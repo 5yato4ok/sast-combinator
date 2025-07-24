@@ -1,0 +1,10 @@
+{
+    "cmd": "semgrep ci --sarif --sarif-output=semgrep.sarif",
+    "environment": "Ubuntu 24.04",
+    "commentary": "Had to launch on Ubuntu, since tool crashes on MacOs",
+    "installation":
+    {
+        "ubuntu": "sudo apt install pipx && pipx ensurepath && pipx install semgrep",
+        "macos": "brew install semgrep"
+    }
+}

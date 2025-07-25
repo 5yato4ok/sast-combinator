@@ -1,0 +1,9 @@
+{
+    "cmd": "devskim analyze -I /work/nx_open --output-format sarif -O /common/devskim.sarif",
+    "environment":
+    {
+        "os": "Docker image 24.04",
+        "preparation": "wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb&& apt update && apt install -y dotnet-sdk-8.0"
+    },
+    "installation_cmd": "dotnet tool install -g Microsoft.CST.DevSkim.CLI && export PATH=\"$PATH:/root/.dotnet/tools\""
+}

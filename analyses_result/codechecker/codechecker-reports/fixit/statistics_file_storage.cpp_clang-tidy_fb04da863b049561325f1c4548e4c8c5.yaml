@@ -1,0 +1,41 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/storage/statistics_file_storage.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractStatisticsStorage'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/abstract_statistics_storage.h'
+      FileOffset:      183
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-range-loop-construct
+    DiagnosticMessage:
+      Message:         'loop variable ''filePath'' creates a copy from type ''QString const'''
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/storage/statistics_file_storage.cpp'
+      FileOffset:      6075
+      Replacements:    []
+    Notes:
+      - Message:         'use reference type ''QString const &'' to prevent copying'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/storage/statistics_file_storage.cpp'
+        FileOffset:      6064
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/storage/statistics_file_storage.cpp'
+            Offset:          6075
+            Length:          0
+            ReplacementText: '&'
+        Ranges:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/storage/statistics_file_storage.cpp'
+            FileOffset:      6064
+            Length:          20
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnStatisticsFileStorage'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/storage/statistics_file_storage.h'
+      FileOffset:      193
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

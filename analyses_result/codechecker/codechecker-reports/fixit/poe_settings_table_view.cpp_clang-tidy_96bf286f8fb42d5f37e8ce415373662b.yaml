@@ -1,0 +1,36 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/resource_properties/server/poe/poe_settings_table_view.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TableView'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/table_view.h'
+      FileOffset:      425
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TableNodeView'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/table_node_view.h'
+      FileOffset:      308
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ResourceNodeViewItemDelegate'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/resource_node_view/details/resource_node_view_item_delegate.h'
+      FileOffset:      336
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''PoeSettingsTableView'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/resource_properties/server/poe/poe_settings_table_view.h'
+      FileOffset:      379
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

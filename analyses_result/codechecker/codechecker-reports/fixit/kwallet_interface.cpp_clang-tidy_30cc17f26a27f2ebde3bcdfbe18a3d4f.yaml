@@ -1,0 +1,831 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain/kwallet_interface.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''OrgKdeKWalletInterface'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/kwallet_interface.h'
+      FileOffset:      599
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      18627
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          18627
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          18639
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      3756
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      18951
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          18951
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          18963
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      19222
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19222
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19234
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      19387
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19387
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19399
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      3756
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      19723
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19723
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19735
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      19947
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19947
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          19959
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      20239
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          20239
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          20251
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      20586
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          20586
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          20598
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QList<QString>>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      20974
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          20974
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          20986
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      21263
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          21263
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          21275
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      21554
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          21554
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          21566
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QList<QString>>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      21943
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          21943
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          21955
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      22276
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22276
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22288
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      22443
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22443
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22455
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      22659
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22659
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22671
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      22879
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22879
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          22891
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      23222
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23222
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23234
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      23397
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23397
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23409
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QString>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      23574
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23574
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23586
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QString>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      23906
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23906
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          23918
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      24297
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          24297
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          24309
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      24633
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          24633
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          24645
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      25028
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          25028
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          25040
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      25638
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          25638
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          25650
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QByteArray>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      26046
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          26046
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          26058
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QMap<QString, QVariant>>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      26446
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          26446
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          26458
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QByteArray>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      26852
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          26852
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          26864
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QMap<QString, QVariant>>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      27251
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          27251
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          27263
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QString>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      27662
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          27662
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          27674
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QMap<QString, QVariant>>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      27823
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          27823
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          27835
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      3756
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      28213
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          28213
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          28225
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      28549
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          28549
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          28561
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<bool>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      28996
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          28996
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          29008
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      29374
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          29374
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          29386
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QList<QString>>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      29553
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          29553
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          29565
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<QList<QString>>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      30002
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          30002
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          30014
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      30504
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          30504
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          30516
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      30951
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          30951
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          30963
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+      FileOffset:      31400
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          31400
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/moc_kwallet_interface.cpp'
+          Offset:          31412
+          Length:          1
+          ReplacementText: ''
+    Notes:
+      - Message:         '''QDBusPendingReply<int>'' is not move assignable/constructible'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtDBus/qdbuspendingreply.h'
+        FileOffset:      1342
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+...

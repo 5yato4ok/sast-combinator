@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/memory/media_cycle_buffer_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnMediaCyclicBuffer'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/memory/cycle_buffer.h'
+      FileOffset:      200
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+...

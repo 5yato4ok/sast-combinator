@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>diagnostics</key>
+	<array>
+		<dict>
+			<key>category</key>
+			<string>cppcoreguidelines</string>
+			<key>check_name</key>
+			<string>cppcoreguidelines-special-member-functions</string>
+			<key>description</key>
+			<string>class 'AbstractBackend' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>37a746110d3516ffd367e7e25e2fd89e</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>7</integer>
+				<key>file</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>9</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>7</integer>
+						<key>file</key>
+						<integer>0</integer>
+						<key>line</key>
+						<integer>9</integer>
+					</dict>
+					<key>message</key>
+					<string>class 'AbstractBackend' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>category</key>
+			<string>cppcoreguidelines</string>
+			<key>check_name</key>
+			<string>cppcoreguidelines-special-member-functions</string>
+			<key>description</key>
+			<string>class 'QSettingsBackend' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>9262252b6313f5df7d0c4186d83852d3</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>20</integer>
+				<key>file</key>
+				<integer>1</integer>
+				<key>line</key>
+				<integer>13</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>20</integer>
+						<key>file</key>
+						<integer>1</integer>
+						<key>line</key>
+						<integer>13</integer>
+					</dict>
+					<key>message</key>
+					<string>class 'QSettingsBackend' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+				</dict>
+			</array>
+		</dict>
+	</array>
+	<key>files</key>
+	<array>
+		<string>/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/property_storage/abstract_backend.h</string>
+		<string>/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/property_storage/qsettings_backend.h</string>
+	</array>
+	<key>metadata</key>
+	<dict>
+		<key>analyzer</key>
+		<dict>
+			<key>name</key>
+			<string>clang-tidy</string>
+		</dict>
+		<key>generated_by</key>
+		<dict>
+			<key>name</key>
+			<string>CodeChecker</string>
+			<key>version</key>
+			<string>6.21.0</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

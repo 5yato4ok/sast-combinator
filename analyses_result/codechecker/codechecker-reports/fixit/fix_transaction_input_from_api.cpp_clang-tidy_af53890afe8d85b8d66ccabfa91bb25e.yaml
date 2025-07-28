@@ -1,0 +1,61 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/fix_transaction_input_from_api.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractPersistentStorage'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/abstract_persistent_storage.h'
+      FileOffset:      220
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''AbstractPersistentStorage'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/abstract_persistent_storage.h'
+      FileOffset:      220
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/abstract_persistent_storage.h'
+        FileOffset:      220
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/abstract_persistent_storage.h'
+            Offset:          260
+            Length:          0
+            ReplacementText: 'virtual '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TransactionDescriptorBase'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/transaction_descriptor.h'
+      FileOffset:      5587
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  google-global-names-in-headers
+    DiagnosticMessage:
+      Message:         using declarations in the global namespace in headers are prohibited
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/common/common_globals.h'
+      FileOffset:      22715
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  google-global-names-in-headers
+    DiagnosticMessage:
+      Message:         using declarations in the global namespace in headers are prohibited
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/common/common_globals.h'
+      FileOffset:      22753
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''String'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/string.h'
+      FileOffset:      697
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+...

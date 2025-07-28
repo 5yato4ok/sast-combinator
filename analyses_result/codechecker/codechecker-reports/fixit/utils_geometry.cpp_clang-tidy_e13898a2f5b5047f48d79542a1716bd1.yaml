@@ -1,0 +1,75 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/testkit/utils_geometry.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''parentWidget'' is deprecated: Use parent() with qobject_cast() instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/testkit/utils_geometry.cpp'
+      FileOffset:      791
+      Replacements:    []
+    Notes:
+      - Message:         '''parentWidget'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/qaction.h'
+        FileOffset:      3533
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''parentWidget<QWidget *>'' is deprecated: Use parent() with qobject_cast() instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/testkit/utils_geometry.cpp'
+      FileOffset:      791
+      Replacements:    []
+    Notes:
+      - Message:         '''parentWidget<QWidget *>'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/qaction.h'
+        FileOffset:      3455
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_X_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4800
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      843
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38230
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''type'' is deprecated: Use typeId() or metaType().'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/testkit/utils_geometry.cpp'
+      FileOffset:      1726
+      Replacements:    []
+    Notes:
+      - Message:         '''type'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qvariant.h'
+        FileOffset:      14736
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_X_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4800
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      843
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38230
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AreaTooltipItem'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/ui/graphics/items/overlays/area_tooltip_item.h'
+      FileOffset:      406
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

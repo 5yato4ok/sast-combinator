@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/__/__/__/artifacts/qt_graphics_items/src/qt_graphics_items/moc_graphics_stacked_widget.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnGraphicsStackedWidget'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/__/__/__/artifacts/qt_graphics_items/src/qt_graphics_items/../../../../../../../../../../../artifacts/qt_graphics_items/src/qt_graphics_items/graphics_stacked_widget.h'
+      FileOffset:      1360
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

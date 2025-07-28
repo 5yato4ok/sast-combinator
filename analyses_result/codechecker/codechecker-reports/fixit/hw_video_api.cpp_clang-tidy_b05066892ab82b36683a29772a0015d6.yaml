@@ -1,0 +1,133 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/nx_media/src/nx/media/ffmpeg/hw_video_api.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractDataPacket'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/abstract_data_packet.h'
+      FileOffset:      223
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAlignedAllocator'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/aligned_allocator.h'
+      FileOffset:      272
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CodecParameters'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/codec_parameters.h'
+      FileOffset:      336
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractVideoDecoder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/abstract_video_decoder.h'
+      FileOffset:      1013
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AvOptions'' defines a destructor and a copy constructor but does not define a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/av_options.h'
+      FileOffset:      207
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractVideoSurface'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/frame_info.h'
+      FileOffset:      534
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CLVideoDecoderOutput'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/frame_info.h'
+      FileOffset:      1185
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''ScreenshotInterface'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/frame_info.h'
+      FileOffset:      4319
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/frame_info.h'
+        FileOffset:      4319
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/frame_info.h'
+            Offset:          4348
+            Length:          0
+            ReplacementText: "\nvirtual ~ScreenshotInterface() = default;"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''HwVideoDecoder'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg/hw_video_decoder.h'
+      FileOffset:      428
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnFfmpegAudioHelper'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/ffmpeg_helper.h'
+      FileOffset:      1967
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractMediaData'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_media_core/src/nx/media/media_data_packet.h'
+      FileOffset:      1802
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''VideoApiDecoderData'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_media/src/nx/media/ffmpeg/hw_video_api.h'
+      FileOffset:      335
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Entry'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_media/src/nx/media/ffmpeg/hw_video_api.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+...

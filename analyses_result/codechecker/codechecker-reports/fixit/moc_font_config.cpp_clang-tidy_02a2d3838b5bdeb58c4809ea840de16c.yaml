@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/moc_font_config.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''FontConfig'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/font_config.h'
+      FileOffset:      354
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

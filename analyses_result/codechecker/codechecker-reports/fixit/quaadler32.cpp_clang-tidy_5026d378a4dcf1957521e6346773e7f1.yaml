@@ -1,0 +1,38 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/quazip/quazip/quaadler32.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''QuaAdler32'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/quazip/quazip/quaadler32.h'
+      FileOffset:      1228
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/quazip/quazip/quaadler32.h'
+        FileOffset:      1228
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/quazip/quazip/quaadler32.h'
+            Offset:          1272
+            Length:          0
+            ReplacementText: "\nvirtual ~QuaAdler32() = default;"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/quazip'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''QuaChecksum32'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/quazip/quazip/quachecksum32.h'
+      FileOffset:      1642
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/quazip/quazip/quachecksum32.h'
+        FileOffset:      1642
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/quazip/quazip/quachecksum32.h'
+            Offset:          1666
+            Length:          0
+            ReplacementText: "\nvirtual ~QuaChecksum32() = default;"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/quazip'
+...

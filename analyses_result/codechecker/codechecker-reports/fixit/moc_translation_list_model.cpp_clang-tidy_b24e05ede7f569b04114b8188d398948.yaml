@@ -1,0 +1,28 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/ui/moc_translation_list_model.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TranslationListModel'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/ui/../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/ui/translation_list_model.h'
+      FileOffset:      261
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''int'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/ui/moc_translation_list_model.cpp'
+      FileOffset:      3045
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/ui/moc_translation_list_model.cpp'
+          Offset:          3045
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/ui/moc_translation_list_model.cpp'
+          Offset:          3057
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

@@ -1,0 +1,28 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/statistics/modules/private/app_active_time_metric.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractMetric'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/abstract_metric.h'
+      FileOffset:      197
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnTimeDurationMetric'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/time_duration_metric.h'
+      FileOffset:      195
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AppActiveTimeMetric'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/statistics/modules/private/app_active_time_metric.h'
+      FileOffset:      194
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

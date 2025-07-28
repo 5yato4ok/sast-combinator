@@ -1,0 +1,36 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_path_util.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_path_util.cpp'
+      FileOffset:      4214
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_path_util.cpp'
+          Offset:          4214
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_path_util.cpp'
+          Offset:          4226
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_path_util.cpp'
+      FileOffset:      4355
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_path_util.cpp'
+          Offset:          4355
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_path_util.cpp'
+          Offset:          4367
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

@@ -1,0 +1,20 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/cloud/cloud_db_client/src/include/nx/cloud/db/api/result_code.cpp'
+Diagnostics:
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+...

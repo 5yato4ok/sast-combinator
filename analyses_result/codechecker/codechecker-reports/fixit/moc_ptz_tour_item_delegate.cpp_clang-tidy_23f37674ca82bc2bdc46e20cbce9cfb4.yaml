@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/ui/delegates/moc_ptz_tour_item_delegate.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnPtzTourItemDelegate'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/ui/delegates/../../../../../../../vms/client/nx_vms_client_desktop/src/ui/delegates/ptz_tour_item_delegate.h'
+      FileOffset:      211
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

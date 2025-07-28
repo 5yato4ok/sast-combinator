@@ -1,0 +1,450 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/action_builder_fields/target_device_field.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MutexHolder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.h'
+      FileOffset:      8699
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractComposer'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/basic_serializer.h'
+      FileOffset:      465
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Visitor'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/basic_serializer.h'
+      FileOffset:      8424
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''keyStd'' of the trivially-copyable type ''std::string_view'' (aka ''basic_string_view<char>'') has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/json/deserializer.h'
+      FileOffset:      8291
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/json/deserializer.h'
+          Offset:          8291
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/json/deserializer.h'
+          Offset:          8307
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forwarding-reference-overload
+    DiagnosticMessage:
+      Message:         constructor accepting a forwarding reference can hide the copy and move constructors
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/type_utils.h'
+      FileOffset:      7653
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BasicBuffer'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/buffer.h'
+      FileOffset:      674
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cert-dcl58-cpp
+    DiagnosticMessage:
+      Message:         'modification of ''std'' namespace can result in undefined behavior'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/buffer.h'
+      FileOffset:      43200
+      Replacements:    []
+    Notes:
+      - Message:         '''std'' namespace opened here'
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/buffer.h'
+        FileOffset:      43158
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/lockable.h'
+      FileOffset:      383
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/lockable.h'
+          Offset:          416
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/lockable.h'
+      FileOffset:      613
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/lockable.h'
+          Offset:          644
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractLogger'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/abstract_logger.h'
+      FileOffset:      313
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AssertTimer'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/assert.h'
+      FileOffset:      1588
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TimeInfo'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/assert.h'
+      FileOffset:      1634
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Filter'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/log_level.h'
+      FileOffset:      1839
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Stream'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/log_main.h'
+      FileOffset:      4161
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractWriter'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/log_writers.h'
+      FileOffset:      727
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''File'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/log_writers.h'
+      FileOffset:      1242
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''expected'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/expected.h'
+      FileOffset:      1160
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''shared_state_base'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      1824
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cert-err09-cpp
+    DiagnosticMessage:
+      Message:         'catch handler catches by value; should catch by reference instead'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      7848
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''future'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      7984
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      8361
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+          Offset:          8387
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      8442
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+          Offset:          8473
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''promise'' defines a non-default destructor, a move constructor and a move assignment operator but does not define a copy constructor or a copy assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      19138
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      19232
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+          Offset:          19257
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      19310
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+          Offset:          19339
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-move-forwarding-reference
+    DiagnosticMessage:
+      Message:         'forwarding reference passed to std::move(), which may unexpectedly cause lvalues to be moved; use std::forward() instead'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      26917
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+          Offset:          26917
+          Length:          9
+          ReplacementText: 'std::forward<Future>'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-move-forwarding-reference
+    DiagnosticMessage:
+      Message:         'forwarding reference passed to std::move(), which may unexpectedly cause lvalues to be moved; use std::forward() instead'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+      FileOffset:      31917
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/cfuture.h'
+          Offset:          31917
+          Length:          9
+          ReplacementText: 'std::forward<FirstFuture>'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''movable_func'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/common.h'
+      FileOffset:      402
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''base_holder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/cf/common.h'
+      FileOffset:      439
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MutexDelegate'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex.h'
+      FileOffset:      209
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ReadWriteLockDelegate'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex.h'
+      FileOffset:      1525
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''WaitConditionDelegate'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex.h'
+      FileOffset:      3582
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Locker'' defines a non-default destructor, a move constructor and a move assignment operator but does not define a copy constructor or a copy assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex_locker.h'
+      FileOffset:      204
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Unlocker'' defines a non-default destructor, a move constructor and a move assignment operator but does not define a copy constructor or a copy assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex_locker.h'
+      FileOffset:      2049
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ScopedUtcTimeFix'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/time.h'
+      FileOffset:      7921
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ScopedSyntheticMonotonicTime'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/time.h'
+      FileOffset:      8186
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Uuid'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/uuid.h'
+      FileOffset:      427
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  google-global-names-in-headers
+    DiagnosticMessage:
+      Message:         using declarations in the global namespace in headers are prohibited
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/common/common_globals.h'
+      FileOffset:      22715
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  google-global-names-in-headers
+    DiagnosticMessage:
+      Message:         using declarations in the global namespace in headers are prohibited
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/common/common_globals.h'
+      FileOffset:      22753
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3341
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3407
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3621
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3674
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnResourcePool'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_management/resource_pool.h'
+      FileOffset:      1005
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''String'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/string.h'
+      FileOffset:      697
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SystemContext'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/vms/common/system_context.h'
+      FileOffset:      1694
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SystemContextAware'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/vms/common/system_context_aware.h'
+      FileOffset:      1073
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''UnitConverterBase'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/api_renamer.h'
+      FileOffset:      494
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/api_renamer.h'
+        FileOffset:      494
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/api_renamer.h'
+            Offset:          513
+            Length:          0
+            ReplacementText: "\nvirtual ~UnitConverterBase() = default;"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+...

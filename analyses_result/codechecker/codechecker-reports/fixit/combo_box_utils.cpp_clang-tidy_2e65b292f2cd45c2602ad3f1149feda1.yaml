@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/utils/combo_box_utils.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''icon'''
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/utils/combo_box_utils.cpp'
+      FileOffset:      1686
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

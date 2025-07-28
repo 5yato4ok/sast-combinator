@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/.qt/rcc/qrc_desktop_client_fragment_shaders_yva12_yuv_gamma.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''initializer'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/.qt/rcc/qrc_desktop_client_fragment_shaders_yva12_yuv_gamma.cpp'
+      FileOffset:      16582
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

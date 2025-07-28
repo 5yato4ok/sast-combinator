@@ -1,0 +1,148 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/cloud/tunnel/tcp/tunnel_tcp_endpoint_verificator_factory.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AddressResolver'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/address_resolver.h'
+      FileOffset:      543
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DnsResolver'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/dns_resolver.h'
+      FileOffset:      796
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractResolver'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/resolve/abstract_resolver.h'
+      FileOffset:      402
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+      FileOffset:      603
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+          Offset:          631
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+      FileOffset:      776
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+          Offset:          804
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Singleton'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/singleton.h'
+      FileOffset:      793
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MutexDelegate'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex.h'
+      FileOffset:      209
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ReadWriteLockDelegate'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex.h'
+      FileOffset:      1525
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''WaitConditionDelegate'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex.h'
+      FileOffset:      3582
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Locker'' defines a non-default destructor, a move constructor and a move assignment operator but does not define a copy constructor or a copy assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex_locker.h'
+      FileOffset:      204
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Unlocker'' defines a non-default destructor, a move constructor and a move assignment operator but does not define a copy constructor or a copy assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/mutex_locker.h'
+      FileOffset:      2049
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/sync_queue.h'
+      FileOffset:      7589
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/sync_queue.h'
+          Offset:          7589
+          Length:          4
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/sync_queue.h'
+          Offset:          7603
+          Length:          29
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/sync_queue.h'
+      FileOffset:      7765
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/sync_queue.h'
+          Offset:          7765
+          Length:          4
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/thread/sync_queue.h'
+          Offset:          7779
+          Length:          29
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ScopedUtcTimeFix'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/time.h'
+      FileOffset:      7921
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ScopedSyntheticMonotonicTime'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/time.h'
+      FileOffset:      8186
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+...

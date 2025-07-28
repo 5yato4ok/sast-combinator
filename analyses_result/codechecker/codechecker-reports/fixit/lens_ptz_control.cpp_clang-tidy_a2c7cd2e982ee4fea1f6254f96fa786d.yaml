@@ -1,0 +1,164 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ColorTheme'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/color_theme.h'
+      FileOffset:      396
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ColorizedIconDeclaration'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/skin.h'
+      FileOffset:      683
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Skin'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/skin.h'
+      FileOffset:      2525
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-integer-division
+    DiagnosticMessage:
+      Message:         'result of integer division used in a floating point context; possible loss of precision'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      2312
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-integer-division
+    DiagnosticMessage:
+      Message:         'result of integer division used in a floating point context; possible loss of precision'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      2370
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-integer-division
+    DiagnosticMessage:
+      Message:         'result of integer division used in a floating point context; possible loss of precision'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      2419
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-unused-but-set-variable
+    DiagnosticMessage:
+      Message:         'variable ''len2'' set but not used'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      4102
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-integer-division
+    DiagnosticMessage:
+      Message:         'result of integer division used in a floating point context; possible loss of precision'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      14856
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-integer-division
+    DiagnosticMessage:
+      Message:         'result of integer division used in a floating point context; possible loss of precision'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      14869
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-integer-division
+    DiagnosticMessage:
+      Message:         'result of integer division used in a floating point context; possible loss of precision'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      16075
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-integer-division
+    DiagnosticMessage:
+      Message:         'result of integer division used in a floating point context; possible loss of precision'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.cpp'
+      FileOffset:      16088
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''LensPtzControl'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/lens_ptz_control.h'
+      FileOffset:      410
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnGenericScopedValueRollback'' defines a non-default destructor, a copy constructor, a copy assignment operator and a move constructor but does not define a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/scoped_value_rollback.h'
+      FileOffset:      394
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the expression of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/scoped_value_rollback.h'
+      FileOffset:      1395
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/scoped_value_rollback.h'
+          Offset:          1395
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/scoped_value_rollback.h'
+          Offset:          1422
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractGetter'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/typed_accessors.h'
+      FileOffset:      244
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractSetter'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/typed_accessors.h'
+      FileOffset:      367
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractExternalGetter'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/typed_accessors.h'
+      FileOffset:      515
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractExternalSetter'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/typed_accessors.h'
+      FileOffset:      681
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnTypedAccessor'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/common/typed_accessors.h'
+      FileOffset:      15654
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

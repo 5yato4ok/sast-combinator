@@ -1,0 +1,38 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/models/sort_filter_proxy_model.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-deprecated-this-capture
+    DiagnosticMessage:
+      Message:         'implicit capture of ''this'' with a capture default of ''='' is deprecated'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/models/sort_filter_proxy_model.cpp'
+      FileOffset:      922
+      Replacements:    []
+    Notes:
+      - Message:         'add an explicit capture of ''this'' to capture ''*this'' by reference'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/models/sort_filter_proxy_model.cpp'
+        FileOffset:      834
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/models/sort_filter_proxy_model.cpp'
+            Offset:          835
+            Length:          0
+            ReplacementText: ', this'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-deprecated-this-capture
+    DiagnosticMessage:
+      Message:         'implicit capture of ''this'' with a capture default of ''='' is deprecated'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/models/sort_filter_proxy_model.cpp'
+      FileOffset:      1217
+      Replacements:    []
+    Notes:
+      - Message:         'add an explicit capture of ''this'' to capture ''*this'' by reference'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/models/sort_filter_proxy_model.cpp'
+        FileOffset:      1129
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/models/sort_filter_proxy_model.cpp'
+            Offset:          1130
+            Length:          0
+            ReplacementText: ', this'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

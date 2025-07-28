@@ -1,0 +1,36 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/detail/moc_base_input_field.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BaseInputField'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/detail/../../../../../../../../../../../../vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/detail/base_input_field.h'
+      FileOffset:      394
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3341
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3407
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3621
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3674
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

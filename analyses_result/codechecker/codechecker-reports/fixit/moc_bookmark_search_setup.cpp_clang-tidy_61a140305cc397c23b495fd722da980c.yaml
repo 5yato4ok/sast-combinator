@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/event_search/utils/moc_bookmark_search_setup.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BookmarkSearchSetup'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/event_search/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/event_search/utils/bookmark_search_setup.h'
+      FileOffset:      260
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

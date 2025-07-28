@@ -1,0 +1,48 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractParam'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.cpp'
+      FileOffset:      3238
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Param'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.cpp'
+      FileOffset:      4569
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  bugprone-string-constructor
+    DiagnosticMessage:
+      Message:         constructing string from nullptr is undefined behaviour
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.cpp'
+      FileOffset:      8646
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MutexHolder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.h'
+      FileOffset:      8699
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  readability-container-data-pointer
+    DiagnosticMessage:
+      Message:         '''data'' should be used for accessing the data pointer instead of taking the address of the 0-th element'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/utils.h'
+      FileOffset:      2668
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/utils.h'
+          Offset:          2668
+          Length:          10
+          ReplacementText: 'result.data()'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+...

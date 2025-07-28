@@ -1,0 +1,68 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QRhiResource'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qrhi.h'
+      FileOffset:      26610
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QRhiResourceUpdateBatch'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qrhi.h'
+      FileOffset:      55126
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QRhi'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qrhi.h'
+      FileOffset:      57332
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QShaderDescription'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qshaderdescription.h'
+      FileOffset:      624
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''PaintPath'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      383
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      2325
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+          Offset:          2349
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      2452
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+          Offset:          2479
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+...

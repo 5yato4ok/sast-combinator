@@ -1,0 +1,21 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/upnp/upnp_device_description.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''DeviceDescriptionHandler'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/upnp/upnp_device_description.h'
+      FileOffset:      1142
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/upnp/upnp_device_description.h'
+        FileOffset:      1142
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/upnp/upnp_device_description.h'
+            Offset:          1176
+            Length:          0
+            ReplacementText: "\nvirtual ~DeviceDescriptionHandler() = default;"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+...

@@ -1,0 +1,37 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/unit_tests/src/nx/vms/client/core/skin/analytics_icon_manager_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''IconManager'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/analytics/analytics_icon_manager.h'
+      FileOffset:      255
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''IconManager'' is private and prevents using the type'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/analytics/analytics_icon_manager.h'
+      FileOffset:      255
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/analytics/analytics_icon_manager.h'
+        FileOffset:      255
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/analytics/analytics_icon_manager.h'
+            Offset:          1116
+            Length:          24
+            ReplacementText: "public:\nvirtual ~IconManager() noexcept overrideprivate:"
+      - Message:         make it protected
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/analytics/analytics_icon_manager.h'
+        FileOffset:      255
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/analytics/analytics_icon_manager.h'
+            Offset:          1116
+            Length:          24
+            ReplacementText: "protected:\n~IconManager() noexcept overrideprivate:"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/unit_tests'
+...

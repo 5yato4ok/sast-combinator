@@ -1,0 +1,116 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/resource_dialogs/backup_settings_view_common.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ValueCacheUnSafe'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/value_cache.h'
+      FileOffset:      4451
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AttributeDescriptionCommon'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/analytics/manifest_items.h'
+      FileOffset:      2465
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AttributeDescription'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/analytics/manifest_items.h'
+      FileOffset:      4645
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  google-global-names-in-headers
+    DiagnosticMessage:
+      Message:         using declarations in the global namespace in headers are prohibited
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/common/common_globals.h'
+      FileOffset:      22715
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  google-global-names-in-headers
+    DiagnosticMessage:
+      Message:         using declarations in the global namespace in headers are prohibited
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/common/common_globals.h'
+      FileOffset:      22753
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnVirtualCameraResource'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/camera_resource.h'
+      FileOffset:      1521
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnMediaResource'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/media_resource.h'
+      FileOffset:      709
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnResource'' defines a destructor and a copy constructor but does not define a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/resource.h'
+      FileOffset:      2653
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnResourceType'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/resource_type.h'
+      FileOffset:      327
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnResourceTypePool'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/resource_type.h'
+      FileOffset:      1746
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3341
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3407
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3621
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3674
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''String'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/string.h'
+      FileOffset:      697
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

@@ -1,0 +1,76 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+Diagnostics:
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      266
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      283
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      332
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      349
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      398
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      415
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      464
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/color_to_vector_converter.cpp'
+      FileOffset:      481
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractConverter'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/converter.h'
+      FileOffset:      700
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

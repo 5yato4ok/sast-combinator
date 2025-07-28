@@ -1,0 +1,39 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/shortcut_hint_widget.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-unused-function
+    DiagnosticMessage:
+      Message:         'unused function ''placeholderString'''
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/shortcut_hint_widget.cpp'
+      FileOffset:      872
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/shortcut_hint_widget.cpp'
+          FileOffset:      872
+          Length:          17
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''int'' and ''size_type'' (aka ''unsigned long'')'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/shortcut_hint_widget.cpp'
+      FileOffset:      2254
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/shortcut_hint_widget.cpp'
+          FileOffset:      2252
+          Length:          1
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/shortcut_hint_widget.cpp'
+          FileOffset:      2256
+          Length:          22
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ShortcutHintBuilder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/widgets/shortcut_hint_widget.h'
+      FileOffset:      484
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

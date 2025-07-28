@@ -1,0 +1,69 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/rules/utils/event_parameter_completer.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ColorTheme'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/color_theme.h'
+      FileOffset:      396
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''EventParametersModel'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/rules/model_view/event_parameters_model.h'
+      FileOffset:      312
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''EventParameterCompleter'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/rules/utils/event_parameter_completer.h'
+      FileOffset:      409
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''EventParametersDropDownDelegate'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/rules/utils/event_parameters_dropdown_delegate.h'
+      FileOffset:      196
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''EventParameterHelper'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+      FileOffset:      398
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''EventParameterHelper'' is private and prevents using the type'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+      FileOffset:      398
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+        FileOffset:      398
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+            Offset:          2283
+            Length:          31
+            ReplacementText: "public:\nvirtual ~EventParameterHelper()private:"
+      - Message:         make it protected
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+        FileOffset:      398
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+            Offset:          2283
+            Length:          31
+            ReplacementText: "protected:\n~EventParameterHelper()private:"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

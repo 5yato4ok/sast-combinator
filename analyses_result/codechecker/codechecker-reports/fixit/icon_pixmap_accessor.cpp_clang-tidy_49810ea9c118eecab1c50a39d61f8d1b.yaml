@@ -1,0 +1,28 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/icon_pixmap_accessor.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QIconPrivate'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/private/qicon_p.h'
+      FileOffset:      650
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QPixmapIconEngine'' defines a destructor and a copy constructor but does not define a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/private/qicon_p.h'
+      FileOffset:      1948
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  clang-diagnostic-unused-private-field
+    DiagnosticMessage:
+      Message:         'private field ''m_icon'' is not used'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/skin/icon_pixmap_accessor.h'
+      FileOffset:      398
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

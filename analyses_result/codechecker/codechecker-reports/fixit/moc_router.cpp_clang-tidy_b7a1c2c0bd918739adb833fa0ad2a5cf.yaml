@@ -1,0 +1,127 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/moc_router.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Router'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/router.h'
+      FileOffset:      633
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''Field'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::api::rules'''
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/rules_fwd.h'
+      FileOffset:      216
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''Field'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/rules/rules_fwd.h'
+        FileOffset:      192
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''ActionBuilder'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::api::rules'''
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/rules_fwd.h'
+      FileOffset:      363
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''ActionBuilder'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/rules/rules_fwd.h'
+        FileOffset:      150
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''EventFilter'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::api::rules'''
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/rules_fwd.h'
+      FileOffset:      384
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''EventFilter'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/rules/rules_fwd.h'
+        FileOffset:      172
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Uuid'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/uuid.h'
+      FileOffset:      427
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''ActionBuilder'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::rules'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/rules/rules_fwd.h'
+      FileOffset:      150
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''ActionBuilder'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/rules_fwd.h'
+        FileOffset:      363
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''EventFilter'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::rules'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/rules/rules_fwd.h'
+      FileOffset:      172
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''EventFilter'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/rules_fwd.h'
+        FileOffset:      384
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''Field'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::rules'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/rules/rules_fwd.h'
+      FileOffset:      192
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''Field'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/rules_fwd.h'
+        FileOffset:      216
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''Rule'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::rules'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/rules/rules_fwd.h'
+      FileOffset:      206
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''Rule'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules/src/nx/vms/rules/../../../../../../../../vms/libs/nx_vms_rules/src/nx/vms/rules/rules_fwd.h'
+        FileOffset:      418
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+...

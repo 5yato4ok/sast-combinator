@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>diagnostics</key>
+	<array>
+		<dict>
+			<key>category</key>
+			<string>cppcoreguidelines</string>
+			<key>check_name</key>
+			<string>cppcoreguidelines-special-member-functions</string>
+			<key>description</key>
+			<string>class 'LinearCombinator' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>c21c861f3636cefd7a7693666e0006f0</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>25</integer>
+				<key>file</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>49</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>25</integer>
+						<key>file</key>
+						<integer>0</integer>
+						<key>line</key>
+						<integer>49</integer>
+					</dict>
+					<key>message</key>
+					<string>class 'LinearCombinator' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+				</dict>
+			</array>
+		</dict>
+		<dict>
+			<key>category</key>
+			<string>cppcoreguidelines</string>
+			<key>check_name</key>
+			<string>cppcoreguidelines-special-member-functions</string>
+			<key>description</key>
+			<string>class 'QnSpaceMapper' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>9f0bd9d5123c55f3b88d8eeda968ac2c</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>7</integer>
+				<key>file</key>
+				<integer>1</integer>
+				<key>line</key>
+				<integer>16</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>7</integer>
+						<key>file</key>
+						<integer>1</integer>
+						<key>line</key>
+						<integer>16</integer>
+					</dict>
+					<key>message</key>
+					<string>class 'QnSpaceMapper' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator</string>
+				</dict>
+			</array>
+		</dict>
+	</array>
+	<key>files</key>
+	<array>
+		<string>/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/utils/math/linear_combination.h</string>
+		<string>/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/utils/math/space_mapper.h</string>
+	</array>
+	<key>metadata</key>
+	<dict>
+		<key>analyzer</key>
+		<dict>
+			<key>name</key>
+			<string>clang-tidy</string>
+		</dict>
+		<key>generated_by</key>
+		<dict>
+			<key>name</key>
+			<string>CodeChecker</string>
+			<key>version</key>
+			<string>6.21.0</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

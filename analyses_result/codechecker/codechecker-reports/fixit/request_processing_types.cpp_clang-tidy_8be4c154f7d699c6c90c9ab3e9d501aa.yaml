@@ -1,0 +1,52 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/server/request_processing_types.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractMsgBodySource'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/server/../abstract_msg_body_source.h'
+      FileOffset:      702
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Span'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_telemetry/src/nx/telemetry/span.h'
+      FileOffset:      279
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Scope'' defines a destructor, a move constructor and a move assignment operator but does not define a copy constructor or a copy assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_telemetry/src/nx/telemetry/span.h'
+      FileOffset:      321
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_telemetry/src/nx/telemetry/span.h'
+      FileOffset:      370
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_telemetry/src/nx/telemetry/span.h'
+          Offset:          390
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_telemetry/src/nx/telemetry/span.h'
+      FileOffset:      448
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_telemetry/src/nx/telemetry/span.h'
+          Offset:          472
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+...

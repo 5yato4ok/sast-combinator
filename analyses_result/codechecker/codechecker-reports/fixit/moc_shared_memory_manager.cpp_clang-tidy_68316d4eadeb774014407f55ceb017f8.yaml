@@ -1,0 +1,28 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/moc_shared_memory_manager.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ClientProcessExecutionInterface'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/../../../../../../../../../../vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/client_process_execution_interface.h'
+      FileOffset:      258
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SharedMemoryInterface'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/../../../../../../../../../../vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/shared_memory_manager.h'
+      FileOffset:      458
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SharedMemoryManager'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/../../../../../../../../../../vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/shared_memory_manager.h'
+      FileOffset:      935
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

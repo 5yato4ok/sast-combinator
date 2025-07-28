@@ -1,0 +1,999 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-all.cc'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AssertionResult'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-assertion-result.h'
+      FileOffset:      4879
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ExitedWithCode'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-death-test.h'
+      FileOffset:      8542
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MatchResultListener'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      3107
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MatcherDescriberInterface'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      4408
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DummyMatchResultListener'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      7615
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''StreamMatchResultListener'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      8083
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''MatcherBase<const std::basic_string<char> &>'' is protected and virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      9114
+      Replacements:    []
+    Notes:
+      - Message:         make it protected and non-virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+        FileOffset:      9114
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+            Offset:          11737
+            Length:          12
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''MatcherBase<const std::basic_string_view<char> &>'' is protected and virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      9114
+      Replacements:    []
+    Notes:
+      - Message:         make it protected and non-virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+        FileOffset:      9114
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+            Offset:          11737
+            Length:          12
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''MatcherBase<std::basic_string<char>>'' is protected and virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      9114
+      Replacements:    []
+    Notes:
+      - Message:         make it protected and non-virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+        FileOffset:      9114
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+            Offset:          11737
+            Length:          12
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''MatcherBase<std::basic_string_view<char>>'' is protected and virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      9114
+      Replacements:    []
+    Notes:
+      - Message:         make it protected and non-virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+        FileOffset:      9114
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+            Offset:          11737
+            Length:          12
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      11539
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+          Offset:          11570
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  bugprone-sizeof-expression
+    DiagnosticMessage:
+      Message:         'suspicious usage of ''sizeof(A*)'' on pointer-to-aggregate type; did you mean ''sizeof(A)''?'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+      FileOffset:      14706
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-matchers.h'
+          FileOffset:      14706
+          Length:          9
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Message'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-message.h'
+      FileOffset:      3765
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  clang-diagnostic-undef
+    DiagnosticMessage:
+      Message:         '''__apple_build_version__'' is not defined, evaluates to 0'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-printers.h'
+      FileOffset:      9088
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ScopedFakeTestPartResultReporter'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-spi.h'
+      FileOffset:      2554
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SingleFailureChecker'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-spi.h'
+      FileOffset:      4466
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestPartResultArray'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-test-part.h'
+      FileOffset:      5189
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestPartResultReporterInterface'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-test-part.h'
+      FileOffset:      5821
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''HasNewFatalFailureHelper'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest-test-part.h'
+      FileOffset:      6469
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''GTestNonCopyable'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      7725
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Test'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      9072
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestResult'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      15138
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestInfo'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      19936
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestSuite'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      25501
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Environment'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      33380
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestEventListener'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      34420
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestEventListeners'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      38842
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''UnitTest'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      42728
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''UnitTest'' is private and prevents using the type'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      42728
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+        FileOffset:      42728
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+            Offset:          210056
+            Length:          39
+            ReplacementText: "public:\nUnitTest::~UnitTest() noexcept {\n    delete this->impl_;\n}\nprivate:"
+      - Message:         make it protected
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+        FileOffset:      42728
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+            Offset:          210056
+            Length:          39
+            ReplacementText: "protected:\nUnitTest::~UnitTest() noexcept {\n    delete this->impl_;\n}\nprivate:"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AssertHelper'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      64178
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''AssertHelper&'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      64465
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AssertHelperData'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      64815
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''WithParamInterface'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      66667
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ScopedTrace'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/gtest.h'
+      FileOffset:      82637
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DeathTest'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-death-test-internal.h'
+      FileOffset:      3948
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ReturnSentinel'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-death-test-internal.h'
+      FileOffset:      4805
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DeathTestFactory'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-death-test-internal.h'
+      FileOffset:      6959
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''InternalRunDeathTestFlag'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-death-test-internal.h'
+      FileOffset:      12716
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''FilePath'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-filepath.h'
+      FileOffset:      3100
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestFactoryBase'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+      FileOffset:      16527
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+      FileOffset:      23037
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+          Offset:          23037
+          Length:          5
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+          Offset:          23053
+          Length:          4
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Random'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+      FileOffset:      33132
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''NativeArray'' defines a non-default destructor and a copy constructor but does not define a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+      FileOffset:      41957
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cert-dcl58-cpp
+    DiagnosticMessage:
+      Message:         'modification of ''std'' namespace can result in undefined behavior'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+      FileOffset:      48478
+      Replacements:    []
+    Notes:
+      - Message:         '''std'' namespace opened here'
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-internal.h'
+        FileOffset:      48164
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParamIteratorInterface'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      3602
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParamIterator'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      5078
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParamGeneratorInterface'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      6434
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParamGenerator'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      7059
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''RangeGenerator'' defines a default destructor and a copy assignment operator but does not define a copy constructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      7833
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Iterator'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      8346
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ValuesInIteratorRangeGenerator'' defines a default destructor and a copy assignment operator but does not define a copy constructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      10815
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Iterator'' defines a default destructor and a copy constructor but does not define a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      11384
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParameterizedTestFactory'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      14689
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestMetaFactoryBase'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      15419
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestMetaFactory'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      16039
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParameterizedTestSuiteInfoBase'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      17086
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParameterizedTestSuiteInfo'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      18724
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      22732
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ParameterizedTestSuiteRegistry'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      26599
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CartesianProductGenerator'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      31377
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''IteratorImpl'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      31979
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Iterator'' defines a default destructor and a copy constructor but does not define a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-param-util.h'
+      FileOffset:      36200
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Secret'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      38011
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''RE'' defines a non-default destructor and a copy constructor but does not define a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      39337
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''GTestLog'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      41880
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Notification'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      49237
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ThreadWithParamBase'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      50591
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ThreadWithParam'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      51783
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Mutex'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      65502
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''GTestMutexLock'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      66160
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ThreadLocalValueHolderBase'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      66746
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ThreadLocal'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      67161
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ValueHolder'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      67986
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ValueHolderFactory'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      69120
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DefaultValueHolderFactory'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      69443
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''InstanceValueHolderFactory'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      69825
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  bugprone-signed-char-misuse
+    DiagnosticMessage:
+      Message:         'comparison between ''signed char'' and ''unsigned char'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/include/gtest/internal/gtest-port.h'
+      FileOffset:      73719
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DeathTestImpl'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-death-test.cc'
+      FileOffset:      14905
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''DeathTestImpl'' is protected and virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-death-test.cc'
+      FileOffset:      14905
+      Replacements:    []
+    Notes:
+      - Message:         make it protected and non-virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-death-test.cc'
+        FileOffset:      14905
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-death-test.cc'
+            Offset:          15299
+            Length:          14
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-data-pointer
+    DiagnosticMessage:
+      Message:         '''data'' should be used for accessing the data pointer instead of taking the address of the 0-th element'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-death-test.cc'
+      FileOffset:      23942
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-death-test.cc'
+          Offset:          23942
+          Length:          7
+          ReplacementText: 'arg.data()'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  bugprone-misplaced-widening-cast
+    DiagnosticMessage:
+      Message:         'either cast from ''int'' to ''size_t'' (aka ''unsigned long'') is ineffective, or there is loss of precision before the conversion'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-death-test.cc'
+      FileOffset:      51799
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''GTestFlagSaver'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      5570
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''OsStackTraceGetterInterface'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      16489
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''OsStackTraceGetter'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      17679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DefaultGlobalTestPartResultReporter'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      18695
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DefaultPerThreadTestPartResultReporter'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      19434
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''UnitTestImpl'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      20344
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''StreamingListener'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      42876
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractSocketWriter'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      43003
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SocketWriter'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-internal-inl.h'
+      FileOffset:      43440
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  performance-no-automatic-move
+    DiagnosticMessage:
+      Message:         'constness of ''file_name'' prevents automatic move'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-port.cc'
+      FileOffset:      35052
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CapturedStream'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-port.cc'
+      FileOffset:      36324
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+      FileOffset:      2992
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+          Offset:          2992
+          Length:          5
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+          Offset:          3003
+          Length:          5
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+      FileOffset:      3128
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+          Offset:          3128
+          Length:          5
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+          Offset:          3139
+          Length:          5
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+      FileOffset:      3412
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+          Offset:          3406
+          Length:          0
+          ReplacementText: '!'
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+          Offset:          3412
+          Length:          5
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest-typed-test.cc'
+          Offset:          3428
+          Length:          5
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''AssertHelper&'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      17016
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      19207
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+          Offset:          19207
+          Length:          4
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+          Offset:          19217
+          Length:          17
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      22281
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+          Offset:          22281
+          Length:          4
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+          Offset:          22301
+          Length:          17
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      29452
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+          Offset:          29452
+          Length:          4
+          ReplacementText: contains
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+          Offset:          29462
+          Length:          31
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  bugprone-signed-char-misuse
+    DiagnosticMessage:
+      Message:         '''signed char'' to ''uint32_t'' (aka ''unsigned int'') conversion; consider casting to ''unsigned char'' first.'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      76136
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  bugprone-signed-char-misuse
+    DiagnosticMessage:
+      Message:         '''signed char'' to ''uint32_t'' (aka ''unsigned int'') conversion; consider casting to ''unsigned char'' first.'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      76190
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  bugprone-signed-char-misuse
+    DiagnosticMessage:
+      Message:         '''signed char'' to ''uint32_t'' (aka ''unsigned int'') conversion; consider casting to ''unsigned char'' first.'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      77860
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  performance-no-automatic-move
+    DiagnosticMessage:
+      Message:         'constness of ''user_msg_string'' prevents automatic move'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      83870
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestEventRepeater'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      141007
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''XmlUnitTestResultPrinter'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      146538
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''JsonUnitTestResultPrinter'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      168432
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ScopedPrematureExitFile'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/googletest/googletest/src/gtest.cc'
+      FileOffset:      190172
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/artifacts/googletest/googletest'
+...

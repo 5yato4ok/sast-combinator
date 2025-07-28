@@ -1,0 +1,124 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_pathkit/unit_tests/src/paint_engine_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QRhiResource'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qrhi.h'
+      FileOffset:      26610
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QRhiResourceUpdateBatch'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qrhi.h'
+      FileOffset:      55126
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QRhi'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qrhi.h'
+      FileOffset:      57332
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QShaderDescription'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/6.9.1/QtGui/rhi/qshaderdescription.h'
+      FileOffset:      624
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''RhiPaintDevice'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_device.h'
+      FileOffset:      336
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''PaintPath'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      383
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      2325
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+          Offset:          2349
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      2452
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+          Offset:          2479
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''RhiPaintDeviceRenderer'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_render.h'
+      FileOffset:      1615
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''RhiOffscreenRenderer'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/unit_tests/src/rhi_offscreen_renderer.h'
+      FileOffset:      313
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Url'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/test_support/../url.h'
+      FileOffset:      343
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TestWithTemporaryDirectory'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/test_support/test_with_temporary_directory.h'
+      FileOffset:      208
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit/unit_tests'
+...

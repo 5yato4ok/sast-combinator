@@ -1,0 +1,49 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/algorithm/merge_sorted_lists_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  bugprone-forwarding-reference-overload
+    DiagnosticMessage:
+      Message:         constructor accepting a forwarding reference can hide the copy and move constructors
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/type_utils.h'
+      FileOffset:      7653
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Vector'' defines a copy constructor, a copy assignment operator and a move constructor but does not define a destructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/algorithm/merge_sorted_lists_ut.cpp'
+      FileOffset:      820
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/algorithm/merge_sorted_lists_ut.cpp'
+      FileOffset:      1007
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/algorithm/merge_sorted_lists_ut.cpp'
+          Offset:          1029
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+  - DiagnosticName:  cert-oop11-cpp
+    DiagnosticMessage:
+      Message:         move constructor initializes base class by calling a copy constructor
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/algorithm/merge_sorted_lists_ut.cpp'
+      FileOffset:      1031
+      Replacements:    []
+    Notes:
+      - Message:         copy constructor being called
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_vector.h'
+        FileOffset:      19085
+        Replacements:    []
+      - Message:         candidate move constructor here
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_vector.h'
+        FileOffset:      19662
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+...

@@ -1,0 +1,54 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/path_util.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''canConvert'' is deprecated'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/path_util.cpp'
+      FileOffset:      1259
+      Replacements:    []
+    Notes:
+      - Message:         '''canConvert'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qvariant.h'
+        FileOffset:      12363
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4865
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      768
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38182
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''PointF'' is deprecated: Use QMetaType::Type instead.'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/path_util.cpp'
+      FileOffset:      1280
+      Replacements:    []
+    Notes:
+      - Message:         '''Type'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qvariant.h'
+        FileOffset:      4293
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_X_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4800
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      843
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38230
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

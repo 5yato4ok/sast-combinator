@@ -1,0 +1,69 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/videowall/videowall_online_screens_watcher.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Singleton'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/singleton.h'
+      FileOffset:      793
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-unused-lambda-capture
+    DiagnosticMessage:
+      Message:         'lambda capture ''this'' is not used'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/videowall/videowall_online_screens_watcher.cpp'
+      FileOffset:      1250
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/videowall/videowall_online_screens_watcher.cpp'
+          Offset:          1250
+          Length:          5
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-unused-lambda-capture
+    DiagnosticMessage:
+      Message:         'lambda capture ''this'' is not used'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/videowall/videowall_online_screens_watcher.cpp'
+      FileOffset:      1454
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/videowall/videowall_online_screens_watcher.cpp'
+          Offset:          1454
+          Length:          5
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SystemContext'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/vms/common/system_context.h'
+      FileOffset:      1694
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SystemContextAware'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/vms/common/system_context_aware.h'
+      FileOffset:      1073
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''QnThreadsafeItemStorageNotifier<QnPeerRuntimeInfo>'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/utils/common/threadsafe_item_storage.h'
+      FileOffset:      476
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/utils/common/threadsafe_item_storage.h'
+        FileOffset:      476
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/utils/common/threadsafe_item_storage.h'
+            Offset:          1025
+            Length:          0
+            ReplacementText: "public:\nvirtual ~QnThreadsafeItemStorageNotifier() = default;\n"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

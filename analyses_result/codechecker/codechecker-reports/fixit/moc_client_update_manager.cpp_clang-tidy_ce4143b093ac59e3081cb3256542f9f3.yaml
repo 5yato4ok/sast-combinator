@@ -1,0 +1,44 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/moc_client_update_manager.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ClientUpdateManager'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/../../../../../../../../../../vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/client_update_manager.h'
+      FileOffset:      517
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/moc_client_update_manager.cpp'
+      FileOffset:      5707
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/moc_client_update_manager.cpp'
+          Offset:          5707
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/moc_client_update_manager.cpp'
+          Offset:          5719
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/moc_client_update_manager.cpp'
+      FileOffset:      5850
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/moc_client_update_manager.cpp'
+          Offset:          5850
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/system_update/moc_client_update_manager.cpp'
+          Offset:          5862
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

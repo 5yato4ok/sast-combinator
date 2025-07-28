@@ -1,0 +1,120 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/sorting_filtering/node_view_numeric_sort_model.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''NodeViewBaseSortModel'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/sorting_filtering/node_view_base_sort_model.h'
+      FileOffset:      217
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''type'' is deprecated: Use typeId() or metaType().'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/sorting_filtering/node_view_numeric_sort_model.cpp'
+      FileOffset:      628
+      Replacements:    []
+    Notes:
+      - Message:         '''type'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qvariant.h'
+        FileOffset:      14736
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_X_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4800
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      843
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38230
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''String'' is deprecated: Use QMetaType::Type instead.'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/sorting_filtering/node_view_numeric_sort_model.cpp'
+      FileOffset:      648
+      Replacements:    []
+    Notes:
+      - Message:         '''Type'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qvariant.h'
+        FileOffset:      4293
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_X_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4800
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      843
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38230
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''type'' is deprecated: Use typeId() or metaType().'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/sorting_filtering/node_view_numeric_sort_model.cpp'
+      FileOffset:      668
+      Replacements:    []
+    Notes:
+      - Message:         '''type'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qvariant.h'
+        FileOffset:      14736
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_X_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4800
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      843
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38230
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''String'' is deprecated: Use QMetaType::Type instead.'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/sorting_filtering/node_view_numeric_sort_model.cpp'
+      FileOffset:      688
+      Replacements:    []
+    Notes:
+      - Message:         '''Type'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qvariant.h'
+        FileOffset:      4293
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_VERSION_X_6_0'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      4800
+        Replacements:    []
+      - Message:         'expanded from macro ''QT_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qtdeprecationmarkers.h'
+        FileOffset:      843
+        Replacements:    []
+      - Message:         'expanded from macro ''Q_DECL_DEPRECATED_X'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtCore/qcompilerdetection.h'
+        FileOffset:      38230
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''NodeViewNumericSortModel'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/node_view/sorting_filtering/node_view_numeric_sort_model.h'
+      FileOffset:      245
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

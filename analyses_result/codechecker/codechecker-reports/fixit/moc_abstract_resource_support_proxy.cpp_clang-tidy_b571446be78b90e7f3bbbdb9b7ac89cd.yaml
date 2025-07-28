@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/nx/analytics/taxonomy/moc_abstract_resource_support_proxy.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractResourceSupportProxy'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/nx/analytics/taxonomy/../../../../../../../../vms/libs/nx_vms_common/src/nx/analytics/taxonomy/abstract_resource_support_proxy.h'
+      FileOffset:      299
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+...

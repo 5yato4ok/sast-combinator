@@ -1,0 +1,34 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/type_utils_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  bugprone-use-after-move
+    DiagnosticMessage:
+      Message:         '''tuple'' used after it was forwarded'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/type_utils.h'
+      FileOffset:      5255
+      Replacements:    []
+    Notes:
+      - Message:         forward occurred here
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/type_utils.h'
+        FileOffset:      5217
+        Replacements:    []
+      - Message:         the use and forward are unsequenced, i.e. there is no guarantee about the order in which they are evaluated
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/type_utils.h'
+        FileOffset:      5255
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+  - DiagnosticName:  bugprone-use-after-move
+    DiagnosticMessage:
+      Message:         '''y'' used after it was moved'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/type_utils_ut.cpp'
+      FileOffset:      2447
+      Replacements:    []
+    Notes:
+      - Message:         move occurred here
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/type_utils_ut.cpp'
+        FileOffset:      2331
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+...

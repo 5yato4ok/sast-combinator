@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/thumbnails/moc_generic_remote_image_request.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''GenericRemoteImageRequest'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/thumbnails/../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/thumbnails/generic_remote_image_request.h'
+      FileOffset:      482
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

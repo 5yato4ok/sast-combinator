@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>diagnostics</key>
+	<array>
+		<dict>
+			<key>category</key>
+			<string>clang</string>
+			<key>check_name</key>
+			<string>clang-diagnostic-deprecated-non-prototype</string>
+			<key>description</key>
+			<string>a function definition without a prototype is deprecated in all versions of C and is not supported in C23</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>732d23c8546edc35026836a24d76f89b</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>12</integer>
+				<key>file</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>93</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>12</integer>
+						<key>file</key>
+						<integer>0</integer>
+						<key>line</key>
+						<integer>93</integer>
+					</dict>
+					<key>message</key>
+					<string>a function definition without a prototype is deprecated in all versions of C and is not supported in C23</string>
+				</dict>
+			</array>
+		</dict>
+	</array>
+	<key>files</key>
+	<array>
+		<string>/home/misha/nika/nx_open/artifacts/quazip/quazip/crypt.h</string>
+	</array>
+	<key>metadata</key>
+	<dict>
+		<key>analyzer</key>
+		<dict>
+			<key>name</key>
+			<string>clang-tidy</string>
+		</dict>
+		<key>generated_by</key>
+		<dict>
+			<key>name</key>
+			<string>CodeChecker</string>
+			<key>version</key>
+			<string>6.21.0</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

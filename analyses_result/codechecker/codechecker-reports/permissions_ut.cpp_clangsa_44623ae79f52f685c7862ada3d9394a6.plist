@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>diagnostics</key>
+	<array>
+		<dict>
+			<key>category</key>
+			<string>Unused code</string>
+			<key>check_name</key>
+			<string>deadcode.DeadStores</string>
+			<key>description</key>
+			<string>Value stored to 'userId' during its initialization is never read</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>4f5fbe0ac04d0ba62d4bef3a72b31be6</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>16</integer>
+				<key>file</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>41</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>16</integer>
+						<key>file</key>
+						<integer>0</integer>
+						<key>line</key>
+						<integer>41</integer>
+					</dict>
+					<key>message</key>
+					<string>Value stored to 'userId' during its initialization is never read</string>
+					<key>ranges</key>
+					<array>
+						<array>
+							<dict>
+								<key>col</key>
+								<integer>16</integer>
+								<key>file</key>
+								<integer>0</integer>
+								<key>line</key>
+								<integer>41</integer>
+							</dict>
+							<dict>
+								<key>col</key>
+								<integer>21</integer>
+								<key>file</key>
+								<integer>0</integer>
+								<key>line</key>
+								<integer>41</integer>
+							</dict>
+						</array>
+					</array>
+				</dict>
+			</array>
+		</dict>
+	</array>
+	<key>files</key>
+	<array>
+		<string>/home/misha/nika/nx_open/vms/libs/nx_vms_api/unit_tests/src/nx/vms/api/permissions_ut.cpp</string>
+	</array>
+	<key>metadata</key>
+	<dict>
+		<key>analyzer</key>
+		<dict>
+			<key>name</key>
+			<string>clangsa</string>
+		</dict>
+		<key>generated_by</key>
+		<dict>
+			<key>name</key>
+			<string>CodeChecker</string>
+			<key>version</key>
+			<string>6.21.0</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

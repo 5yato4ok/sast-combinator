@@ -1,0 +1,62 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_validators.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-overloaded-virtual
+    DiagnosticMessage:
+      Message:         '''nx::vms::client::core::IntValidator::validate'' hides overloaded virtual function'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/validators.h'
+      FileOffset:      575
+      Replacements:    []
+    Notes:
+      - Message:         'hidden overloaded virtual function ''QIntValidator::validate'' declared here: different number of parameters (2 vs 1)'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/qvalidator.h'
+        FileOffset:      1628
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  clang-diagnostic-overloaded-virtual
+    DiagnosticMessage:
+      Message:         '''nx::vms::client::core::DoubleValidator::validate'' hides overloaded virtual function'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/validators.h'
+      FileOffset:      1066
+      Replacements:    []
+    Notes:
+      - Message:         'hidden overloaded virtual function ''QDoubleValidator::validate'' declared here: different number of parameters (2 vs 1)'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtGui/qvalidator.h'
+        FileOffset:      2755
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''QValidator::State'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_validators.cpp'
+      FileOffset:      3450
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_validators.cpp'
+          Offset:          3450
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_validators.cpp'
+          Offset:          3462
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''QValidator::State'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_validators.cpp'
+      FileOffset:      7830
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_validators.cpp'
+          Offset:          7830
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_validators.cpp'
+          Offset:          7842
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

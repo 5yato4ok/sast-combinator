@@ -1,0 +1,24 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/help/help_handler.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-switch
+    DiagnosticMessage:
+      Message:         '175 enumeration values not handled in switch: ''None'', ''Timer'', ''MouseButtonPress''...'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/help/help_handler.cpp'
+      FileOffset:      2379
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/help/help_handler.cpp'
+          FileOffset:      2379
+          Length:          13
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''HelpHandler'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/help/help_handler.h'
+      FileOffset:      385
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

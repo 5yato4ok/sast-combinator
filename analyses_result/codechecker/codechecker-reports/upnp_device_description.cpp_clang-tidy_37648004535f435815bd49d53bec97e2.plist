@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>diagnostics</key>
+	<array>
+		<dict>
+			<key>category</key>
+			<string>cppcoreguidelines</string>
+			<key>check_name</key>
+			<string>cppcoreguidelines-virtual-class-destructor</string>
+			<key>description</key>
+			<string>destructor of 'DeviceDescriptionHandler' is public and non-virtual</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>3edc882b80fa2c7d5b968447be5dd8fc</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>22</integer>
+				<key>file</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>42</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>22</integer>
+						<key>file</key>
+						<integer>0</integer>
+						<key>line</key>
+						<integer>42</integer>
+					</dict>
+					<key>message</key>
+					<string>make it public and virtual</string>
+				</dict>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>22</integer>
+						<key>file</key>
+						<integer>0</integer>
+						<key>line</key>
+						<integer>42</integer>
+					</dict>
+					<key>message</key>
+					<string>destructor of 'DeviceDescriptionHandler' is public and non-virtual</string>
+				</dict>
+			</array>
+		</dict>
+	</array>
+	<key>files</key>
+	<array>
+		<string>/home/misha/nika/nx_open/libs/nx_network/src/nx/network/upnp/upnp_device_description.h</string>
+	</array>
+	<key>metadata</key>
+	<dict>
+		<key>analyzer</key>
+		<dict>
+			<key>name</key>
+			<string>clang-tidy</string>
+		</dict>
+		<key>generated_by</key>
+		<dict>
+			<key>name</key>
+			<string>CodeChecker</string>
+			<key>version</key>
+			<string>6.21.0</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

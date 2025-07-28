@@ -1,0 +1,116 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+      FileOffset:      908
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          954
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the expression of the trivially-copyable type ''nx::Uuid'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+      FileOffset:      1012
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1012
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1035
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the expression of the trivially-copyable type ''nx::Uuid'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+      FileOffset:      1088
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1088
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1112
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+      FileOffset:      1256
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1293
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the expression of the trivially-copyable type ''nx::Uuid'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+      FileOffset:      1410
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1410
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1433
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the expression of the trivially-copyable type ''nx::Uuid'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+      FileOffset:      1486
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1486
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.cpp'
+          Offset:          1510
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.h'
+      FileOffset:      1046
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.h'
+          Offset:          1088
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.h'
+      FileOffset:      1119
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/connection_guard.h'
+          Offset:          1151
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+...

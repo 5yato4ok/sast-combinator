@@ -1,0 +1,52 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/udt/src/udt/unit_queue.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BasicBuffer'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/udt/src/udt/buffer.h'
+      FileOffset:      167
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/udt'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CTimer'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/udt/src/udt/common.h'
+      FileOffset:      3019
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/udt'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CPacket'' defines a destructor, a copy assignment operator and a move assignment operator but does not define a copy constructor or a move constructor'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/udt/src/udt/packet.h'
+      FileOffset:      3924
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/udt'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''UnitQueueImpl'' defines a non-default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/udt/src/udt/unit_queue.cpp'
+      FileOffset:      116
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/udt'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Unit'' defines a non-default destructor and a move constructor but does not define a copy constructor, a copy assignment operator or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/udt/src/udt/unit_queue.h'
+      FileOffset:      126
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/udt'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''UnitQueue'' defines a default destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/udt/src/udt/unit_queue.h'
+      FileOffset:      904
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/udt'
+...

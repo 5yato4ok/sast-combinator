@@ -1,0 +1,120 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/nx_sdk/unit_tests/src/ptr_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  bugprone-forwarding-reference-overload
+    DiagnosticMessage:
+      Message:         constructor accepting a forwarding reference can hide the copy and move constructors
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/test.h'
+      FileOffset:      7639
+      Replacements:    []
+    Notes:
+      - Message:         copy constructor declared here
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/test.h'
+        FileOffset:      6824
+        Replacements:    []
+      - Message:         move constructor declared here
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/test.h'
+        FileOffset:      6824
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  readability-container-data-pointer
+    DiagnosticMessage:
+      Message:         '''data'' should be used for accessing the data pointer instead of taking the address of the 0-th element'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/utils.h'
+      FileOffset:      2668
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/utils.h'
+          Offset:          2668
+          Length:          10
+          ReplacementText: 'result.data()'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''IRefCountableRegistry'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/helpers/i_ref_countable_registry.h'
+      FileOffset:      1021
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ILibContext'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/helpers/lib_context.h'
+      FileOffset:      512
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''IRefCountable'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/i_ref_countable.h'
+      FileOffset:      2665
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1497
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1652
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1773
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1944
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Base'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/unit_tests/src/ptr_ut.cpp'
+      FileOffset:      725
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Data'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/unit_tests/src/ptr_ut.cpp'
+      FileOffset:      1073
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+  - DiagnosticName:  clang-diagnostic-self-assign-overloaded
+    DiagnosticMessage:
+      Message:         'explicitly assigning value of variable of type ''Ptr<Data>'' to itself'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/unit_tests/src/ptr_ut.cpp'
+      FileOffset:      5887
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/unit_tests/src/ptr_ut.cpp'
+          FileOffset:      5879
+          Length:          7
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/unit_tests/src/ptr_ut.cpp'
+          FileOffset:      5889
+          Length:          7
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk/unit_tests'
+...

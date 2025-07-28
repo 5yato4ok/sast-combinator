@@ -1,0 +1,28 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/mobile_client/src/nx/vms/client/mobile/ui/detail/moc_measurements.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Measurements'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/mobile_client/src/nx/vms/client/mobile/ui/detail/../../../../../../../../../../../vms/client/mobile_client/src/nx/vms/client/mobile/ui/detail/measurements.h'
+      FileOffset:      302
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/mobile_client'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''int'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/mobile_client/src/nx/vms/client/mobile/ui/detail/moc_measurements.cpp'
+      FileOffset:      3681
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/mobile_client/src/nx/vms/client/mobile/ui/detail/moc_measurements.cpp'
+          Offset:          3681
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/client/mobile_client/src/nx/vms/client/mobile/ui/detail/moc_measurements.cpp'
+          Offset:          3693
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/mobile_client'
+...

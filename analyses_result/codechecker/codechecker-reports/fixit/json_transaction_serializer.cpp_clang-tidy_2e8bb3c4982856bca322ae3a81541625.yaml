@@ -1,0 +1,325 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/json_transaction_serializer.cpp'
+Diagnostics:
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1177
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1204
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1239
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1274
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1311
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1340
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1369
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1402
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1432
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1459
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1488
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1531
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1563
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1597
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1628
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-move-forwarding-reference
+    DiagnosticMessage:
+      Message:         'forwarding reference passed to std::move(), which may unexpectedly cause lvalues to be moved; use std::forward() instead'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/serialization/json_functions.h'
+      FileOffset:      22096
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/serialization/json_functions.h'
+          Offset:          22096
+          Length:          9
+          ReplacementText: 'std::forward<decltype(arg)>'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SerializationVisitor'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/serialization/json_macros.h'
+      FileOffset:      1304
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''y_combinator_result'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/algorithm.h'
+      FileOffset:      6107
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-forwarding-reference-overload
+    DiagnosticMessage:
+      Message:         constructor accepting a forwarding reference can hide the move constructor
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/algorithm.h'
+      FileOffset:      6293
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-use-after-move
+    DiagnosticMessage:
+      Message:         '''value'' used after it was forwarded'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/json_transaction_serializer.cpp'
+      FileOffset:      199
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT_FUNCTIONS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11818
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11534
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      2455
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS_I'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      5337
+        Replacements:    []
+      - Message:         forward occurred here
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/json_transaction_serializer.cpp'
+        FileOffset:      199
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT_FUNCTIONS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11818
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11534
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      2455
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS_I'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      5032
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-use-after-move
+    DiagnosticMessage:
+      Message:         '''visitor'' used after it was forwarded'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/json_transaction_serializer.cpp'
+      FileOffset:      199
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT_FUNCTIONS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11818
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11534
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      2455
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS_I'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      5337
+        Replacements:    []
+      - Message:         forward occurred here
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/appserver2/src/transaction/json_transaction_serializer.cpp'
+        FileOffset:      199
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT_FUNCTIONS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11818
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_STRUCT'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      11534
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      2455
+        Replacements:    []
+      - Message:         'expanded from macro ''QN_FUSION_ADAPT_CLASS_I'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_adaptor.h'
+        FileOffset:      5032
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+...

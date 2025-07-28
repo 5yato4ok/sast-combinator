@@ -1,0 +1,708 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractPtzController'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/../../../../../../../vms/libs/nx_vms_common/src/core/ptz/abstract_ptz_controller.h'
+      FileOffset:      715
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      14542
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          14542
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          14554
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      14742
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          14742
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          14754
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''Ptz::Capabilities'' (aka ''QFlags<Capability>'') has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      14958
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          14958
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          14970
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''Ptz::Capabilities'' (aka ''QFlags<Capability>'') has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      15118
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15118
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15130
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      15358
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15358
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15370
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      15541
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15541
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15553
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      15786
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15786
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15798
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      15974
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15974
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          15986
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      16220
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          16220
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          16232
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      16409
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          16409
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          16421
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      16773
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          16773
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          16785
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      17080
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17080
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17092
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      17434
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17434
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17446
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      17731
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17731
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17743
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      17975
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17975
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          17987
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      18162
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18162
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18174
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      18406
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18406
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18418
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      18593
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18593
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18605
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      18902
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18902
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          18914
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      19154
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19154
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19166
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      19466
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19466
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19478
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      19721
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19721
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19733
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      19971
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19971
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          19983
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      20164
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20164
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20176
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      20356
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20356
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20368
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      20548
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20548
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20560
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      20736
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20736
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20748
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      20981
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20981
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          20993
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      21176
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21176
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21188
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      21364
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21364
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21376
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      21550
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21550
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21562
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      21738
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21738
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          21750
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      22102
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22102
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22114
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      22298
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22298
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22310
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      22494
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22494
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22506
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      22688
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22688
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22700
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      22956
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22956
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          22968
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      23167
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          23167
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          23179
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      23488
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          23488
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          23500
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      23752
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          23752
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          23764
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      24055
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          24055
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          24067
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+      FileOffset:      24301
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          24301
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common/src/core/ptz/moc_abstract_ptz_controller.cpp'
+          Offset:          24313
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3341
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3407
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3621
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3674
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+...

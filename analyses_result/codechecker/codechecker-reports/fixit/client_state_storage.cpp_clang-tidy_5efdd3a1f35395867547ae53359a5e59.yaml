@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/client_state_storage.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-no-automatic-move
+    DiagnosticMessage:
+      Message:         'constness of ''state'' prevents automatic move'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/state/client_state_storage.cpp'
+      FileOffset:      4480
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

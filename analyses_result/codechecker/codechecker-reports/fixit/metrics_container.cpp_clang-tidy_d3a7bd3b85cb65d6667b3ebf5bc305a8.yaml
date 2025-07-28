@@ -1,0 +1,49 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/metrics_container.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnAbstractMetric'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/abstract_metric.h'
+      FileOffset:      197
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-range-loop-construct
+    DiagnosticMessage:
+      Message:         'loop variable ''metric'' creates a copy from type ''QSharedPointer<QnAbstractMetric> const'''
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/metrics_container.cpp'
+      FileOffset:      736
+      Replacements:    []
+    Notes:
+      - Message:         'use reference type ''QSharedPointer<QnAbstractMetric> const &'' to prevent copying'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/metrics_container.cpp'
+        FileOffset:      725
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/metrics_container.cpp'
+            Offset:          736
+            Length:          0
+            ReplacementText: '&'
+        Ranges:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/metrics_container.cpp'
+            FileOffset:      725
+            Length:          18
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnMetricsContainer'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/metrics_container.h'
+      FileOffset:      211
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnStatisticsValuesProvider'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/statistics/base/statistics_values_provider.h'
+      FileOffset:      208
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

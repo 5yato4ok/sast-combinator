@@ -1,0 +1,62 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/intel_media_sdk/samples/sample_common/src/sysmem_allocator.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MFXFrameAllocator'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/intel_media_sdk/samples/sample_common/include/base_allocator.h'
+      FileOffset:      2271
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BaseFrameAllocator'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/intel_media_sdk/samples/sample_common/include/base_allocator.h'
+      FileOffset:      3884
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SysMemFrameAllocator'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/intel_media_sdk/samples/sample_common/include/sysmem_allocator.h'
+      FileOffset:      2277
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''MFX_FOURCC_RGB3'' is deprecated'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/intel_media_sdk/samples/sample_common/src/sysmem_allocator.cpp'
+      FileOffset:      4598
+      Replacements:    []
+    Notes:
+      - Message:         '''MFX_FOURCC_RGB3'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/libvpl/2023.4.0/_/_/package/3d6c76bdeaa1ceb112780fb2734daaeca81ea6cc/include/vpl/mfxstructures.h'
+        FileOffset:      7841
+        Replacements:    []
+      - Message:         'expanded from macro ''MFX_DEPRECATED_ENUM_FIELD_INSIDE'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/libvpl/2023.4.0/_/_/package/3d6c76bdeaa1ceb112780fb2734daaeca81ea6cc/include/vpl/mfxdefs.h'
+        FileOffset:      3085
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-deprecated-declarations
+    DiagnosticMessage:
+      Message:         '''MFX_FOURCC_RGB3'' is deprecated'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/intel_media_sdk/samples/sample_common/src/sysmem_allocator.cpp'
+      FileOffset:      9067
+      Replacements:    []
+    Notes:
+      - Message:         '''MFX_FOURCC_RGB3'' has been explicitly marked deprecated here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/libvpl/2023.4.0/_/_/package/3d6c76bdeaa1ceb112780fb2734daaeca81ea6cc/include/vpl/mfxstructures.h'
+        FileOffset:      7841
+        Replacements:    []
+      - Message:         'expanded from macro ''MFX_DEPRECATED_ENUM_FIELD_INSIDE'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/libvpl/2023.4.0/_/_/package/3d6c76bdeaa1ceb112780fb2734daaeca81ea6cc/include/vpl/mfxdefs.h'
+        FileOffset:      3085
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+...

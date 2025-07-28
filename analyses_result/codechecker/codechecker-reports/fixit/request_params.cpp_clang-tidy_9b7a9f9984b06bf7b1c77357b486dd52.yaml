@@ -1,0 +1,301 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/appserver2/src/rest/request_params.cpp'
+Diagnostics:
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1177
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1204
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1239
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1274
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1311
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1340
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1369
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1402
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1432
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1459
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1488
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1531
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1563
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1597
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+      FileOffset:      1628
+      Replacements:    []
+    Notes:
+      - Message:         'expanded from macro ''QN_FUSION_DEFINE_KEY'''
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/fusion/fusion_keys.h'
+        FileOffset:      673
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-move-forwarding-reference
+    DiagnosticMessage:
+      Message:         'forwarding reference passed to std::move(), which may unexpectedly cause lvalues to be moved; use std::forward() instead'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/serialization/json_functions.h'
+      FileOffset:      22096
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/serialization/json_functions.h'
+          Offset:          22096
+          Length:          9
+          ReplacementText: 'std::forward<decltype(arg)>'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SerializationVisitor'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_fusion/src/nx/fusion/serialization/json_macros.h'
+      FileOffset:      1304
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''y_combinator_result'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/algorithm.h'
+      FileOffset:      6107
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-forwarding-reference-overload
+    DiagnosticMessage:
+      Message:         constructor accepting a forwarding reference can hide the move constructor
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/algorithm.h'
+      FileOffset:      6293
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''LayoutItemData'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::api'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/resource_fwd.h'
+      FileOffset:      3252
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''LayoutItemData'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/data/layout_data.h'
+        FileOffset:      3511
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'no definition found for ''LayoutItemData'', but a definition with the same name ''LayoutItemData'' found in another namespace ''nx::vms::api'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/resource_fwd.h'
+      FileOffset:      3252
+      Replacements:    []
+    Notes:
+      - Message:         'a definition of ''LayoutItemData'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_api/src/nx/vms/api/data/layout_data.h'
+        FileOffset:      446
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3341
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3407
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3621
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3674
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SystemContext'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/vms/common/system_context.h'
+      FileOffset:      1694
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''SystemContextAware'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/nx/vms/common/system_context_aware.h'
+      FileOffset:      1073
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/appserver2'
+...

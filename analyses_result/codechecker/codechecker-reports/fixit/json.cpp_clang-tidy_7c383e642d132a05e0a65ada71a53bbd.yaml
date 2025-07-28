@@ -1,0 +1,138 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/json.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      4599
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          4599
+          Length:          0
+          ReplacementText: 'std::'
+    Notes:
+      - Message:         'in instantiation of member function ''nx::kit::detail::json11::Value<nx::kit::detail::json11::Json::STRING, std::basic_string<char>>::Value'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+        FileOffset:      6435
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      6441
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          6441
+          Length:          0
+          ReplacementText: 'std::'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      6784
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          6784
+          Length:          0
+          ReplacementText: 'std::'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      7145
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          7145
+          Length:          0
+          ReplacementText: 'std::'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      8569
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          8569
+          Length:          0
+          ReplacementText: 'std::'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      8820
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          8820
+          Length:          0
+          ReplacementText: 'std::'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      8992
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          8992
+          Length:          0
+          ReplacementText: 'std::'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  clang-diagnostic-unqualified-std-cast-call
+    DiagnosticMessage:
+      Message:         'unqualified call to ''std::move'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      13032
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+          Offset:          13032
+          Length:          0
+          ReplacementText: 'std::'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  performance-no-automatic-move
+    DiagnosticMessage:
+      Message:         'constness of ''err_ret'' prevents automatic move'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.cpp'
+      FileOffset:      13222
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''JsonValue'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+      FileOffset:      8513
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''JsonValue'' is protected and virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+      FileOffset:      8513
+      Replacements:    []
+    Notes:
+      - Message:         make it protected and non-virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+        FileOffset:      8513
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+            Offset:          9218
+            Length:          8
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit'
+...

@@ -1,0 +1,169 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MutexHolder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.h'
+      FileOffset:      8699
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      2987
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          2987
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      7885
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          7885
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      8070
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          8070
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      8146
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          8146
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      8190
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          8190
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      8326
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          8326
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      8383
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          8383
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+      FileOffset:      8438
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/cloud/cloud_db_client/src/nx/cloud/db/client/data/access_scope.cpp'
+          Offset:          8438
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BasicBuffer'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/buffer.h'
+      FileOffset:      674
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  cert-dcl58-cpp
+    DiagnosticMessage:
+      Message:         'modification of ''std'' namespace can result in undefined behavior'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/buffer.h'
+      FileOffset:      43200
+      Replacements:    []
+    Notes:
+      - Message:         '''std'' namespace opened here'
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/buffer.h'
+        FileOffset:      43158
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AssertTimer'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/assert.h'
+      FileOffset:      1588
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TimeInfo'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/assert.h'
+      FileOffset:      1634
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''expected'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/expected.h'
+      FileOffset:      1160
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/cloud/cloud_db_client'
+...

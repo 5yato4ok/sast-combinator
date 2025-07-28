@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/settings/global_temporaries.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-pragma-once-outside-header
+    DiagnosticMessage:
+      Message:         '#pragma once in main file'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_core/src/nx/vms/client/core/settings/global_temporaries.cpp'
+      FileOffset:      104
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

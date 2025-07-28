@@ -1,0 +1,76 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/auth_tools.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/auth_tools.cpp'
+      FileOffset:      11821
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/auth_tools.cpp'
+          Offset:          11821
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/auth_tools.cpp'
+          Offset:          11837
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractCredentialsProvider'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/auth_tools.h'
+      FileOffset:      8992
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AbstractComposer'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/basic_serializer.h'
+      FileOffset:      465
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Visitor'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/basic_serializer.h'
+      FileOffset:      8424
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''keyStd'' of the trivially-copyable type ''std::string_view'' (aka ''basic_string_view<char>'') has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/json/deserializer.h'
+      FileOffset:      8291
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/json/deserializer.h'
+          Offset:          8291
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/json/deserializer.h'
+          Offset:          8307
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnCryptographicHash'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/cryptographic_hash.h'
+      FileOffset:      473
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CryptographicDevice'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/random_cryptographic_device.h'
+      FileOffset:      252
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+...

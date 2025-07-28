@@ -1,0 +1,155 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/nx_kit/unit_tests/src/ini.cpp'
+Diagnostics:
+  - DiagnosticName:  google-global-names-in-headers
+    DiagnosticMessage:
+      Message:         using declarations in the global namespace in headers are prohibited
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      238
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'variable ''ini'' defined in a header file; variable definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      276
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  cert-dcl59-cpp
+    DiagnosticMessage:
+      Message:         do not use unnamed namespaces in header files
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      330
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'function ''nx_ini_isEnabled'' defined in a header file; function definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      1318
+      Replacements:    []
+    Notes:
+      - Message:         'mark the definition as ''inline'''
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+        FileOffset:      1318
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+            Offset:          1313
+            Length:          0
+            ReplacementText: 'inline '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'function ''nx_ini_setOutput'' defined in a header file; function definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      1382
+      Replacements:    []
+    Notes:
+      - Message:         'mark the definition as ''inline'''
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+        FileOffset:      1382
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+            Offset:          1377
+            Length:          0
+            ReplacementText: 'inline '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'function ''nx_ini_reload'' defined in a header file; function definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      1826
+      Replacements:    []
+    Notes:
+      - Message:         'mark the definition as ''inline'''
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+        FileOffset:      1826
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+            Offset:          1821
+            Length:          0
+            ReplacementText: 'inline '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'function ''nx_ini_iniFile'' defined in a header file; function definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      1880
+      Replacements:    []
+    Notes:
+      - Message:         'mark the definition as ''inline'''
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+        FileOffset:      1880
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+            Offset:          1868
+            Length:          0
+            ReplacementText: 'inline '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'function ''nx_ini_setIniFilesDir'' defined in a header file; function definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      1936
+      Replacements:    []
+    Notes:
+      - Message:         'mark the definition as ''inline'''
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+        FileOffset:      1936
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+            Offset:          1931
+            Length:          0
+            ReplacementText: 'inline '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'function ''nx_ini_iniFilesDir'' defined in a header file; function definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      2032
+      Replacements:    []
+    Notes:
+      - Message:         'mark the definition as ''inline'''
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+        FileOffset:      2032
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+            Offset:          2020
+            Length:          0
+            ReplacementText: 'inline '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  misc-definitions-in-headers
+    DiagnosticMessage:
+      Message:         'function ''nx_ini_iniFilePath'' defined in a header file; function definitions in header files can lead to ODR violations'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+      FileOffset:      2107
+      Replacements:    []
+    Notes:
+      - Message:         'mark the definition as ''inline'''
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+        FileOffset:      2107
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/ini_config_c_impl.h'
+            Offset:          2095
+            Length:          0
+            ReplacementText: 'inline '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MutexHolder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.h'
+      FileOffset:      8699
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+...

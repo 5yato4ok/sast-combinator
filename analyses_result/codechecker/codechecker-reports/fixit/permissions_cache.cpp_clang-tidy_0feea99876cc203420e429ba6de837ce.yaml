@@ -1,0 +1,94 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''size_type'' (aka ''unsigned long'') and ''const int'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+      FileOffset:      1431
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      1413
+          Length:          17
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      1434
+          Length:          5
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''size_type'' (aka ''unsigned long'') and ''int'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+      FileOffset:      2176
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      2158
+          Length:          17
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      2179
+          Length:          5
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''int'' and ''const unsigned long'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+      FileOffset:      2744
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      2742
+          Length:          1
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      2746
+          Length:          52
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''size_type'' (aka ''unsigned long'') and ''int const'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+      FileOffset:      3896
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      3878
+          Length:          17
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      3898
+          Length:          5
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''int const'' and ''size_type'' (aka ''unsigned long'')'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+      FileOffset:      4001
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      3995
+          Length:          5
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      4003
+          Length:          27
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''size_type'' (aka ''unsigned long'') and ''int const'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+      FileOffset:      4689
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      4671
+          Length:          17
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource_access/permissions_cache.cpp'
+          FileOffset:      4692
+          Length:          5
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_common'
+...

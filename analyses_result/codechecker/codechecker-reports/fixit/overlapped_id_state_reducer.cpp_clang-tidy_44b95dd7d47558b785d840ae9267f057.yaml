@@ -1,0 +1,91 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-redundant-move
+    DiagnosticMessage:
+      Message:         redundant move in return statement
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+      FileOffset:      341
+      Replacements:    []
+    Notes:
+      - Message:         'remove std::move call here'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+        FileOffset:      341
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+            Offset:          341
+            Length:          10
+            ReplacementText: ''
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+            Offset:          356
+            Length:          1
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-redundant-move
+    DiagnosticMessage:
+      Message:         redundant move in return statement
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+      FileOffset:      467
+      Replacements:    []
+    Notes:
+      - Message:         'remove std::move call here'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+        FileOffset:      467
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+            Offset:          467
+            Length:          10
+            ReplacementText: ''
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+            Offset:          482
+            Length:          1
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-redundant-move
+    DiagnosticMessage:
+      Message:         redundant move in return statement
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+      FileOffset:      615
+      Replacements:    []
+    Notes:
+      - Message:         'remove std::move call here'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+        FileOffset:      615
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+            Offset:          615
+            Length:          10
+            ReplacementText: ''
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/integrations/nvr/overlapped_id_state_reducer.cpp'
+            Offset:          630
+            Length:          1
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3341
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3407
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+      FileOffset:      3621
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_common/src/core/resource/shared_resource_pointer.h'
+          Offset:          3674
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

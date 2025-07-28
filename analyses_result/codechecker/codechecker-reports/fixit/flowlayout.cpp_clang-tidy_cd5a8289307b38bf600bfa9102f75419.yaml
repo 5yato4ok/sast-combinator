@@ -1,0 +1,25 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/flowlayout/src/flowlayout/flowlayout.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''FlowLayout'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/flowlayout/src/flowlayout/flowlayout.h'
+      FileOffset:      2084
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  clang-diagnostic-overloaded-virtual
+    DiagnosticMessage:
+      Message:         '''nx::vms::client::desktop::workbench::timeline::FlowLayout::setSpacing'' hides overloaded virtual function'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/flowlayout/src/flowlayout/flowlayout.h'
+      FileOffset:      2386
+      Replacements:    []
+    Notes:
+      - Message:         'hidden overloaded virtual function ''QLayout::setSpacing'' declared here: different number of parameters (1 vs 2)'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/qt/6.9.1/_/_/package/4c0d1d9bdb73e0b0172780e7dcf12370fceaa99d/include/QtWidgets/qlayout.h'
+        FileOffset:      1197
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

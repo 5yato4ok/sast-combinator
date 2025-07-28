@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/quazip/quazip/zip.c'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-deprecated-non-prototype
+    DiagnosticMessage:
+      Message:         a function definition without a prototype is deprecated in all versions of C and is not supported in C23
+      FilePath:        '/home/misha/nika/nx_open/artifacts/quazip/quazip/crypt.h'
+      FileOffset:      3263
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/quazip'
+...

@@ -1,0 +1,66 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/text_tokenizer.cpp'
+Diagnostics:
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''EventParameterHelper'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+      FileOffset:      398
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''EventParameterHelper'' is private and prevents using the type'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+      FileOffset:      398
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+        FileOffset:      398
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+            Offset:          2283
+            Length:          31
+            ReplacementText: "public:\nvirtual ~EventParameterHelper()private:"
+      - Message:         make it protected
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+        FileOffset:      398
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+            Offset:          2283
+            Length:          31
+            ReplacementText: "protected:\n~EventParameterHelper()private:"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+  - DiagnosticName:  bugprone-forward-declaration-namespace
+    DiagnosticMessage:
+      Message:         'declaration ''SystemContext'' is never referenced, but a declaration with the same name found in another namespace ''nx::vms::common'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/text_tokenizer.h'
+      FileOffset:      257
+      Replacements:    []
+    Notes:
+      - Message:         'a declaration of ''SystemContext'' is found here'
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_vms_rules/src/nx/vms/rules/utils/event_parameter_helper.h'
+        FileOffset:      322
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_vms_rules'
+...

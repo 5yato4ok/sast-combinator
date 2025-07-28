@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/mobile_client/src/watchers/moc_cloud_system_information_watcher.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnCloudSystemInformationWatcher'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/mobile_client/src/watchers/../../../../../../vms/client/mobile_client/src/watchers/cloud_system_information_watcher.h'
+      FileOffset:      190
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/mobile_client'
+...

@@ -1,0 +1,60 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QtHttpServerWrapper'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/../../../../../../../artifacts/qthttpserver/QtHttpServer.h'
+      FileOffset:      350
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qthttpserver'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+      FileOffset:      9496
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+          Offset:          9496
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+          Offset:          9508
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qthttpserver'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+      FileOffset:      9676
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+          Offset:          9676
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+          Offset:          9688
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qthttpserver'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+      FileOffset:      9800
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+          Offset:          9800
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qthttpserver/__/__/artifacts/qthttpserver/moc_QtHttpServer.cpp'
+          Offset:          9812
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qthttpserver'
+...

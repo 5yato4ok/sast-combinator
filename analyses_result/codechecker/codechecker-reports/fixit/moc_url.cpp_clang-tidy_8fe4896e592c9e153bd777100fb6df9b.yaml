@@ -1,0 +1,204 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Url'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/../../../../../../libs/nx_utils/src/nx/utils/url.h'
+      FileOffset:      343
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      11934
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          11934
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          11946
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      12196
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          12196
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          12208
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''int'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      14241
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          14241
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          14253
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''int'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      14363
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          14363
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          14375
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      15542
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          15542
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          15554
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      16073
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          16073
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          16085
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      16894
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          16894
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          16906
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      17373
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          17373
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          17385
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      17556
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          17556
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          17568
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      17687
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          17687
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          17699
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+      FileOffset:      18397
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          18397
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_utils/src/nx/utils/moc_url.cpp'
+          Offset:          18409
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      616
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should return ''ItemValue&'''
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_reflect/src/nx/reflect/enum_instrument.h'
+      FileOffset:      679
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+...

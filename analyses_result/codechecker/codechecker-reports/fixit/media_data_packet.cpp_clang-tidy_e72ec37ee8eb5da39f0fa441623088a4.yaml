@@ -1,0 +1,343 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/media_data_packet.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''JsonValue'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+      FileOffset:      8513
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''JsonValue'' is protected and virtual'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+      FileOffset:      8513
+      Replacements:    []
+    Notes:
+      - Message:         make it protected and non-virtual
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+        FileOffset:      8513
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/../../json11/json11.hpp'
+            Offset:          9218
+            Length:          8
+            ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CameraInfo'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      3411
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CameraInfo2'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      5255
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CameraDiscoveryManager'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      7147
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CameraMediaEncoder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      14241
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CameraMediaEncoder2'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      18392
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BaseCameraManager'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      23418
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Picture'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      30819
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''BaseCameraManager2'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      36043
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CameraPtzManager'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      42538
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''Encryptable'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      54213
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+        FileOffset:      54213
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+            Offset:          54242
+            Length:          0
+            ReplacementText: "\nvirtual ~Encryptable() = default;"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CameraInputEventHandler'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/camera/camera_plugin.h'
+      FileOffset:      72921
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''from'' of the trivially-copyable type ''std::optional<RangePoint>'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/data.h'
+      FileOffset:      19219
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/data.h'
+          Offset:          19219
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/data.h'
+          Offset:          19233
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''to'' of the trivially-copyable type ''std::optional<RangePoint>'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/data.h'
+      FileOffset:      19240
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/data.h'
+          Offset:          19240
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/data.h'
+          Offset:          19252
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MediaDataPacket'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/helpers/media_data_packet.h'
+      FileOffset:      308
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''IDataList'' is public and non-virtual'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/i_data_list.h'
+      FileOffset:      183
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/i_data_list.h'
+        FileOffset:      183
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/cloud_storage/i_data_list.h'
+            Offset:          202
+            Length:          0
+            ReplacementText: "\nvirtual ~IDataList() = default;"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''IRefCountableRegistry'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/helpers/i_ref_countable_registry.h'
+      FileOffset:      1021
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ILibContext'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/helpers/lib_context.h'
+      FileOffset:      512
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''IRefCountable'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/i_ref_countable.h'
+      FileOffset:      2665
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1497
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1652
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1773
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  misc-unconventional-assign-operator
+    DiagnosticMessage:
+      Message:         'operator=() should always return ''*this'''
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/ptr.h'
+      FileOffset:      1944
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Error'' defines a copy constructor, a copy assignment operator and a move constructor but does not define a destructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+      FileOffset:      789
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''error'' of the trivially-copyable type ''Error'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+      FileOffset:      1597
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          1597
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          1612
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''error'' of the trivially-copyable type ''Error'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+      FileOffset:      1680
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          1680
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          1695
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''error'' of the trivially-copyable type ''Error'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+      FileOffset:      2232
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          2232
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          2247
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''error'' of the trivially-copyable type ''Error'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+      FileOffset:      2315
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          2315
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/nx/sdk/result.h'
+          Offset:          2330
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''PluginInterface'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/plugins/plugin_api.h'
+      FileOffset:      1836
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  clang-diagnostic-deprecated-volatile
+    DiagnosticMessage:
+      Message:         'volatile-qualified return type ''AtomicLong'' (aka ''volatile long'') is deprecated'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/plugins/plugin_tools.h'
+      FileOffset:      841
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  clang-diagnostic-deprecated-volatile
+    DiagnosticMessage:
+      Message:         'volatile-qualified return type ''AtomicLong'' (aka ''volatile long'') is deprecated'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/plugins/plugin_tools.h'
+      FileOffset:      1081
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''CommonRefManager'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/libs/nx_sdk/src/plugins/plugin_tools.h'
+      FileOffset:      1579
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_sdk'
+...

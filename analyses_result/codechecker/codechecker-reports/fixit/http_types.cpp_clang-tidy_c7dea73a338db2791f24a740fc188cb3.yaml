@@ -1,0 +1,171 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''methods'' of the trivially-copyable type ''std::string_view'' (aka ''basic_string_view<char>'') has no effect'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      3482
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  readability-suspicious-call-argument
+    DiagnosticMessage:
+      Message:         '2nd argument ''get'' (passed to ''match'') looks like it might be swapped with the 8th, ''patch'' (passed to ''tail'')'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      6797
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          FileOffset:      6829
+          Length:          3
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          FileOffset:      6938
+          Length:          5
+    Notes:
+      - Message:         'in the call to ''switch_<std::basic_string_view<char>, std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:258:14), std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:259:15), std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:260:14), std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:261:16), std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:262:18), std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:263:18), std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:264:15), std::basic_string_view<char>, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:265:18), nx::utils::Default, (lambda at /home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp:266:30)>'', declared here'
+        FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/switch.h'
+        FileOffset:      1595
+        Replacements:    []
+        Ranges:
+          - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/switch.h'
+            FileOffset:      1636
+            Length:          5
+          - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/switch.h'
+            FileOffset:      1677
+            Length:          4
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      21676
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          21700
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      22165
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          22192
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      26183
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          26183
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          26198
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      27730
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          27766
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      28570
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          28603
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      31888
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          31936
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''rangeSpec'' of the trivially-copyable type ''RangeSpec'' has no effect'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      36566
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_timeout'' of the trivially-copyable type ''std::chrono::seconds'' (aka ''duration<long>'') has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      42870
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          42870
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          42888
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_max'' of the trivially-copyable type ''std::optional<int>'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+      FileOffset:      42900
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          42900
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_network/src/nx/network/http/http_types.cpp'
+          Offset:          42914
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''y_combinator_result'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/algorithm.h'
+      FileOffset:      6107
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+  - DiagnosticName:  bugprone-forwarding-reference-overload
+    DiagnosticMessage:
+      Message:         constructor accepting a forwarding reference can hide the move constructor
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/std/algorithm.h'
+      FileOffset:      6293
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_network'
+...

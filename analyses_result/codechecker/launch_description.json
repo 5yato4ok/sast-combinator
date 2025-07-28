@@ -1,0 +1,9 @@
+{
+    "cmd": "codechecker analyze ./compile_commands.json --output ./codechecker-reports && sudo snap install codechecker --classic",
+    "environment": "Ubuntu 24.04",
+    "commentary": "It's better to launch on Ubuntu, since then will be used clang-tidy directly from distributed clang for build, and it will work. Note: This analysator works really long time.",
+    "installation":
+    {
+        "ubuntu": "sudo snap install codechecker --classic"
+    }
+}

@@ -1,0 +1,36 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication/__/__/artifacts/qt-solutions/qtsingleapplication/src/moc_qtsinglecoreapplication.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication/__/__/artifacts/qt-solutions/qtsingleapplication/src/moc_qtsinglecoreapplication.cpp'
+      FileOffset:      3477
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication/__/__/artifacts/qt-solutions/qtsingleapplication/src/moc_qtsinglecoreapplication.cpp'
+          Offset:          3477
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication/__/__/artifacts/qt-solutions/qtsingleapplication/src/moc_qtsinglecoreapplication.cpp'
+          Offset:          3489
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication/__/__/artifacts/qt-solutions/qtsingleapplication/src/moc_qtsinglecoreapplication.cpp'
+      FileOffset:      3663
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication/__/__/artifacts/qt-solutions/qtsingleapplication/src/moc_qtsinglecoreapplication.cpp'
+          Offset:          3663
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication/__/__/artifacts/qt-solutions/qtsingleapplication/src/moc_qtsinglecoreapplication.cpp'
+          Offset:          3675
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtsinglecoreapplication'
+...

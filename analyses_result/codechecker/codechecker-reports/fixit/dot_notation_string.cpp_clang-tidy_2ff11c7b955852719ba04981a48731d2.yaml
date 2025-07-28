@@ -1,0 +1,52 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the const variable ''str'' has no effect; remove std::move() or make the variable non-const'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+      FileOffset:      528
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+          Offset:          528
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+          Offset:          541
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'passing result of std::move() as a const reference argument; no move will actually happen'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+      FileOffset:      639
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+          Offset:          639
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+          Offset:          656
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the const expression has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+      FileOffset:      907
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+          Offset:          907
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/dot_notation_string.cpp'
+          Offset:          929
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils'
+...

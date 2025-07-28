@@ -1,0 +1,37 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/moc_thread_pool.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ThreadPool'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/thread_pool.h'
+      FileOffset:      621
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+  - DiagnosticName:  cppcoreguidelines-virtual-class-destructor
+    DiagnosticMessage:
+      Message:         'destructor of ''ThreadPool'' is private and prevents using the type'
+      FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/thread_pool.h'
+      FileOffset:      621
+      Replacements:    []
+    Notes:
+      - Message:         make it public and virtual
+        FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/thread_pool.h'
+        FileOffset:      621
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/thread_pool.h'
+            Offset:          742
+            Length:          23
+            ReplacementText: "public:\nvirtual ~ThreadPool() noexcept overrideprivate:"
+      - Message:         make it protected
+        FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/thread_pool.h'
+        FileOffset:      621
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/../../../../../../../../../../../vms/client/nx_vms_client_core/src/nx/vms/client/core/common/utils/thread_pool.h'
+            Offset:          742
+            Length:          23
+            ReplacementText: "protected:\n~ThreadPool() noexcept overrideprivate:"
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_core'
+...

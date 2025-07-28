@@ -1,0 +1,170 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''dpy'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      1759
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''name'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      4083
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''ctx'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      6298
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-sign-compare
+    DiagnosticMessage:
+      Message:         'comparison of integers of different signs: ''int'' and ''unsigned int'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      11506
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+          FileOffset:      11494
+          Length:          11
+        - FilePath:        ''
+          FileOffset:      0
+          Length:          0
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  misc-misplaced-const
+    DiagnosticMessage:
+      Message:         '''pOpenGLVTable'' declared with a const-qualified typedef; results in the type being ''VAOpenGLVTable *const'' instead of ''const VAOpenGLVTable *'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      14637
+      Replacements:    []
+    Notes:
+      - Message:         typedef declared here
+        FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_private.h'
+        FileOffset:      1927
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-variable
+    DiagnosticMessage:
+      Message:         'unused variable ''wattr'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      15007
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+          FileOffset:      15007
+          Length:          5
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  misc-misplaced-const
+    DiagnosticMessage:
+      Message:         '''pOpenGLVTable'' declared with a const-qualified typedef; results in the type being ''VAOpenGLVTable *const'' instead of ''const VAOpenGLVTable *'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      17814
+      Replacements:    []
+    Notes:
+      - Message:         typedef declared here
+        FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_private.h'
+        FileOffset:      1927
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''ctx'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      19684
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-function
+    DiagnosticMessage:
+      Message:         'unused function ''vaCreateSurfaceGLX_impl_driver'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      25246
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+          FileOffset:      25246
+          Length:          30
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''ctx'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      25302
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''target'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      25331
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''texture'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      25363
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-parameter
+    DiagnosticMessage:
+      Message:         'unused parameter ''gl_surface'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      25396
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-function
+    DiagnosticMessage:
+      Message:         'unused function ''vaDestroySurfaceGLX_impl_driver'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      25530
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+          FileOffset:      25530
+          Length:          31
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-unused-function
+    DiagnosticMessage:
+      Message:         'unused function ''vaCopySurfaceGLX_impl_driver'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      25705
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+          FileOffset:      25705
+          Length:          28
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+  - DiagnosticName:  clang-diagnostic-misleading-indentation
+    DiagnosticMessage:
+      Message:         'misleading indentation; statement is not part of the previous ''if'''
+      FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+      FileOffset:      34412
+      Replacements:    []
+    Notes:
+      - Message:         previous statement is here
+        FilePath:        '/home/misha/nika/nx_open/artifacts/libva/va/glx/va_glx_impl.cpp'
+        FileOffset:      33993
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/libs/nx_media'
+...

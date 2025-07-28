@@ -1,0 +1,20 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/build/libs/nx_branding/src/nx/moc_branding_proxy.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-move-const-arg
+    DiagnosticMessage:
+      Message:         'std::move of the variable ''_r'' of the trivially-copyable type ''bool'' has no effect; remove std::move()'
+      FilePath:        '/home/misha/nika/nx_open/build/libs/nx_branding/src/nx/moc_branding_proxy.cpp'
+      FileOffset:      4783
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_branding/src/nx/moc_branding_proxy.cpp'
+          Offset:          4783
+          Length:          10
+          ReplacementText: ''
+        - FilePath:        '/home/misha/nika/nx_open/build/libs/nx_branding/src/nx/moc_branding_proxy.cpp'
+          Offset:          4795
+          Length:          1
+          ReplacementText: ''
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_branding'
+...

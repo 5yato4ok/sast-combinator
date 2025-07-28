@@ -1,0 +1,12 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/graphics/items/controls/time_step.cpp'
+Diagnostics:
+  - DiagnosticName:  performance-no-automatic-move
+    DiagnosticMessage:
+      Message:         'constness of ''result'' prevents automatic move'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/graphics/items/controls/time_step.cpp'
+      FileOffset:      1149
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

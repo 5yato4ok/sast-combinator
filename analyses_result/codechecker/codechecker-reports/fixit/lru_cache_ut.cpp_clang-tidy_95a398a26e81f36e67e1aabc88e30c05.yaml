@@ -1,0 +1,40 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/data_structures/lru_cache_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/data_structures/lru_cache.h'
+      FileOffset:      4269
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/data_structures/lru_cache.h'
+          Offset:          4269
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/data_structures/lru_cache.h'
+      FileOffset:      4349
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/data_structures/lru_cache.h'
+          Offset:          4349
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+  - DiagnosticName:  readability-container-contains
+    DiagnosticMessage:
+      Message:         'use ''contains'' to check for membership'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/data_structures/lru_cache_ut.cpp'
+      FileOffset:      866
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/unit_tests/src/data_structures/lru_cache_ut.cpp'
+          Offset:          866
+          Length:          5
+          ReplacementText: contains
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_utils/unit_tests'
+...

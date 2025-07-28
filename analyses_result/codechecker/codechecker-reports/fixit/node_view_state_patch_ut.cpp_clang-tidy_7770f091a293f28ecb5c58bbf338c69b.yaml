@@ -1,0 +1,198 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/node_view/node_view_state_patch_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MutexHolder'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/ini_config.h'
+      FileOffset:      8699
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''AssertTimer'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/assert.h'
+      FileOffset:      1588
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''TimeInfo'' defines a copy constructor and a copy assignment operator but does not define a destructor, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/log/assert.h'
+      FileOffset:      1634
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MoveOnlyFunc'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/move_only_func.h'
+      FileOffset:      351
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''MoveOnlyFuncWrapper'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/move_only_func.h'
+      FileOffset:      472
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/move_only_func.h'
+      FileOffset:      1195
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/move_only_func.h'
+          Offset:          1232
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+      FileOffset:      603
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+          Offset:          631
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+      FileOffset:      776
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/scope_guard.h'
+          Offset:          804
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Uuid'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/uuid.h'
+      FileOffset:      427
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ViewNode'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/details/node/view_node.h'
+      FileOffset:      306
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ViewNodeData'' defines a destructor, a copy constructor and a copy assignment operator but does not define a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/details/node/view_node_data.h'
+      FileOffset:      581
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ViewNodeDataBuilder'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/details/node/view_node_data_builder.h'
+      FileOffset:      336
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ViewNodePath'' defines a copy constructor but does not define a destructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/details/node/view_node_path.h'
+      FileOffset:      376
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  clang-diagnostic-deprecated-copy-with-user-provided-copy
+    DiagnosticMessage:
+      Message:         'definition of implicit copy assignment operator for ''ViewNodePath'' is deprecated because it has a user-provided copy constructor'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/details/node/view_node_path.h'
+      FileOffset:      436
+      Replacements:    []
+    Notes:
+      - Message:         'in implicit copy assignment operator for ''nx::vms::client::desktop::node_view::details::ViewNodePath'' first required here'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/details/node_view_state_patch.h'
+        FileOffset:      553
+        Replacements:    []
+      - Message:         'in implicit move assignment operator for ''nx::vms::client::desktop::node_view::details::PatchStep'' first required here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_algobase.h'
+        FileOffset:      13220
+        Replacements:    []
+      - Message:         'in instantiation of function template specialization ''std::__copy_move<true, false, std::random_access_iterator_tag>::__copy_m<nx::vms::client::desktop::node_view::details::PatchStep *, nx::vms::client::desktop::node_view::details::PatchStep *>'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_algobase.h'
+        FileOffset:      16098
+        Replacements:    []
+      - Message:         'in instantiation of function template specialization ''std::__copy_move_a2<true, nx::vms::client::desktop::node_view::details::PatchStep *, nx::vms::client::desktop::node_view::details::PatchStep *>'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_algobase.h'
+        FileOffset:      17297
+        Replacements:    []
+      - Message:         'in instantiation of function template specialization ''std::__copy_move_a1<true, nx::vms::client::desktop::node_view::details::PatchStep *, nx::vms::client::desktop::node_view::details::PatchStep *>'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_algobase.h'
+        FileOffset:      17556
+        Replacements:    []
+      - Message:         'in instantiation of function template specialization ''std::__copy_move_a<true, __gnu_cxx::__normal_iterator<nx::vms::client::desktop::node_view::details::PatchStep *, std::vector<nx::vms::client::desktop::node_view::details::PatchStep>>, __gnu_cxx::__normal_iterator<nx::vms::client::desktop::node_view::details::PatchStep *, std::vector<nx::vms::client::desktop::node_view::details::PatchStep>>>'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_algobase.h'
+        FileOffset:      22074
+        Replacements:    []
+      - Message:         'in instantiation of function template specialization ''std::move<__gnu_cxx::__normal_iterator<nx::vms::client::desktop::node_view::details::PatchStep *, std::vector<nx::vms::client::desktop::node_view::details::PatchStep>>, __gnu_cxx::__normal_iterator<nx::vms::client::desktop::node_view::details::PatchStep *, std::vector<nx::vms::client::desktop::node_view::details::PatchStep>>>'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/vector.tcc'
+        FileOffset:      6012
+        Replacements:    []
+      - Message:         'expanded from macro ''_GLIBCXX_MOVE3'''
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_algobase.h'
+        FileOffset:      22220
+        Replacements:    []
+      - Message:         'in instantiation of member function ''std::vector<nx::vms::client::desktop::node_view::details::PatchStep>::_M_erase'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/build/.conan/data/gcc-toolchain/13.3/_/_/package/5f672a39ea96f91a8badf2fd1665d812f1b79335/lib/gcc/x86_64-linux-gnu/13.3.0/../../../../x86_64-linux-gnu/include/c++/13.3.0/bits/stl_vector.h'
+        FileOffset:      51283
+        Replacements:    []
+      - Message:         'in instantiation of member function ''std::vector<nx::vms::client::desktop::node_view::details::PatchStep>::erase'' requested here'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/node_view/node_view_state_patch_ut.cpp'
+        FileOffset:      1972
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''NodeViewState'' defines a copy constructor, a copy assignment operator, a move constructor and a move assignment operator but does not define a destructor'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/node_view/details/node_view_state.h'
+      FileOffset:      230
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+  - DiagnosticName:  clang-diagnostic-range-loop-construct
+    DiagnosticMessage:
+      Message:         'loop variable ''child'' creates a copy from type ''QSharedPointer<nx::vms::client::desktop::node_view::details::ViewNode> const'''
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/node_view/node_view_state_patch_ut.cpp'
+      FileOffset:      2161
+      Replacements:    []
+    Notes:
+      - Message:         'use reference type ''QSharedPointer<nx::vms::client::desktop::node_view::details::ViewNode> const &'' to prevent copying'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/node_view/node_view_state_patch_ut.cpp'
+        FileOffset:      2150
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/node_view/node_view_state_patch_ut.cpp'
+            Offset:          2161
+            Length:          0
+            ReplacementText: '&'
+        Ranges:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/node_view/node_view_state_patch_ut.cpp'
+            FileOffset:      2150
+            Length:          17
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+...

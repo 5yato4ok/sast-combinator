@@ -1,0 +1,68 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain_unix.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''Job'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain.h'
+      FileOffset:      1622
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''ReadPasswordJob'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain.h'
+      FileOffset:      5191
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''WritePasswordJob'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain.h'
+      FileOffset:      6374
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''DeletePasswordJob'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain.h'
+      FileOffset:      7644
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  clang-diagnostic-cast-function-type-mismatch
+    DiagnosticMessage:
+      Message:         'cast from ''void (*)(int, const char *, JobPrivate *)'' to ''GnomeKeyring::OperationGetStringCallback'' (aka ''void (*)(GnomeKeyring::Result, bool, const char *, void *)'') converts to incompatible function type'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain_unix.cpp'
+      FileOffset:      6966
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain_unix.cpp'
+          FileOffset:      6966
+          Length:          94
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  clang-diagnostic-cast-function-type-mismatch
+    DiagnosticMessage:
+      Message:         'cast from ''void (*)(int, const char *, JobPrivate *)'' to ''GnomeKeyring::OperationGetStringCallback'' (aka ''void (*)(GnomeKeyring::Result, bool, const char *, void *)'') converts to incompatible function type'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain_unix.cpp'
+      FileOffset:      10011
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/qtkeychain/keychain_unix.cpp'
+          FileOffset:      10011
+          Length:          94
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''OrgKdeKWalletInterface'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/build/dependencies/qtkeychain/kwallet_interface.h'
+      FileOffset:      599
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/dependencies/qtkeychain'
+...

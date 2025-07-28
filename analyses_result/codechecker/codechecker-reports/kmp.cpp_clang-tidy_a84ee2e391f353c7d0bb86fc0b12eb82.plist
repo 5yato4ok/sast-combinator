@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>diagnostics</key>
+	<array>
+		<dict>
+			<key>category</key>
+			<string>performance</string>
+			<key>check_name</key>
+			<string>performance-move-const-arg</string>
+			<key>description</key>
+			<string>passing result of std::move() as a const reference argument; no move will actually happen</string>
+			<key>issue_hash_content_of_line_in_context</key>
+			<string>8a3fda273fbe02d8c50be3121cd29bdc</string>
+			<key>location</key>
+			<dict>
+				<key>col</key>
+				<integer>24</integer>
+				<key>file</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>114</integer>
+			</dict>
+			<key>path</key>
+			<array>
+				<dict>
+					<key>depth</key>
+					<integer>0</integer>
+					<key>kind</key>
+					<string>event</string>
+					<key>location</key>
+					<dict>
+						<key>col</key>
+						<integer>24</integer>
+						<key>file</key>
+						<integer>0</integer>
+						<key>line</key>
+						<integer>114</integer>
+					</dict>
+					<key>message</key>
+					<string>passing result of std::move() as a const reference argument; no move will actually happen</string>
+				</dict>
+			</array>
+		</dict>
+	</array>
+	<key>files</key>
+	<array>
+		<string>/home/misha/nika/nx_open/libs/nx_utils/src/nx/utils/algorithm/kmp.cpp</string>
+	</array>
+	<key>metadata</key>
+	<dict>
+		<key>analyzer</key>
+		<dict>
+			<key>name</key>
+			<string>clang-tidy</string>
+		</dict>
+		<key>generated_by</key>
+		<dict>
+			<key>name</key>
+			<string>CodeChecker</string>
+			<key>version</key>
+			<string>6.21.0</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

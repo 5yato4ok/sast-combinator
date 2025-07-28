@@ -1,0 +1,24 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/dialogs/abstract_preferences_dialog.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-switch
+    DiagnosticMessage:
+      Message:         '8 enumeration values not handled in switch: ''InvalidRole'', ''DestructiveRole'', ''ActionRole''...'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/dialogs/abstract_preferences_dialog.cpp'
+      FileOffset:      4833
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/common/dialogs/abstract_preferences_dialog.cpp'
+          FileOffset:      4833
+          Length:          31
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnButtonBoxDialog'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/dialogs/common/button_box_dialog.h'
+      FileOffset:      393
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

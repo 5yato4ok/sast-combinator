@@ -1,0 +1,33 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/test.cpp'
+Diagnostics:
+  - DiagnosticName:  bugprone-forwarding-reference-overload
+    DiagnosticMessage:
+      Message:         constructor accepting a forwarding reference can hide the copy and move constructors
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/test.h'
+      FileOffset:      7639
+      Replacements:    []
+    Notes:
+      - Message:         copy constructor declared here
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/test.h'
+        FileOffset:      6824
+        Replacements:    []
+      - Message:         move constructor declared here
+        FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/test.h'
+        FileOffset:      6824
+        Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+  - DiagnosticName:  readability-container-data-pointer
+    DiagnosticMessage:
+      Message:         '''data'' should be used for accessing the data pointer instead of taking the address of the 0-th element'
+      FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/utils.h'
+      FileOffset:      2668
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/artifacts/nx_kit/src/nx/kit/utils.h'
+          Offset:          2668
+          Length:          10
+          ReplacementText: 'result.data()'
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/open/artifacts/nx_kit/unit_tests'
+...

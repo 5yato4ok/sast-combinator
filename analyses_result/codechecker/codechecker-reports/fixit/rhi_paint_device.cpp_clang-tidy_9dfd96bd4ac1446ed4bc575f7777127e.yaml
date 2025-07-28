@@ -1,0 +1,44 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_device.cpp'
+Diagnostics:
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''RhiPaintDevice'' defines a non-default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_device.h'
+      FileOffset:      336
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''PaintPath'' defines a destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      383
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move constructors should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      2325
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+          Offset:          2349
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+  - DiagnosticName:  performance-noexcept-move-constructor
+    DiagnosticMessage:
+      Message:         move assignment operators should be marked noexcept
+      FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+      FileOffset:      2452
+      Replacements:
+        - FilePath:        '/home/misha/nika/nx_open/libs/nx_pathkit/src/nx/pathkit/rhi_paint_engine.h'
+          Offset:          2479
+          Length:          0
+          ReplacementText: ' noexcept '
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/libs/nx_pathkit'
+...

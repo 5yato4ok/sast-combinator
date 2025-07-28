@@ -1,0 +1,33 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/directory_backup.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-range-loop-construct
+    DiagnosticMessage:
+      Message:         'loop variable ''backup'' creates a copy from type ''QSharedPointer<QnBaseDirectoryBackup> const'''
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/directory_backup.cpp'
+      FileOffset:      9429
+      Replacements:    []
+    Notes:
+      - Message:         'use reference type ''QSharedPointer<QnBaseDirectoryBackup> const &'' to prevent copying'
+        FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/directory_backup.cpp'
+        FileOffset:      9418
+        Replacements:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/directory_backup.cpp'
+            Offset:          9429
+            Length:          0
+            ReplacementText: '&'
+        Ranges:
+          - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/directory_backup.cpp'
+            FileOffset:      9418
+            Length:          19
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  cppcoreguidelines-special-member-functions
+    DiagnosticMessage:
+      Message:         'class ''QnBaseDirectoryBackup'' defines a default destructor but does not define a copy constructor, a copy assignment operator, a move constructor or a move assignment operator'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/utils/directory_backup.h'
+      FileOffset:      296
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

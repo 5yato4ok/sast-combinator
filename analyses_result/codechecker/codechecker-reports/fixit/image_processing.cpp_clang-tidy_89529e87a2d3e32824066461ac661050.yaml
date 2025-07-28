@@ -1,0 +1,20 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/image_processing.cpp'
+Diagnostics:
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/image_processing.cpp'
+      FileOffset:      518
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+  - DiagnosticName:  bugprone-incorrect-roundings
+    DiagnosticMessage:
+      Message:         'casting (double + 0.5) to integer leads to incorrect rounding; consider using lround (#include <cmath>) instead'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/src/ui/common/image_processing.cpp'
+      FileOffset:      535
+      Replacements:    []
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop'
+...

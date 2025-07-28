@@ -1,0 +1,16 @@
+---
+MainSourceFile:  '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/cdb/result_code_ut.cpp'
+Diagnostics:
+  - DiagnosticName:  clang-diagnostic-switch
+    DiagnosticMessage:
+      Message:         '11 enumeration values not handled in switch: ''created'', ''noContent'', ''secondFactorRequired''...'
+      FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/cdb/result_code_ut.cpp'
+      FileOffset:      1804
+      Replacements:    []
+      Ranges:
+        - FilePath:        '/home/misha/nika/nx_open/vms/client/nx_vms_client_desktop/unit_tests/src/cdb/result_code_ut.cpp'
+          FileOffset:      1804
+          Length:          10
+    Level:           Warning
+    BuildDirectory:  '/home/misha/nika/nx_open/build/vms/client/nx_vms_client_desktop/unit_tests'
+...

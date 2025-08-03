@@ -1,0 +1,1 @@
+Results of analyses on [test suite](https://github.com/5yato4ok/cooddy-test-suite) .

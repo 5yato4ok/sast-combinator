@@ -20,4 +20,4 @@ WORKDIR /src
 VOLUME /src
 
 # Default command
-CMD ["sh", "-c", "rats . --xml > rats.xml"]
+CMD ["sh", "-c", "rats . --xml > rats_result.xml"]

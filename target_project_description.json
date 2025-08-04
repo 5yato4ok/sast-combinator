@@ -2,5 +2,7 @@
     "name": "Nx open",
     "commit": "b9dc06bef68593ffdc79b1f8b9eafe84761cc72f",
     "github_url": "https://github.com/networkoptix/nx_open/tree/b9dc06bef68593ffdc79b1f8b9eafe84761cc72f",
-    "language": "cpp"
+    "language": "cpp",
+    "description": "Collection of C++ components that power the commercial Nx Video Management System (VMS). Includes the source code for the cross-platform Desktop Client and shared libraries. The project heavily depends on the Qt 6.9.* framework and uses modern C++23+ features. The Desktop Client can connect to either Nx Cloud (hosted on AWS) or directly to a VMS Media Server to retrieve information about cameras, users, events, and more."
+
 }

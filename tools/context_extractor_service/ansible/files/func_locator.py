@@ -1,4 +1,6 @@
 from pathlib import Path
+from urllib.parse import urlparse
+import requests
 import tree_sitter_cpp as cpp_lang
 import tree_sitter_python as py_lang
 import tree_sitter_javascript as js_lang
@@ -19,30 +21,14 @@ SUPPORTED_LANGUAGES = {
     '.js': JS_LANGUAGE,
 }
 
-
 def _detect_language_name(filepath: Path):
-    """
-    Detect the tree-sitter language name from the file extension.
-    """
     ext = filepath.suffix
     if ext not in SUPPORTED_LANGUAGES:
         raise ValueError(f"Unsupported file extension: {ext}")
     return SUPPORTED_LANGUAGES[ext]
 
-
-
-def extract_function(filename: str, line_number: int) -> str | None:
-    """
-    Return the full source code of the function that contains the given line number.
-
-    :param filename: Path or name of the file (used to detect language)
-    :param line_number: Line number (1-based) to locate the enclosing function
-    :return: Function body as string or None if not found
-    """
-
-    source_path = Path(filename)
-    source_code = source_path.read_text()
-    lang = _detect_language_name(source_path)
+def extract_function_from_source(source_code: str, filename: str, line_number: int) -> str | None:
+    lang = _detect_language_name(Path(filename))
     parser = Parser(lang)
 
     tree = parser.parse(source_code.encode("utf-8"))
@@ -68,14 +54,9 @@ def extract_function(filename: str, line_number: int) -> str | None:
 
     return find_enclosing_function(tree.root_node)
 
-
-# Example usage:
-if __name__ == "__main__":
-    source_path = "example.cpp"
-    line = 39
-
-    function_body = extract_function(source_path, line)
-    if function_body:
-        print(function_body)
-    else:
-        print("No function found at the given line.")
+def extract_function(file_url: str, line_number: int) -> str | None:
+    response = requests.get(file_url)
+    response.raise_for_status()
+    source_code = response.text
+    filename = Path(urlparse(file_url).path).name
+    return extract_function_from_source(source_code, filename, line_number)

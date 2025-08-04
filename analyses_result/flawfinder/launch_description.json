@@ -1,5 +1,0 @@
-{
-    "cmd": "flawfinder --sarif  . > flawfinder_results.sarif",
-    "environment": "MacOs",
-    "installation_cmd": "pip3 install flawfinder"
-}

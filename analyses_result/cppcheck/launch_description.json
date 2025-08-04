@@ -1,6 +1,0 @@
-{
-    "cmd": "cppcheck --output-format=sarif --output-file=cppcheck_result_withoutc_cdb.sarif --check-level=exhaustive -j 10 .",
-    "environment": "Mac Os",
-    "commentary": "Launch performed on sorces, without compile_commands.json. Thats means there is no intermodule analyses. It's the simplest SAST analyses",
-    "installation_cmd": "brew install cppcheck"
-}

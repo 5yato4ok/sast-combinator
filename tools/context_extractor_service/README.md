@@ -87,11 +87,11 @@ curl -X POST http://localhost:8080/function/extract \
 
 ## 🌐 Supported Languages
 
-| File Extension                      | Language   |
-| ----------------------------------- | ---------- |
-| `.py`                               | Python     |
-| `.cpp`, `.cc`, `.h`, `.hpp`, `.cxx` | C++        |
-| `.js`                               | JavaScript |
+| File Extension                            | Language   |
+|-------------------------------------------| ---------- |
+| `.py`                                     | Python     |
+| `.cpp`, `.cc`, `.h`, `.hpp`, `.cxx`, `.c` | C++        |
+| `.js`                                     | JavaScript |
 
 To add support for more languages (e.g., TypeScript, Go, Rust), extend the `SUPPORTED_LANGUAGES` dictionary in `func_locator.py`.
 

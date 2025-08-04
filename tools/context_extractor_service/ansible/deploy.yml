@@ -61,8 +61,21 @@
         group: docker
         mode: '0644'
 
-    - name: Build and start container
+    - name: Stop and remove existing container
       community.docker.docker_compose_v2:
         project_src: /opt/context_extractor/
+        state: absent
+
+    - name: Remove old Docker image if exists
+      community.docker.docker_image:
+        name: context_extractor-context_extractor
+        state: absent
+      ignore_errors: true
+
+    - name: Rebuild and restart container with updated source
+      community.docker.docker_compose_v2:
+        project_src: /opt/context_extractor/
+        build: always
+        recreate: always
         pull: always
         state: present

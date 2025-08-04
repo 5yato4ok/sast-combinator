@@ -16,6 +16,7 @@ SUPPORTED_LANGUAGES = {
     '.h': CPP_LANGUAGE,
     '.hpp': CPP_LANGUAGE,
     '.cpp': CPP_LANGUAGE,
+    '.c': CPP_LANGUAGE,
     '.cc': CPP_LANGUAGE,
     '.cxx': CPP_LANGUAGE,
     '.js': JS_LANGUAGE,

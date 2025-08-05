@@ -29,17 +29,27 @@ def build_image_if_needed(image_name: str, dockerfile_dir: str):
         check=True
     )
 
-def run_docker(image: str, args: list, project_path: str, output_dir: str):
+
+def run_docker(image: str, args: list, project_path: str, output_dir: str, env_vars: list = None):
     print(f"[>] Running analyzer: {image}")
-    subprocess.run(
-        [
-            "docker", "run", "--rm",
-            "-v", f"{project_path}:/src",        # project source
-            "-v", f"{output_dir}:/shared/output",# result output
-            image
-        ] + args,
-        check=True
-    )
+
+    cmd = [
+        "docker", "run", "--rm",
+        "-v", f"{project_path}:/src",         # project source
+        "-v", f"{output_dir}:/shared/output"  # result output
+    ]
+
+    if env_vars:
+        for var in env_vars:
+            if var in os.environ:
+                cmd += ["-e", f"{var}={os.environ[var]}"]
+            else:
+                print(f"[!] Warning: Environment variable '{var}' is not set.")
+
+    cmd += [image] + args
+
+    subprocess.run(cmd, check=True)
+
 
 def run_selected_analyzers(
     config_path: str,
@@ -77,6 +87,7 @@ def run_selected_analyzers(
         input_path = analyzer.get("input", "/src")
         args = [input_path, "/shared/output"]
 
-        run_docker(image, args, project_path, output_dir)
+        env_vars = analyzer.get("env", [])
+        run_docker(image, args, project_path, output_dir, env_vars)
 
     print("[✓] All selected analyzers completed.")

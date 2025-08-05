@@ -19,6 +19,14 @@ analyzers:
 
   - name: rats
     type: simple
-    image: sast-rats
+    image: sast-rat
     input: /src
-    time_class: slow
+    time_class: fast
+
+  - name: snyk
+    type: simple
+    image: sast-snyk
+    input: /src
+    time_class: medium
+    env:
+      - SNYK_TOKEN

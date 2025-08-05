@@ -1,5 +1,0 @@
-{
-    "cmd": "snyk code test --sarif --org=e4a1ffb9-d085-4ee0-9da3-feb45c76b961 > snyk_result.sarif",
-    "environment": "MacOs",
-    "installation_cmd": "npm install -g snyk && snyk auth"
-}

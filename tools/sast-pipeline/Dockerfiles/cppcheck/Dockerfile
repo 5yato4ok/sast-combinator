@@ -24,5 +24,8 @@ RUN git clone --branch 2.17.1 https://github.com/danmar/cppcheck.git && \
 
 WORKDIR /src
 
-# Default values
-CMD ["cppcheck", "--output-format=sarif", "--output-file=cppcheck_result.sarif", "--check-level=exhaustive", "-j", "4", "."]
+# Copy analyzer script into container
+COPY analyze.sh /analyze.sh
+RUN chmod +x /analyze.sh
+
+ENTRYPOINT ["/analyze.sh"]

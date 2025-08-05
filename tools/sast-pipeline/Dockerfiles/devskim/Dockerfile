@@ -20,5 +20,12 @@ ENV PATH="${PATH}:/root/.dotnet/tools"
 # Working directory for source code
 WORKDIR /src
 
+# Copy analysis script
+COPY analyze.sh /analyze.sh
+RUN chmod +x /analyze.sh
+
+# Entrypoint: run script
+ENTRYPOINT ["/analyze.sh"]
+
 # Default command: analyze /src and write results to /src/devskim.sarif
 CMD ["devskim", "analyze", "-I", "/src", "--output-format", "sarif", "-O", "/src/devskim_results.sarif"]

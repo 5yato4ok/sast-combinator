@@ -22,7 +22,6 @@ Each issue is assigned a **risk level from 0 to 5** (higher means more dangerous
 ## Build image
 
 ```bash
-cd docker
 docker build -t flawfinder .
 ```
 

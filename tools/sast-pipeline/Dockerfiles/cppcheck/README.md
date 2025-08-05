@@ -24,7 +24,6 @@ Image runs [Cppcheck](http://cppcheck.sourceforge.net/), a static analysis tool 
 ## Build image
 
 ```bash
-cd docker
 docker build -t cppcheck:2.17.1 .
 ```
 

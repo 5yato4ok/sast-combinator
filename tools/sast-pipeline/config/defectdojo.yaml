@@ -1,0 +1,4 @@
+defectdojo:
+  url: "https://defectdojo.local"
+  token: "xxx"
+  product_id: 12

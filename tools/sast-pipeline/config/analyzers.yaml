@@ -1,0 +1,24 @@
+analyzers:
+  - name: cppcheck
+    type: simple
+    image: sast-cppcheck
+    input: /src
+    time_class: fast
+
+  - name: devskim
+    type: simple
+    image: sast-devskim
+    input: /src
+    time_class: medium
+
+  - name: flawfinder
+    type: simple
+    image: sast-flawfinder
+    input: /src
+    time_class: fast
+
+  - name: rats
+    type: simple
+    image: sast-rats
+    input: /src
+    time_class: slow

@@ -12,12 +12,15 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 ENV HOMEBREW_NO_AUTO_UPDATE=1
 
-# Install RATS via brew
+# Install RATS via Homebrew
 RUN brew install rats
 
-# Working directory
+# Set working directory
 WORKDIR /src
-VOLUME /src
 
-# Default command
-CMD ["sh", "-c", "rats . --xml > rats_result.xml"]
+# Copy analyzer wrapper script
+COPY analyze.sh /analyze.sh
+RUN chmod +x /analyze.sh
+
+# Entrypoint
+ENTRYPOINT ["/analyze.sh"]

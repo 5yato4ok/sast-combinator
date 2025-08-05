@@ -48,7 +48,6 @@ It uses regex-based rules organized by language and vulnerability class. Below a
 ## Build image
 
 ```bash
-cd docker
 docker build -t devskim-analyzer .
 ```
 

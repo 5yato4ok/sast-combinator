@@ -1,8 +1,20 @@
-from flask import Flask, request, jsonify
+import os
+from flask import Flask, request, jsonify, abort
 from urllib.parse import urlparse
 from func_locator import extract_function, extract_function_from_source
 
 app = Flask(__name__)
+
+API_TOKEN = os.environ.get("API_TOKEN", "secret-token")  # по умолчанию
+
+def require_auth(f):
+    def decorated(*args, **kwargs):
+        token = request.headers.get("Authorization")
+        if not token or token != f"Bearer {API_TOKEN}":
+            abort(401, description="Unauthorized")
+        return f(*args, **kwargs)
+    decorated.__name__ = f.__name__
+    return decorated
 
 def convert_github_to_raw(url: str) -> str:
     """
@@ -23,6 +35,7 @@ def convert_github_to_raw(url: str) -> str:
     return f"https://raw.githubusercontent.com/{user}/{repo}/{branch}/{'/'.join(file_path)}"
 
 @app.route("/function/extract", methods=["POST"])
+@require_auth
 def extract():
     try:
         line_number = int(request.form.get("line_number", 0) or request.json.get("line_number", 0))

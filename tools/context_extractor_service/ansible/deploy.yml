@@ -79,3 +79,8 @@
         recreate: always
         pull: always
         state: present
+
+    - name: Remove .env file after container start
+      file:
+        path: /opt/context_extractor/.env
+        state: absent

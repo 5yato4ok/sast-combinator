@@ -4,3 +4,4 @@ tree_sitter
 tree-sitter-cpp
 tree-sitter-python
 tree-sitter-javascript
+tree-sitter-java

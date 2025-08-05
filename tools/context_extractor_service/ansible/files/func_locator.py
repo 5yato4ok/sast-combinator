@@ -4,11 +4,13 @@ import requests
 import tree_sitter_cpp as cpp_lang
 import tree_sitter_python as py_lang
 import tree_sitter_javascript as js_lang
+import tree_sitter_java as java_lang
 from tree_sitter import Language, Parser
 
 CPP_LANGUAGE = Language(cpp_lang.language())
 PY_LANGUAGE = Language(py_lang.language())
 JS_LANGUAGE = Language(js_lang.language())
+JAVA_LANGUAGE = Language(java_lang.language())
 
 # Supported file extensions mapped to tree-sitter language names
 SUPPORTED_LANGUAGES = {
@@ -20,6 +22,7 @@ SUPPORTED_LANGUAGES = {
     '.cc': CPP_LANGUAGE,
     '.cxx': CPP_LANGUAGE,
     '.js': JS_LANGUAGE,
+    '.java': JAVA_LANGUAGE
 }
 
 def _detect_language_name(filepath: Path):
@@ -37,6 +40,7 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
     def find_enclosing_function(node):
         # Check if the node is a function or method definition and contains the given line
         if node.type in (
+            'method_declaration',                           # Java
             'function_definition', 'function_declaration',  # C/C++
             'function', 'method_definition',                # JS/TS
             'function_definition', 'decorated_definition'   # Python

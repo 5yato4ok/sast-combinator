@@ -30,12 +30,14 @@ def build_image_if_needed(image_name: str, dockerfile_dir: str):
     )
 
 
-def run_docker(image: str, args: list, project_path: str, output_dir: str, env_vars: list = None):
+def run_docker(image: str, builder_container: str, args: list, project_path: str, output_dir: str,
+               env_vars: list = None):
     print(f"[>] Running analyzer: {image}")
 
     cmd = [
         "docker", "run", "--rm",
         "-v", f"{project_path}:/src",         # project source
+        "--volumes-from", builder_container,
         "-v", f"{output_dir}:/shared/output"  # result output
     ]
 
@@ -56,7 +58,8 @@ def run_selected_analyzers(
     analyzers_to_run: list = None,
     exclude_slow: bool = False,
     project_path: str = "./my_project",
-    output_dir: str = "/tmp/sast_output"
+    output_dir: str = "/tmp/sast_output",
+    builder_container: str = "builder-env"
 ):
     # Ensure output dir exists
     os.makedirs(output_dir, exist_ok=True)
@@ -76,7 +79,7 @@ def run_selected_analyzers(
         name = analyzer["name"]
         image = analyzer["image"]
         time_class = analyzer.get("time_class", "medium")
-        dockerfile_path = f"Dockerfiles/{name}"
+        dockerfile_path = f"/app/Dockerfiles/{name}"
 
         if exclude_slow and time_class == "slow":
             print(f"[!] Skipping '{name}' (marked as slow)")
@@ -88,6 +91,6 @@ def run_selected_analyzers(
         args = [input_path, "/shared/output"]
 
         env_vars = analyzer.get("env", [])
-        run_docker(image, args, project_path, output_dir, env_vars)
+        run_docker(image, args, project_path, output_dir, env_vars, builder_container)
 
     print("[✓] All selected analyzers completed.")

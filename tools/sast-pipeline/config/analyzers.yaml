@@ -30,3 +30,11 @@ analyzers:
     time_class: medium
     env:
       - SNYK_TOKEN
+
+  - name: codechecker
+    type: builder
+    image: sast-builder-codechecker
+    input: /src
+    time_class: slow
+    env:
+      - CC_ANALYSIS_MODE

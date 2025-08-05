@@ -26,6 +26,3 @@ RUN chmod +x /analyze.sh
 
 # Entrypoint: run script
 ENTRYPOINT ["/analyze.sh"]
-
-# Default command: analyze /src and write results to /src/devskim.sarif
-CMD ["devskim", "analyze", "-I", "/src", "--output-format", "sarif", "-O", "/src/devskim_results.sarif"]

@@ -50,4 +50,6 @@ fi
 
 cd "$PROJECT_ROOT"
 echo "[+] Launching analyzers..."
+
+export PYTHONUNBUFFERED=1
 python3 /app/run_inside_builder.py

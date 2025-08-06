@@ -1,8 +1,11 @@
 from analyzer_runner import run_selected_analyzers
+from dotenv import load_dotenv
 
 from pathlib import Path
 import json
 import os
+
+load_dotenv(dotenv_path="/app/.env")
 
 if __name__ == "__main__":
 
@@ -30,7 +33,7 @@ if __name__ == "__main__":
 
     run_selected_analyzers(
         config_path="/app/config/analyzers.yaml",
-        analyzers_to_run=["devskim"],
+        analyzers_to_run=["snyk", "codechecker"],
         exclude_slow=False,
         project_path="/workspace/build-tmp/nx_open",
         output_dir="/shared/output",

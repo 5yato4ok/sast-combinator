@@ -26,6 +26,7 @@ def build_image_if_needed(image_name: str, dockerfile_dir: str):
     subprocess.run(
         ["docker", "build", "-t", image_name, "."],
         cwd=dockerfile_dir,
+        text=True,
         check=True
     )
 
@@ -50,7 +51,7 @@ def run_docker(image: str, builder_container: str, args: list, project_path: str
 
     cmd += [image] + args
 
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, text=True)
 
 
 def run_selected_analyzers(

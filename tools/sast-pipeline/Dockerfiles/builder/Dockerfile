@@ -5,7 +5,7 @@ ENV PYTHONPATH=/app
 
 RUN apt-get update && apt-get install -y \
     git python3 python3-pip curl sudo jq docker.io && \
-    pip3 install pyyaml && \
+    pip3 install pyyaml python-dotenv && \
     apt-get clean
 
 WORKDIR /app
@@ -15,6 +15,7 @@ COPY config/analyzers.yaml /app/config/analyzers.yaml
 COPY Dockerfiles/builder/run_inside_builder.py /app/
 COPY Dockerfiles/builder/builder-entrypoint.sh /app/
 COPY Dockerfiles /app/Dockerfiles
+COPY .env /app/
 
 ENV PYTHONPATH=/app
 

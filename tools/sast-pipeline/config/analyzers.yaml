@@ -2,31 +2,31 @@ analyzers:
   - name: cppcheck
     type: simple
     image: sast-cppcheck
-    input: /src
+    input: /workspace
     time_class: fast
 
   - name: devskim
     type: simple
     image: sast-devskim
-    input: /src
+    input: /workspace
     time_class: medium
 
   - name: flawfinder
     type: simple
     image: sast-flawfinder
-    input: /src
+    input: /workspace
     time_class: fast
 
   - name: rats
     type: simple
     image: sast-rat
-    input: /src
+    input: /workspace
     time_class: fast
 
   - name: snyk
     type: simple
     image: sast-snyk
-    input: /src
+    input: /workspace
     time_class: medium
     env:
       - SNYK_TOKEN
@@ -34,7 +34,7 @@ analyzers:
   - name: codechecker
     type: builder
     image: sast-builder-codechecker
-    input: /src
+    input: /workspace
     time_class: slow
     env:
       - CC_ANALYSIS_MODE

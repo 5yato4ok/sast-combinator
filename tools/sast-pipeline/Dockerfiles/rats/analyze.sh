@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-INPUT_DIR="${1:-/src}"
+INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
 OUTPUT_FILE="${OUTPUT_DIR}/rats_result.xml"
 

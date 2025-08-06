@@ -22,7 +22,7 @@ RUN git clone --branch 2.17.1 https://github.com/danmar/cppcheck.git && \
     make install
 
 
-WORKDIR /src
+WORKDIR /workspace
 
 # Copy analyzer script into container
 COPY analyze.sh /analyze.sh

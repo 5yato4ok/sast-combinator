@@ -30,13 +30,13 @@ docker build -t cppcheck:2.17.1 .
 ## Run
 
 ```bash
-docker run --rm -v "$PWD:/src" cppcheck:2.17.1
+docker run --rm -v "$PWD:/workspace" cppcheck:2.17.1
 ```
 
 ## Custom Run 
 
 ```bash
-docker run --rm -v "$PWD:/src" cppcheck:2.17.1 \
+docker run --rm -v "$PWD:/workspace" cppcheck:2.17.1 \
   cppcheck -j8 \
            --output-format=sarif \
            --output-file=result.sarif .

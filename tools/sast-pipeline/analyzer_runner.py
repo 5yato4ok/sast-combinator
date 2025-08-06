@@ -36,9 +36,9 @@ def run_docker(image: str, builder_container: str, args: list, project_path: str
 
     cmd = [
         "docker", "run", "--rm",
-        "-v", f"{project_path}:/src",         # project source
+        #"-v", f"{project_path}:/workspace",         # project source
         "--volumes-from", builder_container,
-        "-v", f"{output_dir}:/shared/output"  # result output
+        #"-v", f"{output_dir}:/shared/output"  # result output
     ]
 
     if env_vars:
@@ -87,10 +87,10 @@ def run_selected_analyzers(
 
         build_image_if_needed(image, dockerfile_path)
 
-        input_path = analyzer.get("input", "/src")
+        input_path = analyzer.get("input", "/workspace")
         args = [input_path, "/shared/output"]
 
         env_vars = analyzer.get("env", [])
-        run_docker(image, args, project_path, output_dir, env_vars, builder_container)
+        run_docker(image, builder_container, args, project_path, output_dir, env_vars)
 
     print("[✓] All selected analyzers completed.")

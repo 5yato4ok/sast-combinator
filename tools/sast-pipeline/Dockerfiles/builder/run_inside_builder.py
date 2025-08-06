@@ -22,13 +22,17 @@ if __name__ == "__main__":
     else:
         print(f"[!] File not found: {cc_path}")
 
-    print("[>] Running analyzer: codechecker...")
+    print("[>] Running analyzer...")
+
+    builder_container = os.environ.get("BUILDER_CONTAINER", None)
+    if builder_container is None:
+        raise Exception("Enviromental variabl BUILDER_CONTAINER is not set. Terminating.")
 
     run_selected_analyzers(
         config_path="/app/config/analyzers.yaml",
-        analyzers_to_run=["codechecker"],
+        analyzers_to_run=["devskim"],
         exclude_slow=False,
         project_path="/workspace/build-tmp/nx_open",
         output_dir="/shared/output",
-        builder_container = os.environ.get("BUILDER_CONTAINER", "builder-env")
+        builder_container = builder_container
     )

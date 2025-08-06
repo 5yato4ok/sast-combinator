@@ -4,7 +4,7 @@ FROM python:3.12-slim
 RUN pip install --no-cache-dir flawfinder
 
 # Set working directory
-WORKDIR /src
+WORKDIR /workspace
 
 # Copy analyzer script
 COPY analyze.sh /analyze.sh

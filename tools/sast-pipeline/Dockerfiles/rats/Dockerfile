@@ -16,7 +16,7 @@ ENV HOMEBREW_NO_AUTO_UPDATE=1
 RUN brew install rats
 
 # Set working directory
-WORKDIR /src
+WORKDIR /workspace
 
 # Copy analyzer wrapper script
 COPY analyze.sh /analyze.sh

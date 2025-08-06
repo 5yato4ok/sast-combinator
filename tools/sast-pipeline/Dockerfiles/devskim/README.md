@@ -54,5 +54,5 @@ docker build -t devskim-analyzer .
 ## Run
 
 ```bash
-docker run --rm -v "$PWD:/src" devskim-analyzer
+docker run --rm -v "$PWD:/workspace" devskim-analyzer
 ```

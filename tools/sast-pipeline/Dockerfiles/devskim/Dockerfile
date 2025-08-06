@@ -18,11 +18,13 @@ RUN dotnet tool install -g Microsoft.CST.DevSkim.CLI
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # Working directory for source code
-WORKDIR /src
+WORKDIR /workspace
 
 # Copy analysis script
 COPY analyze.sh /analyze.sh
 RUN chmod +x /analyze.sh
+
+RUN ls /workspace
 
 # Entrypoint: run script
 ENTRYPOINT ["/analyze.sh"]

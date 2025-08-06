@@ -28,5 +28,5 @@ docker build -t flawfinder .
 ## Run
 
 ```bash
-docker run --rm -v "$PWD:/src" flawfinder
+docker run --rm -v "$PWD:/workspace" flawfinder
 ```

@@ -47,7 +47,7 @@ def run_docker(image: str, builder_container: str, args: list, project_path: str
             if var in os.environ:
                 cmd += ["-e", f"{var}={os.environ[var]}"]
             else:
-                print(f"[!] Warning: Environment variable '{var}' is not set.")
+                raise Exception(f"[!] Warning: Environment variable '{var}' is not set.")
 
     cmd += [image] + args
 

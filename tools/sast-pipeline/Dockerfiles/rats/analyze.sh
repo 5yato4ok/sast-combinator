@@ -8,9 +8,11 @@ OUTPUT_FILE="${OUTPUT_DIR}/rats_result.xml"
 echo "[+] Running RATS on: $INPUT_DIR"
 echo "[+] Output will be saved to: $OUTPUT_FILE"
 
-if snyk rats "$INPUT_DIR" --xml > "$OUTPUT_FILE"; then
+if rats "$INPUT_DIR" --xml > "$OUTPUT_FILE"; then
     echo "[✓] RATS completed with no critical issues."
 else
     echo "[!] RATS found issues or exited with non-zero status (possibly 2)."
+fi
 
 echo "[✓] RATS analysis complete."
+

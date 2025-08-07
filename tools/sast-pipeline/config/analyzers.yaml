@@ -29,7 +29,7 @@ analyzers:
   - name: codechecker
     type: builder
     image: sast-builder-codechecker
-    input: /workspace
     time_class: slow
     env:
-      - CC_ANALYSIS_MODE
+      - COMPILE_COMMANDS_PATH
+      - COMPILER_PATH

@@ -1,5 +1,7 @@
 import subprocess
 import os
+import shutil
+from pathlib import Path
 
 def image_exists(image_name: str) -> bool:
     result = subprocess.run(
@@ -10,7 +12,8 @@ def image_exists(image_name: str) -> bool:
     )
     return result.stdout.strip() != ""
 
-def configure_project_run_analyses(image_name="project-builder",
+def configure_project_run_analyses(script_path,
+                                   image_name="project-builder",
                                    dockerfile_path="Dockerfiles/builder/Dockerfile",
                                    project_path="/tmp/my_project",
                                    output_dir="/tmp/sast_output",
@@ -28,12 +31,39 @@ def configure_project_run_analyses(image_name="project-builder",
             text=True
         )
 
+    input_path = Path(script_path).resolve()
+
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file does not exist: {input_path}")
+
+    context_path = Path(context_dir).resolve()
+    target_dir = context_path / "tmp"
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy file
+    target_path = target_dir / input_path.name
+    shutil.copy2(input_path, target_path)
+
+    relative_config_path = target_path.relative_to(context_path)
+
     subprocess.run(
-        ["docker", "build", "-t", image_name, "-f", dockerfile_path, "."],
+        ["docker", "build", "--build-arg", f"PROJECT_CONFIG_PATH={str(relative_config_path)}", "-t", image_name, "-f",
+         dockerfile_path, "."],
         cwd=context_dir,  # use full project as build context
         check=True,
         text=True
     )
+
+    # Cleanup after build — here simulated directly
+    # If you want to delete it after actual Docker build, move this to another script
+    try:
+        target_path.unlink()
+        # Optionally remove the subdirectory if empty
+        if not any(target_dir.iterdir()):
+            target_dir.rmdir()
+    except Exception as e:
+        print(f"[!] Warning: Failed to delete copied file: {e}")
 
     print(f"[>] Running builder container...")
     container_name = f"{image_name}_container"

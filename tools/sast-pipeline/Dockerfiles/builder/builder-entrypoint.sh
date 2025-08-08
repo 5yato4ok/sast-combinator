@@ -7,20 +7,23 @@ chmod +x project_config.sh
 
 source ./project_config.sh
 
-echo "[+] Warning: Looking for compiler path in $COMPILE_COMMANDS_PATH"
+if [[ "${NON_COMPILE_PROJECT:-1}" -eq 0 ]]; then
 
-if [ ! -f "$COMPILE_COMMANDS_PATH" ]; then
-    echo "[x] File not found: $COMPILE_COMMANDS_PATH"
-    exit 1
+  echo "[+] Warning: Looking for compiler path in $COMPILE_COMMANDS_PATH"
+
+  if [ ! -f "$COMPILE_COMMANDS_PATH" ]; then
+      echo "[x] File not found: $COMPILE_COMMANDS_PATH"
+      exit 1
+  fi
+
+  compiler=$(jq -r '.[0].command' "$COMPILE_COMMANDS_PATH" | awk '{print $1}')
+
+  if [ -z "$compiler" ]; then
+      echo "[x] Warning: Failed to extract compiler"
+  fi
+
+  export COMPILER_PATH=${compiler}
 fi
-
-compiler=$(jq -r '.[0].command' "$COMPILE_COMMANDS_PATH" | awk '{print $1}')
-
-if [ -z "$compiler" ]; then
-    echo "[x] Warning: Failed to extract compiler"
-fi
-
-export COMPILER_PATH=${compiler}
 
 cd "$PROJECT_ROOT"
 

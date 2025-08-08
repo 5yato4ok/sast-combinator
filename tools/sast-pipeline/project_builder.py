@@ -2,6 +2,8 @@ import subprocess
 import os
 import shutil
 from pathlib import Path
+from datetime import datetime
+
 
 def image_exists(image_name: str) -> bool:
     result = subprocess.run(
@@ -12,14 +14,18 @@ def image_exists(image_name: str) -> bool:
     )
     return result.stdout.strip() != ""
 
+
 def configure_project_run_analyses(script_path,
+                                   output_dir,
                                    image_name="project-builder",
                                    dockerfile_path="Dockerfiles/builder/Dockerfile",
                                    project_path="/tmp/my_project",
-                                   output_dir="/tmp/sast_output",
                                    force_rebuild=False):
 
     context_dir = os.path.abspath(".")  # assume this file is run from the root project
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = f"{output_dir}/{timestamp}"
     os.makedirs(output_dir, exist_ok=True)
 
     print(f"[+] Building builder image: {image_name}")

@@ -30,6 +30,7 @@ analyzers:
     type: simple
     image: sast-semgrep
     time_class: medium
+    enabled: false
     env:
       - SEMGREP_APP_TOKEN
 
@@ -37,6 +38,7 @@ analyzers:
     type: builder
     image: sast-builder-codechecker
     time_class: slow
+    enabled: false
     env:
       - COMPILE_COMMANDS_PATH
       - COMPILER_PATH

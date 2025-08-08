@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
 
-
 PROJECT_ROOT="${1:-/workspace}"
 PROJECT_BUILD_DIR="${PROJECT_ROOT}/build-tmp"
 TEST_SUITE_DIR="${PROJECT_BUILD_DIR}/cooddy-test-suite"
+export PROJECT_PATH=${TEST_SUITE_DIR}
+
+cd "$PROJECT_BUILD_DIR"
 
 FORCE_REBUILD=${FORCE_REBUILD:-0}
 
@@ -31,8 +33,8 @@ if [ -d "$TEST_SUITE_DIR" ]; then
 
 else
   echo "[+] Cloning fresh copy of project..."
-  git clone https://github.com/networkoptix/nx_open.git
-
+  git clone https://github.com/5yato4ok/cooddy-test-suite.git
+  ls "${PROJECT_PATH}"
 fi
 
-export PROJECT_PATH=${TEST_SUITE_DIR}
+export NON_COMPILE_PROJECT=1

@@ -16,10 +16,14 @@ if __name__ == "__main__":
         "--script", required=True,
         help="Path to the script, which configures project for future analyses"
     )
+    parser.add_argument(
+        "--output_dir", required=True,
+        help="Path to directory, where results should be stored"
+    )
 
     args = parser.parse_args()
     force_rebuild = os.environ.get("FORCE_REBUILD", "0")
-    configure_project_run_analyses(args.script, force_rebuild=(force_rebuild == "1"),)
+    configure_project_run_analyses(args.script, args.output_dir, force_rebuild=(force_rebuild == "1"),)
 
 
 # send to defect dojo to get results from it

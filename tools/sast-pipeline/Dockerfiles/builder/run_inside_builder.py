@@ -37,7 +37,6 @@ if __name__ == "__main__":
 
     run_selected_analyzers(
         config_path="/app/config/analyzers.yaml",
-        analyzers_to_run=["codechecker"],
         exclude_slow=False,
         project_path=project_path,
         output_dir="/shared/output",

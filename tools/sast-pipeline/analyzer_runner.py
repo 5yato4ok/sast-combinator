@@ -73,6 +73,8 @@ def run_selected_analyzers(
 
     if analyzers_to_run:
         analyzers = [a for a in analyzers if a["name"] in analyzers_to_run]
+    else:
+        analyzers = [a for a in analyzers if a.get("enabled", True)]
 
     analyzers.sort(key=lambda a: ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
 
@@ -89,7 +91,7 @@ def run_selected_analyzers(
         build_image_if_needed(image, dockerfile_path)
 
         input_path = analyzer.get("input", project_path)
-        args = [input_path, "/shared/output"]
+        args = [input_path, output_dir]
 
         env_vars = analyzer.get("env", [])
         run_docker(image, builder_container, args, project_path, output_dir, env_vars)

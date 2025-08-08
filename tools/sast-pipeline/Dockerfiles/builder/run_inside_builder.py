@@ -31,11 +31,15 @@ if __name__ == "__main__":
     if builder_container is None:
         raise Exception("Enviromental variabl BUILDER_CONTAINER is not set. Terminating.")
 
+    project_path = os.environ.get("PROJECT_PATH", None)
+    if project_path is None:
+        raise Exception("Enviromental variabl PROJECT_PATH is not set. Terminating.")
+
     run_selected_analyzers(
         config_path="/app/config/analyzers.yaml",
-        analyzers_to_run=["codechecker"],
+        analyzers_to_run=["semgrep"],
         exclude_slow=False,
-        project_path="/workspace/build-tmp/nx_open",
+        project_path=project_path,
         output_dir="/shared/output",
         builder_container = builder_container
     )

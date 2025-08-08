@@ -26,6 +26,13 @@ analyzers:
     env:
       - SNYK_TOKEN
 
+  - name: semgrep
+    type: simple
+    image: sast-semgrep
+    time_class: medium
+    env:
+      - SEMGREP_APP_TOKEN
+
   - name: codechecker
     type: builder
     image: sast-builder-codechecker

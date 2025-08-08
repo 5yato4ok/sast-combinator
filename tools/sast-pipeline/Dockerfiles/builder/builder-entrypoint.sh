@@ -70,4 +70,5 @@ cd "$PROJECT_ROOT"
 echo "[+] Launching analyzers..."
 
 export PYTHONUNBUFFERED=1
+export PROJECT_PATH=${NX_OPEN_DIR}
 python3 /app/run_inside_builder.py

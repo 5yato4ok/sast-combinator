@@ -88,7 +88,7 @@ def run_selected_analyzers(
 
         build_image_if_needed(image, dockerfile_path)
 
-        input_path = analyzer.get("input", "/workspace")
+        input_path = analyzer.get("input", project_path)
         args = [input_path, "/shared/output"]
 
         env_vars = analyzer.get("env", [])

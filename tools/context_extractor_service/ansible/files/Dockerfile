@@ -6,7 +6,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
-COPY func_locator.py .
+COPY context_extractor .
 
 EXPOSE 8080
 

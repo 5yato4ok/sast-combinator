@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request, jsonify, abort
 from urllib.parse import urlparse
-from func_locator import extract_function, extract_function_from_source
+from context_extractor import extract_function, extract_function_from_source
 
 app = Flask(__name__)
 
@@ -35,7 +35,7 @@ def convert_github_to_raw(url: str) -> str:
     return f"https://raw.githubusercontent.com/{user}/{repo}/{branch}/{'/'.join(file_path)}"
 
 @app.route("/function/extract", methods=["POST"])
-@require_auth
+#@require_auth
 def extract():
     try:
         line_number = int(request.form.get("line_number", 0) or request.json.get("line_number", 0))

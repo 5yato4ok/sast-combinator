@@ -32,16 +32,15 @@ SUPPORTED_LANGUAGES = {
     ".java": JAVA_LANGUAGE,
 }
 
-# --- Per-language node type sets and roles.
-# These names come from the official tree-sitter grammars and may evolve with versions. ---
+# --- Per-language node type sets and roles. ---
 LANG_NODESETS = {
     "cpp": {
         "function": {"function_definition", "function_declaration", "lambda_expression"},
         "block": {"compound_statement", "lambda_expression", "function_definition"},
-        "key": {"assignment_expression", "declaration", "call_expression", "if_statement", "return_statement",
-                "for_statement", "for_range_loop"},
+        "key": {"assignment_expression", "declaration", "call_expression",
+                "if_statement", "return_statement", "for_statement", "for_range_loop"},
         "ident": {"identifier", "field_identifier", "scoped_identifier"},
-        "member_like": {"field_expression", "scoped_identifier"},  # C++ grammar may use 'field_expression' for obj.member
+        "member_like": {"field_expression", "scoped_identifier"},
         "assign": {"assignment_expression"},
         "declaration": {"declaration", "init_declarator"},
         "loop": {"for_statement", "for_range_loop"},
@@ -52,8 +51,8 @@ LANG_NODESETS = {
     "java": {
         "function": {"method_declaration", "constructor_declaration", "lambda_expression"},
         "block": {"block", "lambda_expression"},
-        "key": {"assignment_expression", "local_variable_declaration", "method_invocation", "if_statement",
-                "return_statement", "for_statement", "enhanced_for_statement"},
+        "key": {"assignment_expression", "local_variable_declaration", "method_invocation",
+                "if_statement", "return_statement", "for_statement", "enhanced_for_statement"},
         "ident": {"identifier"},
         "member_like": {"field_access", "method_invocation"},
         "loop": {"for_statement", "enhanced_for_statement"},
@@ -66,8 +65,8 @@ LANG_NODESETS = {
     "javascript": {
         "function": {"function_declaration", "function", "method_definition", "arrow_function"},
         "block": {"statement_block", "function", "method_definition"},
-        "key": {"assignment_expression", "variable_declaration", "call_expression", "if_statement", "return_statement",
-                "for_statement", "for_in_statement", "for_of_statement"},
+        "key": {"assignment_expression", "variable_declaration", "call_expression",
+                "if_statement", "return_statement", "for_statement", "for_in_statement", "for_of_statement"},
         "ident": {"identifier", "shorthand_property_identifier"},
         "member_like": {"member_expression"},
         "assign": {"assignment_expression"},
@@ -82,9 +81,9 @@ LANG_NODESETS = {
         "block": {"block", "function_definition"},
         "key": {"assignment", "expression_statement", "call", "if_statement", "return_statement", "for_statement"},
         "ident": {"identifier"},
-        "member_like": {"attribute"},  # obj.attr
+        "member_like": {"attribute"},
         "assign": {"assignment", "augmented_assignment"},
-        "declaration": set(),  # Python declarations are assignments/imports
+        "declaration": set(),
         "call": {"call"},
         "loop": {"for_statement"},
         "closing_is_brace": False,
@@ -92,12 +91,75 @@ LANG_NODESETS = {
     },
 }
 
+# --- Per-language comment styles (for full and inline comments) ---
+COMMENT_STYLE = {
+    "cpp":         {"line": ["//"], "block": [("/*", "*/")]},
+    "java":        {"line": ["//"], "block": [("/*", "*/")]},
+    "javascript":  {"line": ["//"], "block": [("/*", "*/")]},
+    "python":      {"line": ["#"],  "block": []},  # triple quotes are strings, not comments
+}
+
+def _compute_comment_lines_generic(lang_key: str, lines: list[str]) -> set[int]:
+    """
+    Return 0-based indices of lines that are comment-only:
+      - line comments (prefix after leading spaces),
+      - block comment spans between any configured delimiters.
+    Trailing inline comments are NOT included here (handled separately).
+    """
+    style = COMMENT_STYLE.get(lang_key, {"line": [], "block": []})
+    line_prefixes = tuple(style.get("line", []))
+    block_delims = style.get("block", [])
+
+    comment_lines: set[int] = set()
+    n = len(lines)
+
+    # Block comments
+    if block_delims:
+        in_block = False
+        end_tok = ""
+        for i in range(n):
+            s = lines[i]
+            j = 0
+            while True:
+                if not in_block:
+                    idx_open = -1
+                    open_tok = ""
+                    for beg, end in block_delims:
+                        k = s.find(beg, j)
+                        if k != -1 and (idx_open == -1 or k < idx_open):
+                            idx_open = k
+                            open_tok = beg
+                            end_tok = end
+                    if idx_open == -1:
+                        break
+                    in_block = True
+                    comment_lines.add(i)
+                    j = idx_open + len(open_tok)
+                    idx_close = s.find(end_tok, j)
+                    if idx_close != -1:
+                        in_block = False
+                        j = idx_close + len(end_tok)
+                        continue
+                else:
+                    comment_lines.add(i)
+                    idx_close = s.find(end_tok, j)
+                    if idx_close != -1:
+                        in_block = False
+                        j = idx_close + len(end_tok)
+                        continue
+                    break
+
+    # Line comments (start-of-line after whitespace)
+    if line_prefixes:
+        for i, s in enumerate(lines):
+            stripped = s.lstrip()
+            if any(stripped.startswith(p) for p in line_prefixes):
+                comment_lines.add(i)
+
+    return comment_lines
 
 def _detect_language_name(filepath: Path) -> Tuple[Language, str]:
-    """
-    Return (Language, lang_key) by file extension.
-    lang_key is one of: 'cpp', 'python', 'javascript', 'java'.
-    """
+    """Return (Language, lang_key) by file extension."""
     ext = filepath.suffix.lower()
     if ext not in SUPPORTED_LANGUAGES:
         raise ValueError(f"Unsupported file extension: {ext}")
@@ -110,30 +172,24 @@ def _detect_language_name(filepath: Path) -> Tuple[Language, str]:
         return lang, "javascript"
     if lang is JAVA_LANGUAGE:
         return lang, "java"
-    # Fallback (should not happen)
     return lang, "cpp"
-
 
 def _node_text(node: Node, source_bytes: bytes) -> str:
     """Safely get node text from source bytes."""
     return source_bytes[node.start_byte: node.end_byte].decode("utf-8", errors="replace")
 
-
 def _line_range(node: Node) -> Tuple[int, int]:
     """Get 0-based inclusive line range for a node."""
     return node.start_point[0], node.end_point[0]
 
-
 def _collect_multiline_header(lines: List[str], lang_key: str, f_start: int, f_end: int) -> Tuple[List[str], int]:
     """
     Collect a multi-line function header:
-    - For brace languages: include lines from f_start up to and including the line that contains the first '{'.
-      If '{' is alone on the next line, include that line too.
-    - For Python: include only the 'def ...:' line (assume f_start is that line).
+    - For brace languages: include lines from f_start up to and including the first '{' line.
+    - For Python: include only the 'def ...:' line.
     Returns (header_lines, new_cursor_position_after_header).
     """
     if LANG_NODESETS[lang_key]["closing_is_brace"]:
-        # Scan from f_start to find the first '{'
         header: List[str] = []
         cursor = f_start
         found_brace = False
@@ -146,28 +202,20 @@ def _collect_multiline_header(lines: List[str], lang_key: str, f_start: int, f_e
                 break
             cursor += 1
         if not found_brace and cursor <= f_end:
-            # Next line might be only '{'
             if cursor <= f_end and lines[cursor].strip() == "{":
                 header.append(lines[cursor])
                 cursor += 1
         return header, cursor
     else:
-        # Python: first line should be the def header (ends with ':')
         return [lines[f_start]], f_start + 1
 
-
 def _dedent_minimum(lines: List[str]) -> List[str]:
-    """
-    Normalize indentation by removing the minimum common leading spaces across all non-empty lines.
-    Tabs are left as-is; we only measure spaces.
-    """
-
+    """Remove minimum common leading spaces across all non-empty lines (tabs unchanged)."""
     def leading_spaces(s: str) -> int:
         i = 0
         while i < len(s) and s[i] == " ":
             i += 1
         return i
-
     non_empty = [l for l in lines if l.strip()]
     if not non_empty:
         return lines
@@ -176,6 +224,43 @@ def _dedent_minimum(lines: List[str]) -> List[str]:
         return lines
     return [l[min_lead:] if l.startswith(" " * min_lead) else l for l in lines]
 
+def _byte_span_to_text(source_bytes: bytes, start_byte: int, end_byte: int) -> str:
+    """Decode a slice of bytes to UTF-8 text with replacement for invalid sequences."""
+    return source_bytes[start_byte:end_byte].decode("utf-8", errors="replace")
+
+def _first_inline_comment_index(line: str, lang_key: str) -> Optional[int]:
+    """
+    Return index where an inline comment starts (//, #, or block opener like /*),
+    only if there is non-whitespace code before it. Otherwise return None.
+    Heuristic: does not parse strings; good enough for snippet retention.
+    """
+    style = COMMENT_STYLE.get(lang_key, {"line": [], "block": []})
+    tokens = list(style.get("line", [])) + [beg for (beg, _end) in style.get("block", [])]
+    best_idx: Optional[int] = None
+    for tok in tokens:
+        k = line.find(tok)
+        if k == -1:
+            continue
+        # Must have some non-space before token (i.e., inline, not comment-only)
+        if any(ch not in " \t" for ch in line[:k]):
+            if best_idx is None or k < best_idx:
+                best_idx = k
+    return best_idx
+
+def _mask_code_keep_comment(line: str, lang_key: str) -> Optional[str]:
+    """
+    If the line contains an inline comment (code then comment), return a masked version:
+      <indent>… <comment-part>
+    Otherwise return None.
+    """
+    idx = _first_inline_comment_index(line, lang_key)
+    if idx is None:
+        return None
+    # Keep original indentation
+    indent_len = 0
+    while indent_len < len(line) and line[indent_len] in (" ", "\t"):
+        indent_len += 1
+    return f"{line[:indent_len]}… {line[idx:].rstrip()}"
 
 def compress_function_from_source(
         source_code: str,
@@ -184,44 +269,18 @@ def compress_function_from_source(
         *,
         max_backward_depth: int = 2,
         markers: Optional[Dict[str, str]] = None,
+        preserve_inline_comments: bool = True,
 ) -> Dict[str, Any]:
     """
     Produce a compact, language-aware snippet of a function that contains `line_number`.
 
-    Key features in this version:
-      - Multi-line function headers (accumulate until '{' for C-like, or the 'def ...:' for Python).
-      - Identifier roles: distinguish reads vs. writes (assignment LHS vs. RHS, declarations).
-      - Member/field access awareness (obj.member), counted into identifier sets.
-      - Comment markers are configurable via `markers` and auto-detected per language.
-      - Indentation normalization for the final snippet.
-      - Returns both the compact text and metadata useful for post-processing.
-
-    Parameters:
-      source_code: Full file text (UTF-8).
-      filename   : Path-like string used to detect language by extension.
-      line_number: 1-based line number where interesting code lies.
-      max_backward_depth: How many identifier-expansion passes to do.
-      markers    : Optional dict with keys {"line_comment"} to override comment prefix.
-
-    Returns:
-      {
-        "text": <str>,                 # compacted snippet
-        "meta": {
-           "language": <str>,          # 'cpp'|'java'|'javascript'|'python'
-           "function_lines": (start,end),  # 1-based inclusive
-           "header_lines": (start,end),    # 1-based range of header used
-           "target_line": <int>,       # 1-based
-           "identifiers": {
-              "seed": [...],           # identifiers captured at target node
-              "reads": [...],          # identifiers considered as 'reads' during expansion
-              "writes": [...],         # identifiers considered as 'writes' during expansion
-           },
-           "blocks": [(start,end), ...]    # 1-based compacted blocks included
-        }
-      }
-      On failure, "text" contains an explanatory comment and "meta" is minimal.
+    Features:
+      - Multi-line headers ('{' or 'def:').
+      - Read/Write identifiers and member/field awareness.
+      - Keeps ALL comment-only lines inside the function.
+      - Optionally preserves inline comments on omitted lines by masking code (…).
+      - Indentation normalization and rich metadata.
     """
-    # --- Basic validation ---
     if line_number <= 0:
         return {"text": "// Invalid line number (must be 1-based and > 0).", "meta": {"target_line": line_number}}
     lines = source_code.splitlines()
@@ -232,46 +291,32 @@ def compress_function_from_source(
 
     source_bytes = source_code.encode("utf-8", errors="replace")
 
-    # --- Language + parser setup ---
+    # Language + parser setup
     try:
         lang, lang_key = _detect_language_name(Path(filename))
     except Exception as e:
         return {"text": f"// {e}", "meta": {"target_line": line_number}}
-    parser = Parser(lang)
+    parser = Parser(lang)  # keep as requested
     tree = parser.parse(source_bytes)
     nodeset = LANG_NODESETS[lang_key]
 
-    # --- Comment markers (auto-detect unless overridden) ---
+    # Comment marker
     line_comment = nodeset["line_comment_prefix"]
     if markers and "line_comment" in markers and markers["line_comment"]:
         line_comment = markers["line_comment"]
 
-    # --- Helpers using per-language node type sets ---
-    def is_function_like(n: Node) -> bool:
-        return n.type in nodeset["function"]
+    # Helpers
+    def is_function_like(n: Node) -> bool: return n.type in nodeset["function"]
+    def is_block_like(n: Node) -> bool:    return n.type in nodeset["block"]
+    def is_key_stmt(n: Node) -> bool:      return n.type in nodeset["key"]
+    def is_identifier(n: Node) -> bool:    return n.type in nodeset["ident"]
+    def is_member_like(n: Node) -> bool:   return n.type in nodeset["member_like"]
+    def is_assign(n: Node) -> bool:        return n.type in nodeset["assign"]
+    def is_declaration(n: Node) -> bool:   return n.type in nodeset["declaration"]
+    def is_call(n: Node) -> bool:          return n.type in nodeset["call"]
+    def is_loop(n: Node) -> bool:          return n.type in nodeset.get("loop", set())
 
-    def is_block_like(n: Node) -> bool:
-        return n.type in nodeset["block"]
-
-    def is_key_stmt(n: Node) -> bool:
-        return n.type in nodeset["key"]
-
-    def is_identifier(n: Node) -> bool:
-        return n.type in nodeset["ident"]
-
-    def is_member_like(n: Node) -> bool:
-        return n.type in nodeset["member_like"]
-
-    def is_assign(n: Node) -> bool:
-        return n.type in nodeset["assign"]
-
-    def is_declaration(n: Node) -> bool:
-        return n.type in nodeset["declaration"]
-
-    def is_call(n: Node) -> bool:
-        return n.type in nodeset["call"]
-
-    # --- Find the function node that covers the target line ---
+    # Find enclosing function & target node
     def find_function_node(n: Node) -> Optional[Node]:
         if is_function_like(n):
             s, e = _line_range(n)
@@ -283,7 +328,6 @@ def compress_function_from_source(
                 return fn
         return None
 
-    # --- Find the deepest node that contains target line ---
     def find_target_node(n: Node) -> Optional[Node]:
         s, e = _line_range(n)
         if s <= (line_number - 1) <= e:
@@ -306,12 +350,9 @@ def compress_function_from_source(
             "meta": {"language": lang_key, "function_lines": (f_start + 1, f_end + 1), "target_line": line_number},
         }
 
-    def is_loop(n: Node) -> bool:
-        return n.type in nodeset.get("loop", set())
-
-    # --- Identifier collection with roles (reads vs writes) ---
+    # Identifier helpers
     def collect_idents_in_node(root: Node) -> Set[str]:
-        """Collect raw identifier tokens in the subtree (includes field/member pieces)."""
+        """Collect identifiers including member/field parts."""
         ids: Set[str] = set()
         stack = [root]
         while stack:
@@ -319,7 +360,6 @@ def compress_function_from_source(
             if is_identifier(n):
                 ids.add(_node_text(n, source_bytes))
             elif is_member_like(n):
-                # For member/field expressions, collect constituent identifiers (object and property if identifier-like)
                 for ch in n.children:
                     if is_identifier(ch):
                         ids.add(_node_text(ch, source_bytes))
@@ -327,107 +367,60 @@ def compress_function_from_source(
         return ids
 
     def split_reads_writes(root: Node) -> Tuple[Set[str], Set[str]]:
-        """
-        Best-effort separation of identifiers into (reads, writes) for the subtree:
-          - Assignment LHS -> writes, RHS -> reads
-          - Declarations (and their initializers) -> writes (name), RHS -> reads
-          - Calls -> callee and args counted as reads
-        """
         reads: Set[str] = set()
         writes: Set[str] = set()
         stack = [root]
         while stack:
             n = stack.pop()
-
             if is_assign(n):
-                # Heuristic per grammar:
-                # Many grammars structure assignment as (left, '=', right)
                 if n.child_count >= 3:
                     lhs = n.children[0]
                     rhs = n.children[-1]
                     writes |= collect_idents_in_node(lhs)
-                    reads |= collect_idents_in_node(rhs)
+                    reads  |= collect_idents_in_node(rhs)
                 else:
-                    # Fallback to collect all as reads if structure unknown
                     reads |= collect_idents_in_node(n)
-
             elif is_declaration(n):
-                # Declarations: variable name is a write; initializer (if any) is read
-                # C/Java/JS usually have child declarators/variable_declarator with name and optional initializer
                 for ch in n.children:
-                    # naive: anything identifier under declaration contributes to writes
                     if is_identifier(ch):
                         writes.add(_node_text(ch, source_bytes))
                     else:
-                        # look deeper for declarators
                         for g in ch.children:
                             if is_identifier(g):
                                 writes.add(_node_text(g, source_bytes))
                             else:
-                                # initializers considered reads
                                 reads |= collect_idents_in_node(g)
-
             elif is_call(n):
                 reads |= collect_idents_in_node(n)
-
             elif is_loop(n):
-                # Heuristics per language:
-
-                # 1) Try to find "target" loop variable(s) -> writes
-                #    Python: (for_statement) children like: 'for', target, 'in', iterable, ':', block
-                #    JS: for_in/for_of have left(target) and right(iterable)
-                #    Java enhanced_for_statement: has variable_declarator_id + expression
-                #    C++ range_based_for_loop: has declarator + expression
                 for ch in n.children:
                     t = ch.type
-
-                    # Python: loop target often a node like 'pattern' or 'identifier' before 'in'
                     if lang_key == "python" and t in {"identifier", "pattern", "tuple"}:
                         writes |= collect_idents_in_node(ch)
-
-                    # JS: 'for_in_statement' / 'for_of_statement' usually have 'left' and 'right' fields
                     if lang_key == "javascript" and t in {"variable_declaration", "identifier"}:
-                        # left side (declaration or identifier) is a write
                         writes |= collect_idents_in_node(ch)
-
-                    # Java enhanced-for: variable declarator on the left -> write
                     if lang_key == "java" and t in {"local_variable_declaration", "variable_declarator", "identifier"}:
                         writes |= collect_idents_in_node(ch)
-
-                    # C++ range-based: declarator on the left -> write
                     if lang_key == "cpp" and t in {"declaration", "init_declarator", "identifier"}:
                         writes |= collect_idents_in_node(ch)
-
-                # 2) Iterable / condition / step -> reads
-                #    Collect all ids, then remove ones that got to writes (to avoid duplication)
                 all_ids = collect_idents_in_node(n)
                 reads |= (all_ids - writes)
-
             else:
-                # Generic walk
                 stack.extend(n.children)
                 continue
-
-            # Continue traversal into children to catch nested structures
             stack.extend(n.children)
-
-        # Always include bare identifiers encountered where we couldn't classify:
         raw_ids = collect_idents_in_node(root)
-        # Prefer to keep unknowns in reads (safer for backward slicing)
         reads |= (raw_ids - writes)
         return reads, writes
 
-    # Seed identifiers at the target node
+    # Seed identifiers and parent blocks
     seed_reads, seed_writes = split_reads_writes(target_node)
     seed_all = seed_reads | seed_writes
 
-    # We'll expand over parent blocks
     relevant_lines: Set[int] = set()
-    # Mark target node lines
     for i in range(target_node.start_point[0], target_node.end_point[0] + 1):
         relevant_lines.add(i)
 
-    # Collect parent blocks (including the function)
     nodes_to_visit: List[Node] = []
     p: Optional[Node] = target_node
     while p is not None:
@@ -435,21 +428,16 @@ def compress_function_from_source(
             nodes_to_visit.append(p)
         p = p.parent
 
-    # Expansion frontier: we track both read/write sets
+    # Expand frontier
     frontier_reads: Set[str] = set(seed_reads)
     frontier_writes: Set[str] = set(seed_writes)
     seen_reads: Set[str] = set()
     seen_writes: Set[str] = set()
 
     def mark_if_references_ids(root: Node, idset: Set[str]) -> Tuple[bool, Set[str], Set[str]]:
-        """
-        If a key-statement references any identifier from idset, mark its lines and
-        return (matched?, new_reads, new_writes) discovered in that statement.
-        """
         matched_any = False
         discovered_reads: Set[str] = set()
         discovered_writes: Set[str] = set()
-
         stack = [root]
         while stack:
             n = stack.pop()
@@ -466,7 +454,6 @@ def compress_function_from_source(
             stack.extend(n.children)
         return matched_any, discovered_reads, discovered_writes
 
-    # Expand up to max_backward_depth passes
     depth = 0
     while depth < max_backward_depth and (frontier_reads - seen_reads or frontier_writes - seen_writes):
         current_ids = (frontier_reads - seen_reads) | (frontier_writes - seen_writes)
@@ -487,6 +474,13 @@ def compress_function_from_source(
         if not any_match:
             break
 
+    # Include ALL comment-only lines within the function body
+    f_start, f_end = _line_range(func_node)
+    comment_only_lines = _compute_comment_lines_generic(lang_key, lines)
+    for i in range(f_start, f_end + 1):
+        if i in comment_only_lines:
+            relevant_lines.add(i)
+
     # Merge relevant lines into contiguous blocks
     blocks: List[Tuple[int, int]] = []
     if relevant_lines:
@@ -500,8 +494,7 @@ def compress_function_from_source(
                 start = prev = i
         blocks.append((start, prev))
 
-    # Build output with multi-line header and omission markers
-    f_start, f_end = _line_range(func_node)
+    # Build output
     header_lines, cursor = _collect_multiline_header(lines, lang_key, f_start, f_end)
 
     out: List[str] = []
@@ -513,29 +506,36 @@ def compress_function_from_source(
     def comment_omitted() -> str:
         return f"{line_comment} ... omitted ..."
 
+    def emit_skipped_region_with_inline_comments(lo: int, hi: int):
+        """Emit omission marker and masked inline comments within [lo, hi)."""
+        slice_lines = lines[lo:hi]
+        if not nonempty_present(slice_lines):
+            return
+        out.append(comment_omitted())
+        if preserve_inline_comments:
+            for j in range(lo, hi):
+                masked = _mask_code_keep_comment(lines[j], lang_key)
+                if masked:
+                    out.append(masked)
+
     for start, end in blocks:
         if start < cursor:
             start = max(start, cursor)
             if start > end:
                 continue
-        if nonempty_present(lines[cursor:start]):
-            out.append(comment_omitted())
+        emit_skipped_region_with_inline_comments(cursor, start)
         for i in range(start, end + 1):
-            if lines[i].strip():
+            if lines[i].strip() or i in comment_only_lines:
                 out.append(lines[i])
         cursor = end + 1
 
-    if nonempty_present(lines[cursor:f_end]):
-        out.append(comment_omitted())
+    emit_skipped_region_with_inline_comments(cursor, f_end)
 
-    # Closing line for brace languages
     if nodeset["closing_is_brace"]:
         out.append(lines[f_end])
 
-    # Normalize indentation of the final snippet
     out = _dedent_minimum(out)
 
-    # Prepare metadata (convert to 1-based inclusive ranges)
     meta = {
         "language": lang_key,
         "function_lines": (f_start + 1, f_end + 1),
@@ -547,27 +547,16 @@ def compress_function_from_source(
             "writes": sorted(frontier_writes),
         },
         "blocks": [(a + 1, b + 1) for (a, b) in blocks],
+        "preserve_inline_comments": preserve_inline_comments,
     }
 
     return {"text": "\n".join(out), "meta": meta}
-
-
-# ---- Utility: safe slicing helpers ----
-def _byte_span_to_text(source_bytes: bytes, start_byte: int, end_byte: int) -> str:
-    """Decode a slice of bytes to UTF-8 text with replacement for invalid sequences."""
-    return source_bytes[start_byte:end_byte].decode("utf-8", errors="replace")
-
-
-def _line_range(node: Node) -> Tuple[int, int]:
-    """Return 0-based inclusive (start_line, end_line)."""
-    return node.start_point[0], node.end_point[0]
-
 
 def load_source_from_url(
         url: str,
         *,
         timeout: float = 15.0,
-        max_bytes: int = 50 * 1024 * 1024,  # 5 MiB hard cap to avoid accidental huge downloads
+        max_bytes: int = 50 * 1024 * 1024,  # hard cap to avoid huge downloads
 ) -> str:
     """
     Load source text from a file:// or http(s):// URL with sensible safety defaults.
@@ -594,30 +583,13 @@ def load_source_from_url(
         # Fetch with streaming to enforce a hard byte cap.
         with requests.get(url, stream=True, timeout=timeout) as r:
             r.raise_for_status()
-
-            ctype = r.headers.get("Content-Type", "")
-            # Light guard: allow typical text/* and code-like types
-            if not any(t in ctype for t in ("text/", "json", "xml", "javascript")):
-                # We still might allow unknown content-types if it's small and decodes to text,
-                # but by default be conservative.
-                pass
-
-            # Accumulate up to max_bytes
             buf = bytearray()
             for chunk in r.iter_content(chunk_size=65536):
                 if chunk:
                     if len(buf) + len(chunk) > max_bytes:
                         raise ValueError(f"Response exceeds max_bytes={max_bytes} limit")
                     buf.extend(chunk)
-
-        # Decode with response encoding hint if present; fallback to UTF-8
-        # Note: we do a best-effort UTF-8 decode because most code repos are UTF-8.
-        try:
-            # requests may set an apparent encoding; we ignore to keep behavior stable
-            text = bytes(buf).decode("utf-8", errors="replace")
-        except Exception:
-            text = bytes(buf).decode("utf-8", errors="replace")
-        return text
+        return bytes(buf).decode("utf-8", errors="replace")
 
     raise ValueError(f"Unsupported URL scheme for source loading: {parsed.scheme}")
 
@@ -680,17 +652,14 @@ def extract_function_from_source(
             hit = find_enclosing_function(ch)
             if hit:
                 return hit
-        return n if is_function_like(n) else None
+        return None
 
     func_node = find_enclosing_function(tree.root_node)
-    if not func_node or not is_function_like(func_node):
-        return {
-            "text": "// Function not found.",
-            "meta": {"language": lang_key, "target_line": line_number},
-        }
+    if not func_node:
+        return {"text": "// Function not found.", "meta": {"language": lang_key, "target_line": line_number}}
 
     f_start, f_end = _line_range(func_node)
-    relative_line_number = (line_number - (f_start + 1)) + 1  # 1-based inside function
+    relative_line_number = (line_number - (f_start + 1)) + 1
     text = _byte_span_to_text(source_bytes, func_node.start_byte, func_node.end_byte)
 
     return {
@@ -703,19 +672,18 @@ def extract_function_from_source(
         },
     }
 
-
 def extract_function(file_url: str, line_number: int) -> Dict[str, Any]:
     """Download the file and extract the function containing the given line number."""
     source_code = load_source_from_url(file_url)
     filename = Path(urlparse(file_url).path).name
     return extract_function_from_source(source_code, filename, line_number)
 
-
 def compress_function(file_url: str, line_number: int) -> Dict[str, Any]:
     """Download the file and compress the function to contain only important information, related to the given line number."""
     source_code = load_source_from_url(file_url)
     filename = Path(urlparse(file_url).path).name
     return compress_function_from_source(source_code, filename, line_number)
+
 
 
 if __name__ == "__main__":

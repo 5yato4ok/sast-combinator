@@ -8,6 +8,7 @@ OUTPUT_FILE="${OUTPUT_DIR}/flawfinder_results.sarif"
 echo "[+] Running Flawfinder on: $INPUT_DIR"
 echo "[+] Output will be saved to: $OUTPUT_FILE"
 
-flawfinder --sarif "$INPUT_DIR" > "$OUTPUT_FILE"
+cd "$INPUT_DIR"
+flawfinder --sarif . > "$OUTPUT_FILE"
 
 echo "[✓] Flawfinder analysis complete."

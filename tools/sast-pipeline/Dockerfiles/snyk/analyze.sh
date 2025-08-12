@@ -11,7 +11,8 @@ if [[ -z "${SNYK_TOKEN}" ]]; then
 fi
 
 echo "[+] Running Snyk Code analysis..."
-if snyk code test --sarif --project-name="${INPUT_DIR##*/}" > "$OUTPUT_FILE"; then
+cd "$INPUT_DIR"
+if snyk code test --sarif --project-name=. > "$OUTPUT_FILE"; then
     echo "[✓] Snyk completed with no critical issues."
 else
     echo "[!] Snyk found issues or exited with non-zero status (possibly 2)."

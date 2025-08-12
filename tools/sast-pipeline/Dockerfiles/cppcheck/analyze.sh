@@ -8,11 +8,12 @@ OUTPUT_FILE="${OUTPUT_DIR}/cppcheck_result.sarif"
 echo "[+] Running Cppcheck on: $INPUT_DIR"
 echo "[+] Output will be saved to: $OUTPUT_FILE"
 
+cd "$INPUT_DIR"
 cppcheck \
     --output-format=sarif \
     --output-file="$OUTPUT_FILE" \
     --check-level=exhaustive \
     -j "$(nproc)" \
-    "$INPUT_DIR"
+    .
 
 echo "[✓] Cppcheck analysis complete."

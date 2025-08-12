@@ -34,7 +34,6 @@ if [ -d "$TEST_SUITE_DIR" ]; then
 else
   echo "[+] Cloning fresh copy of project..."
   git clone https://github.com/5yato4ok/cooddy-test-suite.git
-  ls "${PROJECT_PATH}"
 fi
 
 export NON_COMPILE_PROJECT=1

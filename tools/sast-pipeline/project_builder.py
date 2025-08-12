@@ -20,7 +20,8 @@ def configure_project_run_analyses(script_path,
                                    image_name="project-builder",
                                    dockerfile_path="Dockerfiles/builder/Dockerfile",
                                    project_path="/tmp/my_project",
-                                   force_rebuild=False):
+                                   force_rebuild=False,
+                                   version=None):
 
     context_dir = os.path.abspath(".")  # assume this file is run from the root project
 
@@ -73,14 +74,22 @@ def configure_project_run_analyses(script_path,
 
     print(f"[>] Running builder container...")
     container_name = f"{image_name}_container"
+
+    env_args = [
+        "-e", f"FORCE_REBUILD={'1' if force_rebuild else '0'}",
+        "-e", f"BUILDER_CONTAINER={container_name}",
+    ]
+
+    if version is not None:
+        env_args += ["-e", f"PROJECT_VERSION={str(version)}"]
+
     subprocess.run([
         "docker", "run", "--rm",
         "--name", container_name,
         "-v", f"{os.path.abspath(project_path)}:/workspace",
         "-v", f"{os.path.abspath(output_dir)}:/shared/output",
         "-v", "/var/run/docker.sock:/var/run/docker.sock",  # For running child analyses containers
-        "-e", f"FORCE_REBUILD={'1' if force_rebuild else '0'}",
-        "-e", f"BUILDER_CONTAINER={container_name}",
+        *env_args,
         image_name
     ], check=True, text=True)
 

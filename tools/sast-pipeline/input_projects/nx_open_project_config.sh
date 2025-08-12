@@ -28,6 +28,7 @@ if [ -d "$NX_OPEN_DIR" ]; then
 
   if [ "$LOCAL" != "$REMOTE" ]; then
     echo "[+] Updates detected. Pulling changes and rebuilding..."
+    git checkout master
     git pull
     REBUILD=1
   else
@@ -38,6 +39,13 @@ if [ -d "$NX_OPEN_DIR" ]; then
 else
   echo "[+] Cloning fresh copy of project..."
   git clone https://github.com/networkoptix/nx_open.git
+  REBUILD=1
+fi
+
+if [[ -n "${PROJECT_VERSION:-}" ]]; then
+  cd "$NX_OPEN_DIR"
+  echo "[+] Git checkout to a specific version"
+  git checkout "${PROJECT_VERSION}"
   REBUILD=1
 fi
 

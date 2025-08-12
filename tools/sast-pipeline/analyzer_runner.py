@@ -78,7 +78,7 @@ def run_selected_analyzers(
 
     analyzers.sort(key=lambda a: ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
 
-    print(f"[=] Analyses will be launched for following analyzers: {", ".join([a["name"] for a in analyzers])}")
+    print(f"[=] Analyses will be launched for following analyzers: {', '.join([a['name'] for a in analyzers])}")
 
     for analyzer in analyzers:
         name = analyzer["name"]

@@ -1,0 +1,45 @@
+# Expected variables:
+# - mysql_restore_src: /path/to/dump.sql(.gz)
+# - mysql_restore_drop_db: true/false (default: true)
+
+- name: Check dump exists
+  ansible.builtin.stat:
+    path: "{{ mysql_restore_src }}"
+  register: dump_stat
+
+- name: Fail if dump not found
+  ansible.builtin.fail:
+    msg: "Dump {{ mysql_restore_src }} not found on remote."
+  when: not dump_stat.stat.exists
+
+- name: Ensure stack is up
+  community.docker.docker_compose_v2:
+    project_src: "{{ mysql_stack_root }}"
+    state: present
+
+- name: Drop & recreate DB (optional)
+  community.docker.docker_container_exec:
+    container: mysql
+    command: >
+      sh -lc "mysql -uroot -p'{{ mysql_root_password }}' -e
+      \"DROP DATABASE IF EXISTS {{ mysql_database }};
+      CREATE DATABASE {{ mysql_database }};
+      GRANT ALL PRIVILEGES ON {{ mysql_database }}.* TO '{{ mysql_user }}'@'%';
+      FLUSH PRIVILEGES;\""
+  when: (mysql_restore_drop_db | default(true)) | bool
+
+- name: Import dump (gz)
+  community.docker.docker_container_exec:
+    container: mysql
+    command: >
+      sh -lc "zcat < '{{ mysql_restore_src }}' |
+      mysql -u'{{ mysql_user }}' -p'{{ mysql_app_password }}' '{{ mysql_database }}'"
+  when: mysql_restore_src | regex_search('\.gz$')
+
+- name: Import dump (plain sql)
+  community.docker.docker_container_exec:
+    container: mysql
+    command: >
+      sh -lc "cat '{{ mysql_restore_src }}' |
+      mysql -u'{{ mysql_user }}' -p'{{ mysql_app_password }}' '{{ mysql_database }}'"
+  when: not (mysql_restore_src | regex_search('\\.gz$'))

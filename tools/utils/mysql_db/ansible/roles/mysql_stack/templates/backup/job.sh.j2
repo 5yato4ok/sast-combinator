@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+STAMP="$(date +%Y%m%d_%H%M%S)"
+OUT="/backups/${MYSQL_DATABASE}_${STAMP}.sql.gz"
+
+echo "[+] Starting mysqldump to $OUT"
+mysqldump           --host="${MYSQL_HOST:-mysql}"           --port="${MYSQL_PORT:-3306}"           --user="${MYSQL_USER}"           --password="${MYSQL_PASSWORD}"           --single-transaction --routines --triggers --events           "${MYSQL_DATABASE}" | gzip -9 > "$OUT"
+
+echo "[✓] Backup written: $OUT"
+
+# Retention
+find /backups -type f -name '*.sql.gz' -mtime "+${BACKUP_RETENTION_DAYS}" -print -delete || true

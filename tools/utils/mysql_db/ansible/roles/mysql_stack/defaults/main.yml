@@ -1,0 +1,47 @@
+mysql_stack_root: /srv/mysql
+mysql_stack_image: "mysql:8.4"
+mysql_database: "app"
+mysql_user: "app"
+mysql_port: 3306
+mysql_timezone: "UTC"
+
+# Set passwords via inventory/group_vars, --extra-vars, or Ansible Vault
+mysql_root_password: ""
+mysql_app_password:  ""
+
+# Backup schedule/retention
+mysql_backup_cron: "0 3 1 * *"
+mysql_backup_retention_days: 365
+
+# Firewall: allow only these CIDRs to connect to 3306 (empty = no rules managed)
+mysql_allow_cidrs: []     # e.g. ["1.2.3.4/32", "10.0.0.0/24"]
+
+# MySQL tuning
+innodb_buffer_pool_size: "70G"
+innodb_buffer_pool_instances: 8
+innodb_log_file_size: "4G"
+innodb_flush_method: "O_DIRECT"
+innodb_flush_neighbors: 0
+innodb_io_capacity: 1000
+innodb_io_capacity_max: 2000
+max_connections: 300
+thread_cache_size: 100
+table_open_cache: 4000
+open_files_limit: 65535
+tmp_table_size: "256M"
+max_heap_table_size: "256M"
+innodb_flush_log_at_trx_commit: 1
+performance_schema: "ON"
+collation_server: "utf8mb4_0900_ai_ci"
+
+# Install Docker automatically?
+mysql_install_docker: false
+
+# Storage / mount management (disabled by default)
+mysql_manage_storage: false          # Set true to manage disk + migration
+mysql_mount_device: ""               # e.g. /dev/sdb
+mysql_mount_fstype: "ext4"
+mysql_mount_opts: "defaults,noatime"
+mysql_mount_create_fs: true          # Create FS if empty (use with care)
+mysql_migrate_existing: true         # Rsync existing data into new disk
+mysql_storage_temp_mount: "/mnt/mysql_migrate"

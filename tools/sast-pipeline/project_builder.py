@@ -94,3 +94,6 @@ def configure_project_run_analyses(script_path,
     ], check=True, text=True)
 
     print("[✓] Builder + analysis finished.")
+    print (f"[✓] Result saved in {output_dir}")
+
+    return output_dir

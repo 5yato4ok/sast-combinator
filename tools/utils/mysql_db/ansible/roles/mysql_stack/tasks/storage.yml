@@ -1,0 +1,80 @@
+- name: Ensure required packages are present for migration
+  ansible.builtin.package:
+    name: [ rsync, e2fsprogs, util-linux ]
+    state: present
+
+- name: Validate mysql_mount_device provided
+  ansible.builtin.assert:
+    that:
+      - mysql_mount_device | length > 0
+    fail_msg: "Set mysql_mount_device (e.g. /dev/sdb)."
+
+- name: Stop stack before storage changes
+  community.docker.docker_compose_v2:
+    project_src: "{{ mysql_stack_root }}"
+    state: absent
+  ignore_errors: true
+
+- name: Create temp mount dir
+  ansible.builtin.file:
+    path: "{{ mysql_storage_temp_mount }}"
+    state: directory
+    mode: "0755"
+
+- name: Check if device already has filesystem
+  ansible.builtin.command: blkid -o value -s TYPE {{ mysql_mount_device }}
+  register: fs_type
+  changed_when: false
+  failed_when: false
+
+- name: Create filesystem if needed
+  ansible.builtin.filesystem:
+    fstype: "{{ mysql_mount_fstype }}"
+    dev: "{{ mysql_mount_device }}"
+    force: false
+  when: mysql_mount_create_fs | bool and (fs_type.rc != 0 or fs_type.stdout | length == 0)
+
+- name: Mount device at temp to stage data
+  ansible.posix.mount:
+    path: "{{ mysql_storage_temp_mount }}"
+    src: "{{ mysql_mount_device }}"
+    fstype: "{{ mysql_mount_fstype }}"
+    opts: "{{ mysql_mount_opts }}"
+    state: mounted
+
+- name: Rsync current data into new disk (if any)
+  ansible.builtin.shell: >
+    rsync -aHAX --info=progress2 {{ mysql_stack_root }}/ {{ mysql_storage_temp_mount }}/
+  when: mysql_migrate_existing | bool
+  args:
+    warn: false
+
+- name: Get UUID of device
+  ansible.builtin.command: blkid -s UUID -o value {{ mysql_mount_device }}
+  register: dev_uuid
+  changed_when: false
+
+- name: Unmount temp mount
+  ansible.posix.mount:
+    path: "{{ mysql_storage_temp_mount }}"
+    state: unmounted
+
+- name: Ensure final mountpoint exists
+  ansible.builtin.file:
+    path: "{{ mysql_stack_root }}"
+    state: directory
+    mode: "0755"
+
+- name: Persist mount in fstab and mount it
+  ansible.posix.mount:
+    path: "{{ mysql_stack_root }}"
+    src: "UUID={{ dev_uuid.stdout }}"
+    fstype: "{{ mysql_mount_fstype }}"
+    opts: "{{ mysql_mount_opts }}"
+    state: mounted
+
+- name: Bring stack back up
+  community.docker.docker_compose_v2:
+    project_src: "{{ mysql_stack_root }}"
+    state: present
+    build: always

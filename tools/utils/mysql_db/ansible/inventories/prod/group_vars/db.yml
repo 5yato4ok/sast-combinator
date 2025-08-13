@@ -1,0 +1,27 @@
+mysql_stack_root: /srv/mysql
+mysql_stack_image: "mysql:8.4"
+mysql_database: "app"
+mysql_user: "app"
+mysql_port: 3306
+mysql_timezone: "Europe/Belgrade"
+
+# Backups
+mysql_backup_cron: "0 3 1 * *"          # Run monthly at 03:00 on the 1st
+mysql_backup_retention_days: 365        # Keep compressed dumps for ~1 year
+
+# Network / firewall: allow these CIDRs to access port 3306
+mysql_allow_cidrs: []
+
+# Tuning for ~100GB RAM host (adjust to your workload)
+innodb_buffer_pool_size: "50G"
+innodb_buffer_pool_instances: 8
+innodb_log_file_size: "4G"
+innodb_io_capacity: 1000
+innodb_io_capacity_max: 2000
+
+# Install Docker automatically (get.docker.com convenience script)
+mysql_install_docker: true
+
+# Passwords — prefer Ansible Vault or pass via --extra-vars
+mysql_root_password: "ChangeMeRoot_9G!"
+mysql_app_password:  "ChangeMeApp_7Q!"

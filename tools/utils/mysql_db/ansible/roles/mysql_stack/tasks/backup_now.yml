@@ -1,0 +1,9 @@
+- name: Ensure stack is up
+  community.docker.docker_compose_v2:
+    project_src: "{{ mysql_stack_root }}"
+    state: present
+
+- name: Run backup now
+  community.docker.docker_container_exec:
+    container: mysql-backup
+    command: /job.sh

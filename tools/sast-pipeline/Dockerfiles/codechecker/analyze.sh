@@ -4,7 +4,7 @@ set -e
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
 REPORT_DIR="${OUTPUT_DIR}/codechecker-reports"
-JSON_PATH="${OUTPUT_DIR}/codechecker_json.json"
+JSON_PATH="${OUTPUT_DIR}/flawfinder_result.json"
 
 echo "[+] Checking..."
 

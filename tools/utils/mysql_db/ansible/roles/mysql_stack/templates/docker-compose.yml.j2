@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  mysql:
+    image: {{ mysql_stack_image }}
+    container_name: mysql
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "{{ mysql_port }}:3306"
+    volumes:
+      - type: bind
+        source: {{ mysql_stack_root }}/data
+        target: /var/lib/mysql
+      - type: bind
+        source: {{ mysql_stack_root }}/conf/my.cnf
+        target: /etc/mysql/conf.d/zz-tuning.cnf
+        read_only: true
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      retries: 10
+
+  backup:
+    build:
+      context: {{ mysql_stack_root }}/backup
+    container_name: mysql-backup
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: "mysql"
+      MYSQL_PORT: "3306"
+      BACKUP_CRON: "${BACKUP_CRON}"
+      BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS}"
+    volumes:
+      - type: bind
+        source: {{ mysql_stack_root }}/backups
+        target: /backups

@@ -1,0 +1,13 @@
+- name: Create directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ mysql_stack_root }}"
+    - "{{ mysql_stack_root }}/data"
+    - "{{ mysql_stack_root }}/backups"
+    - "{{ mysql_stack_root }}/conf"
+    - "{{ mysql_stack_root }}/backup"

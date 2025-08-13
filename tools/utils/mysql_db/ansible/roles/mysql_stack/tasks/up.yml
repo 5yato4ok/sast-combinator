@@ -1,0 +1,5 @@
+- name: Bring up MySQL stack (build+up)
+  community.docker.docker_compose_v2:
+    project_src: "{{ mysql_stack_root }}"
+    state: present
+    build: always

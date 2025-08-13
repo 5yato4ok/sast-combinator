@@ -1,0 +1,23 @@
+- name: Assert required vars
+  ansible.builtin.assert:
+    that:
+      - mysql_root_password | length > 0
+      - mysql_app_password  | length > 0
+    fail_msg: "Set mysql_root_password and mysql_app_password under tools/utils/mysql_db/ansible/inventories/prod/group_vars/vault.yml."
+
+- name: Optionally install Docker
+  ansible.builtin.include_tasks: install_docker.yml
+  when: mysql_install_docker | bool
+
+- name: Create layout
+  ansible.builtin.include_tasks: layout.yml
+
+- name: Render templates
+  ansible.builtin.include_tasks: templates.yml
+
+- name: Bring up stack
+  ansible.builtin.include_tasks: up.yml
+
+- name: Configure firewall
+  ansible.builtin.include_tasks: firewall.yml
+  when: mysql_allow_cidrs | length > 0

@@ -62,28 +62,29 @@ if __name__ == "__main__":
         help="Force a fresh rebuild of the project. If provided without a value, it is treated as true."
     )
     parser.add_argument(
-        "--dojo_product_id",
+        "--dojo_product_name",
         required=False,
-        help="If provided, upload resulting reports to the specified DefectDojo product ID after analysis."
+        help="If provided, upload resulting reports to the specified DefectDojo product after analysis."
     )
     parser.add_argument(
         "--dojo_config",
         required=False,
-        default="tools/sast-pipeline/config/defectdojo.yaml",
-        help="Path to the DefectDojo configuration YAML. Defaults to tools/sast-pipeline/config/defectdojo.yaml."
+        default="config/defectdojo.yaml",
+        help="Path to the DefectDojo configuration YAML. Defaults to config/defectdojo.yaml."
     )
 
     args = parser.parse_args()
-    configure_project_run_analyses(args.script, args.output_dir, force_rebuild=args.project_force_rebuild,
-                                   version=args.project_version)
+    results_path = configure_project_run_analyses(args.script, args.output_dir,
+                                                  force_rebuild=args.project_force_rebuild,
+                                                  version=args.project_version)
 
     # Optionally upload scan results to DefectDojo
-    if args.dojo_product_id:
-        print(f"[=] Uploading reports to DefectDojo product {args.dojo_product_id}...")
+    if args.dojo_product_name:
+        print(f"[=] Uploading reports to DefectDojo product {args.dojo_product_name}...")
         results = upload_results(
-            output_dir=args.output_dir,
-            analyzers_cfg_path="tools/sast-pipeline/config/analyzers.yaml",
-            product_id=args.dojo_product_id,
+            output_dir=results_path,
+            analyzers_cfg_path="config/analyzers.yaml",
+            product_name=args.dojo_product_name,
             dojo_config_path=args.dojo_config,
         )
         print("[✓] DefectDojo upload complete.")

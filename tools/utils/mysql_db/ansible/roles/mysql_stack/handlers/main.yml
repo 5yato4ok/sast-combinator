@@ -1,0 +1,4 @@
+- name: restart mysql stack
+  ansible.builtin.shell: docker compose restart mysql
+  args:
+    chdir: "{{ mysql_stack_root }}"

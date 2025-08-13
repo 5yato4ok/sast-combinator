@@ -3,6 +3,11 @@ set -e
 
 PROJECT_ROOT="/workspace"
 
+export RESERVE_CORES="${RESERVE_CORES:-2}"
+
+CORES=$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
+export JOBS=$(( CORES > RESERVE_CORES ? CORES - RESERVE_CORES : 1 ))
+
 chmod +x project_config.sh
 
 source ./project_config.sh

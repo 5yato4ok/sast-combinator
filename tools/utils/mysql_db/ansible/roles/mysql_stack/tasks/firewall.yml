@@ -1,0 +1,24 @@
+- name: Detect firewall (firewalld)
+  ansible.builtin.shell: command -v firewall-cmd
+  register: fwcmd
+  changed_when: false
+  failed_when: false
+
+- name: Configure firewalld rules
+  ansible.builtin.shell: >
+    firewall-cmd --permanent
+    --add-rich-rule='rule family=ipv4 source address="{{ item }}" port protocol="tcp" port="{{ mysql_port }}" accept'
+  loop: "{{ mysql_allow_cidrs }}"
+  when: fwcmd.rc == 0
+
+- name: Reload firewalld
+  ansible.builtin.shell: firewall-cmd --reload
+  when: fwcmd.rc == 0
+
+- name: Configure UFW rules
+  ansible.builtin.shell: ufw allow from {{ item }} to any port {{ mysql_port }} proto tcp
+  loop: "{{ mysql_allow_cidrs }}"
+  when: fwcmd.rc != 0
+  changed_when: "'Skipping' not in ufw_result.stdout | default('')"
+  register: ufw_result
+  failed_when: false

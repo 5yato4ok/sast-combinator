@@ -1,0 +1,30 @@
+- name: Drop docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ mysql_stack_root }}/docker-compose.yml"
+    mode: "0644"
+
+- name: Drop .env
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ mysql_stack_root }}/.env"
+    mode: "0640"
+
+- name: Drop my.cnf
+  ansible.builtin.template:
+    src: my.cnf.j2
+    dest: "{{ mysql_stack_root }}/conf/my.cnf"
+    mode: "0644"
+  notify: restart mysql stack
+
+- name: Drop backup Dockerfile
+  ansible.builtin.template:
+    src: backup/Dockerfile.j2
+    dest: "{{ mysql_stack_root }}/backup/Dockerfile"
+    mode: "0644"
+
+- name: Drop backup job.sh
+  ansible.builtin.template:
+    src: backup/job.sh.j2
+    dest: "{{ mysql_stack_root }}/backup/job.sh"
+    mode: "0755"

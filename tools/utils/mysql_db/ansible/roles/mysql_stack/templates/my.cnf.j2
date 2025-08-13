@@ -1,0 +1,28 @@
+[mysqld]
+bind-address=0.0.0.0
+skip_name_resolve=ON
+
+character-set-server=utf8mb4
+collation-server={{ collation_server }}
+
+innodb_buffer_pool_size={{ innodb_buffer_pool_size }}
+innodb_buffer_pool_instances={{ innodb_buffer_pool_instances }}
+innodb_log_file_size={{ innodb_log_file_size }}
+innodb_flush_method={{ innodb_flush_method }}
+innodb_flush_neighbors={{ innodb_flush_neighbors }}
+innodb_io_capacity={{ innodb_io_capacity }}
+innodb_io_capacity_max={{ innodb_io_capacity_max }}
+max_connections={{ max_connections }}
+thread_cache_size={{ thread_cache_size }}
+table_open_cache={{ table_open_cache }}
+open_files_limit={{ open_files_limit }}
+tmp_table_size={{ tmp_table_size }}
+max_heap_table_size={{ max_heap_table_size }}
+innodb_flush_log_at_trx_commit={{ innodb_flush_log_at_trx_commit }}
+performance_schema={{ performance_schema }}
+
+# Example binlog (disabled by default)
+# log_bin=mysql-bin
+# server_id=1
+# binlog_expire_logs_seconds=2592000
+# sync_binlog=1

@@ -75,7 +75,7 @@ if [ "$REBUILD" = "1" ]; then
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DinstallSystemRequirements=ON
 
-  cmake --build "$NX_OPEN_DIR/build" --clean-first --parallel
+  cmake --build "$NX_OPEN_DIR/build" --clean-first --parallel "$JOBS"
 else
   echo "[=] No rebuild needed. Skipping build."
 fi

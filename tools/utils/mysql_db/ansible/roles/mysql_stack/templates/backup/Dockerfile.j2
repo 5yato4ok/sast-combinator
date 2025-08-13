@@ -1,0 +1,7 @@
+FROM alpine:3.20
+RUN apk add --no-cache mysql-client tzdata bash coreutils
+ENV BACKUP_CRON="0 3 1 * *"
+ENV BACKUP_RETENTION_DAYS=365
+COPY job.sh /job.sh
+RUN chmod +x /job.sh
+CMD /bin/sh -c 'echo "$BACKUP_CRON /job.sh >> /var/log/cron.log 2>&1" > /etc/crontabs/root && crond -f -l 8'

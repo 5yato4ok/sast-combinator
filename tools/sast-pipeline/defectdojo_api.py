@@ -11,9 +11,9 @@ Usage example:
 >>> from defectdojo_api import upload_results
 >>> upload_results(
 ...     output_dir="/tmp/sast_output",
-...     analyzers_cfg_path="tools/sast-pipeline/config/analyzers.yaml",
-...     product_id="42",
-...     dojo_config_path="tools/sast-pipeline/config/defectdojo.yaml",
+...     analyzers_cfg_path="config/analyzers.yaml",
+...     product_name="Test_suite",
+...     dojo_config_path="config/defectdojo.yaml",
 ... )
 
 The analyzers configuration must specify an `output_type` for each analyzer
@@ -59,8 +59,8 @@ def load_dojo_config(path: str) -> Dict[str, Any]:
     if "defectdojo" not in cfg:
         raise KeyError(f"Expected top‑level 'defectdojo' key in {config_path}")
     dojo_cfg = cfg["defectdojo"]
-    if "url" not in dojo_cfg or "token" not in dojo_cfg:
-        raise KeyError(f"Missing 'url' or 'token' in defectdojo config: {config_path}")
+    if "url" not in dojo_cfg:
+        raise KeyError(f"Missing 'url' in defectdojo config: {config_path}")
     return dojo_cfg
 
 
@@ -87,33 +87,35 @@ def resolve_scan_type(output_type: str) -> str:
 
 
 def upload_report(
-    dojo_url: str,
+    analyzer_name,
+    dojo_cfg: Dict,
     dojo_token: str,
-    product_id: str | int,
+    product_name: str,
     scan_type: str,
-    report_path: str,
-    verify_ssl: bool = True,
+    report_path: str
 ) -> Dict[str, Any]:
     """Upload a single report file to DefectDojo.
 
-    :param dojo_url: Base URL of the DefectDojo instance (no trailing slash).
+    :param dojo_cfg: Dict, containing configuration for Defect Dojo
     :param dojo_token: API token for authentication.
-    :param product_id: ID of the product (project) to attach the scan to.
+    :param product_name: ID of the product (project) to attach the scan to.
     :param scan_type: Type of scan, as understood by DefectDojo.
     :param report_path: Path to the report file on disk.
-    :param verify_ssl: Whether to verify SSL certificates. Default: True.
     :return: Parsed JSON response from DefectDojo.
     :raises Exception: if the HTTP request fails or returns a non‑2xx status.
     """
+    dojo_url = dojo_cfg.get("url")
     api_endpoint = "/api/v2/import-scan/"
     full_url = dojo_url.rstrip("/") + api_endpoint
     headers = {"Authorization": f"Token {dojo_token}"}
     data = {
         "scan_type": scan_type,
-        "product_id": str(product_id),
-        # Minimal flags; you can extend this to set 'active', 'verified', etc.
+        "product_name": str(product_name),
         "active": "true",
         "verified": "true",
+        "engagement_name": analyzer_name,
+        "minimum_severity": dojo_cfg.get("minimum_severity", "Info"),
+        "auto_create_context" : dojo_cfg.get("auto_create_context", "true")
     }
     file_name = os.path.basename(report_path)
     with open(report_path, "rb") as f:
@@ -123,7 +125,7 @@ def upload_report(
             headers=headers,
             data=data,
             files=files,
-            verify=verify_ssl,
+            verify=dojo_cfg.get("verify_ssl", True),
             timeout=120,
         )
     if response.status_code >= 400:
@@ -143,7 +145,7 @@ def upload_report(
 def upload_results(
     output_dir: str,
     analyzers_cfg_path: str,
-    product_id: str | int,
+    product_name: str | int,
     dojo_config_path: str,
 ) -> Dict[str, Any]:
     """Upload all analyzer reports from a directory into DefectDojo.
@@ -158,14 +160,15 @@ def upload_results(
 
     :param output_dir: Directory containing the analyzer result files.
     :param analyzers_cfg_path: Path to the analyzers YAML file.
-    :param product_id: DefectDojo product/project identifier.
+    :param product_name: DefectDojo product/project identifier.
     :param dojo_config_path: Path to the DefectDojo connection YAML.
     :return: A mapping of analyzer names to upload responses.
     """
     dojo_cfg = load_dojo_config(dojo_config_path)
-    dojo_url = dojo_cfg.get("url")
-    dojo_token = dojo_cfg.get("token")
-    verify_ssl = dojo_cfg.get("verify_ssl", True)
+
+    dojo_token = os.environ.get("DEFECT_DOJO_TOKEN", None)
+    if dojo_token is None:
+        raise Exception("Environmental variable DEFECT_DOJO_TOKEN is not set up")
 
     # Load analyzers configuration
     analyzers_path = Path(analyzers_cfg_path).expanduser().resolve()
@@ -192,12 +195,12 @@ def upload_results(
             continue
         try:
             resp = upload_report(
-                dojo_url=dojo_url,
+                analyzer_name=name,
+                dojo_cfg=dojo_cfg,
                 dojo_token=dojo_token,
-                product_id=product_id,
+                product_name=product_name,
                 scan_type=scan_type,
-                report_path=report_file,
-                verify_ssl=verify_ssl,
+                report_path=report_file
             )
             results[name] = resp
             print(f"[✓] Uploaded {name} report to DefectDojo")

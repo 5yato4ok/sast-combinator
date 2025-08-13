@@ -1,13 +1,18 @@
 # Configuration for connecting to DefectDojo
 #
 # url    – Base URL of your DefectDojo instance. Do not include a trailing slash.
-# token  – API token for authenticating with DefectDojo. You can generate
-#          this from your user profile in DefectDojo. Consider using an
-#          environment variable in production instead of committing the token.
 # verify_ssl – Optional. When set to false, SSL certificate verification
 #              will be disabled. Default is true.
 
 defectdojo:
-  url: "https://defectdojo.local"
-  token: "xxx"
-  verify_ssl: true
+  url: "https://157.90.113.55:8443"
+  verify_ssl: false
+#  Minimum severity level to be imported
+#
+#  Info - Info
+#  Low - Low
+#  Medium - Medium
+#  High - High
+#  Critical - Critical
+  minimum_severity: "Info"
+  auto_create_context: true

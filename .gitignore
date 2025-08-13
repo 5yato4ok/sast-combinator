@@ -4,5 +4,5 @@
 *.iml
 *.ipr
 *.env
-tools/../vault.yml
+**/inventories/**/group_vars/vault.yml
 

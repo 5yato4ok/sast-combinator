@@ -2,173 +2,156 @@
 
 ## Overview
 
-This repository contains a SAST (Static Application Security Testing) pipeline that can build a target C/C++ project in an isolated container, generate a `compile_commands.json` file, and run one or more static analyzers against the built project.
+This repository contains a **static application security testing (SAST) pipeline** for
+building projects and running multiple analyzers in an isolated Docker
+environment.  The pipeline is split into two stages:
 
-The pipeline is designed to be flexible:
+* **Builder stage:** the pipeline starts a dedicated container to
+  clone and **configure** your project.  The configuration step can
+  generate a `compile_commands.json` for C/C++ projects but does not
+  necessarily build the entire code base.  The project’s location
+  inside the container is communicated to analyzers via the
+  environment variable `PROJECT_PATH`; if a compilation database is
+  produced, its location is provided in `COMPILE_COMMANDS_PATH`.  The
+  compiler used to generate the database is recorded in
+  `COMPILER_PATH`.  These variables are set by your project
+  configuration script and consumed by analyzers later on.
 
-* Add new analyzers without modifying core logic
-* Analyze any compatible project by adding build script
+* **Analyzer stage:** each analyzer runs in its own Docker image and
+  analyses the built source tree.  Analyzers are configured via the
+  file `config/analyzers.yaml` (see below).  The pipeline launches
+  analyzers in order of their `time_class` to optimise run time.  The
+  `analyzer_runner.py` script uses Docker’s `--volumes-from` option to
+  mount the builder container’s file system into each analyzer
+  container so that tools can access the build outputs.
 
-### Pipeline Stages:
+Each analyzer writes its report into the output directory using the
+format appropriate for that tool.  **Not every analyzer produces a
+SARIF file**: for example, Semgrep and Snyk can emit
+[SARIF](https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/sarif-v2.1.0-os.html),
+but CodeChecker writes its findings to a JSON file.
+Refer to the corresponding analyzer README files for details about
+output formats and filenames.
 
-1. **Builder Stage**: Prepares the build environment, clones the project, installs dependencies, builds via CMake, and generates `compile_commands.json`. Exposes the filesystem via Docker volumes for reuse.
-2. **Analyzer Stage**: Executes each analyzer in its own container inside the builder. Thanks to Docker's `--volumes-from`, analyzers inherit volumes from the builder and can access build artifacts, includes, and write results.
+## Prerequisites
 
-The entry point is `run_pipeline.py`, which builds the builder image, starts the builder container, and runs configured analyzers.
+* **Python 3.8+** – the pipeline uses Python scripts for orchestration.
+* **Docker** – all analyzers and the builder run in containers.  Make
+  sure your user has permission to run Docker commands.
 
----
+## Running the pipeline
 
-## Running the Pipeline
-
-### Prerequisites:
-
-* **Install Docker**: Both the host and builder require Docker
-* **Prepare Project**: TBD
-
-### Steps:
-
-```bash
-# Optionally export to force fresh rebuild of project
-export FORCE_REBUILD=1
-
-python3 run_pipeline.py
-```
-
-This will:
-
-* Build the builder image from `Dockerfiles/builder/Dockerfile`
-* Run the builder container with mounts:
-
-  * `project_path` → `/workspace`
-  * `output_dir` → `/shared/output`
-  * `/var/run/docker.sock` (for launching analyzer containers)
-
-* During run it will firstly prepare the environment for building and analyzing the project
-* Then it will launch analyses by analyzers, described in config `analyzers.yaml`
-
-Set `FORCE_REBUILD=1` to force fresh clone; otherwise, `git pull` is used.
-
----
-
-## Adding a New Analyzer
-
-An analyzers configuration is stored in `analyzers.yaml`. Example:
-
-```yaml
-analyzers:
-  - name: mytool
-    type: simple         # or builder
-    image: sast-mytool
-    input: /src
-    time_class: medium
-    env:
-      - MY_TOOL_TOKEN
-```
-
-### Steps:
-
-1. **Dockerfile**:
-
-   * Create under `Dockerfiles/mytool`
-   * Install dependencies and set `WORKDIR /workspace`
-   * Copy `analyze.sh` and set as entrypoint
-
-2. **analyze.sh**:
+To run the pipeline, execute the `run_pipeline.py` script from the
+`tools/sast-pipeline` directory of this repository.  **It is important
+to run the script from within the project directory**; the pipeline
+depends on relative paths when mounting volumes.  The script accepts
+two required arguments:
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-INPUT_DIR="${1:-/workspace}"
-OUTPUT_DIR="${2:-/shared/output}"
-mkdir -p "$OUTPUT_DIR"
-mytool --input "$INPUT_DIR" --output "$OUTPUT_DIR/report.sarif"
+python3 run_pipeline.py \
+  --script input_projects/<project>_config.sh \
+  --output_dir /absolute/path/to/results
 ```
 
-3. **Build Context**:
+* `--script` – path to the project configuration script.  See the
+  section on *Adding a new project* below for how to write this
+  script.  The script is executed inside the builder container to
+  prepare the source code and set environment variables.
+* `--output_dir` – absolute path on the host where analysis results
+  (e.g. SARIF or JSON) will be written.
 
-   * Directory should contain everything needed for reproducible build
+The pipeline will automatically load environment variables defined in
+a `.env` file located at the repository root.  This is handled by
+`python-dotenv` in `run_pipeline.py`.  Place any tokens required
+by analyzers (e.g., `SNYK_TOKEN`, `SEMGREP_APP_TOKEN`) into this file.
 
-4. **Update `analyzers.yaml`** with tool definition
+To skip analyzers marked as _slow_, you can pass the `--exclude_slow`
+flag when running the pipeline.
 
-### Notes:
+## Configuring analyzers
 
-* Use `type: simple` if the analyzer does not need build artifacts
-* Use `type: builder` (e.g., for `codechecker`) if it needs full build context
-* Use `env:` to pass API tokens/secrets to analyzers
+Analyzers are defined in `config/analyzers.yaml`.  Each entry
+specifies the analyzer name, type, Docker image, classification
+(`time_class`), whether it is enabled, and any environment variables
+required.  For example, the bundled configuration includes analyzers
+such as `cppcheck`, `semgrep`, `codechecker`, `snyk`, etc., and
+associates variables like `SNYK_TOKEN`, `SEMGREP_APP_TOKEN`,
+`COMPILE_COMMANDS_PATH` and `COMPILER_PATH` with the appropriate
+analyzer.  To enable or disable an analyzer,
+change its `enabled:` field.  You may add additional analyzers by
+defining a new entry with a unique `name` and pointing it to a Docker
+image built in `Dockerfiles/<analyzer>`.
 
----
+### Adding a new analyzer
 
-## Adding a New Project
+1. **Add an entry to `config/analyzers.yaml`:** provide a `name`, set
+   `type` to `simple` for analyzers that read files directly or
+   `builder` for analyzers that reuse the builder container.  Specify
+   the Docker image under `image:` and set any required environment
+   variables under the `env:` section.
 
- !!! 
- TBD
+2. **Create a Dockerfile:** create a directory `Dockerfiles/<name>`
+   containing a `Dockerfile` that installs the analyzer.  See the
+   existing directories (e.g., `Dockerfiles/semgrep` or
+   `Dockerfiles/codechecker`) for examples.  Your Dockerfile should
+   install the tool and copy an `analyze.sh` script that executes the
+   analysis.  **The script is free to choose its output format**
+   (SARIF, JSON, etc.) and destination.  The pipeline copies all
+   generated files from `/tmp` in the analyzer container into the
+   output directory.  Consult other analyzer directories for
+   conventions.
 
----
+3. **Reconfigure the project (optional):** on the next pipeline
+   run the analyzer runner will build the image if it does not
+   already exist.  If you need to re-run your project configuration
+   script (for example after changing dependencies or build flags),
+   pass argument `--force_rebuild` when invoking `run_pipeline.py`.  This
+   removes any previously generated configuration artifacts inside the
+   builder container and reruns your project script.
+   It does **not** rebuild Docker images; to rebuild images, delete
+   them via Docker before running the pipeline again.
 
-## How Volumes and Nested Containers Work
+Refer to the existing analyzer directories for guidance on how to
+structure your `Dockerfile` and `analyze.sh`.
 
-### Builder Container:
+## Adding a new project
 
-* Mounts project at `/workspace`
-* Clones source into `/workspace/build-tmp/nx_open`
-* Builds with CMake and generates `compile_commands.json` at `/workspace/build-tmp/nx_open/build`
+To analyse a new repository you need to provide a **project
+configuration script**.  You must provide the path via the
+`--script` argument when running `run_pipeline.py`. The pipeline copies the script into the builder
+container as `project_config.sh` and executes it.
+Your project script must:
 
-### Analyzer Container:
+1. **Check out or update the source code.**  Clone the repository
+   into the build directory (inside the container) or update it if
+   already present.  For example, the `nx_open_project_config.sh`
+   script clones a Git repository into `/build/nx-open` and updates
+   it on subsequent runs.
 
-* Is launched from within builder using host's Docker socket
-* Uses `--volumes-from` to inherit builder container’s volumes
+2. **Define mandatory variables.**  At minimum export
+   `PROJECT_PATH` pointing to the directory containing the source code.
+   If the project can generate a compilation database
+   (`compile_commands.json`), set `COMPILE_COMMANDS_PATH` to its
+   absolute path.  The builder sets `COMPILER_PATH` automatically by
+   inspecting the compilation database.  If your project
+   requires compilation and can provide `compile_commands.json`
+   export `NON_COMPILE_PROJECT=0`.
 
-This ensures:
+3. **Configure the project (if necessary).**  If your analyzers need
+   a compilation database (for example, CodeChecker), your script
+   should **configure** the project using CMake or a similar tool to
+   generate `compile_commands.json`.  A full build is not required.
+   See the provided project configuration examples for details on
+   generating a compilation database.
 
-* Full access to build files, headers, and libraries (e.g., `/usr`, `/usr/local`)
-* Valid paths in `compile_commands.json` inside analyzer
-* Persistent output to host
+4. **Set additional environment variables (optional).**  If your
+   analyzers require tokens or configuration, ensure those variables
+   are set in the `.env` file at the repository root.  The pipeline
+   automatically passes variables listed in `env:` sections of
+   `analyzers.yaml` to the appropriate containers.
 
----
-
-## Entry Points
-
-* **`run_pipeline.py`**: Top-level orchestrator
-* **`project_builder.py`**: Defines `build_environment()` and handles builder container setup
-* **`builder-entrypoint.sh`**: Inside builder, clones project, builds it, and invokes `run_inside_builder.py`
-* **`run_inside_builder.py`**: Applies optional filtering and calls `run_selected_analyzers()`
-* **`analyzer_runner.py`**: Parses `analyzers.yaml`, builds images, and runs analyzer containers
-
----
-
-## Example: Adding SuperLint Analyzer
-
-1. Create:
-
-```
-Dockerfiles/superlint/
-├── Dockerfile
-└── analyze.sh
-```
-
-2. Update `analyzers.yaml`:
-
-```yaml
-analyzers:
-  - name: superlint
-    type: simple
-    image: sast-superlint
-    input: /src
-    time_class: fast
-```
-
-3. Run:
-
-```bash
-python3 run_pipeline.py
-```
-
-Reports appear in `/tmp/sast_output/superlint_result.sarif`
-
----
-
-## Notes
-
-* Assumes project uses CMake
-* Slow analyzers (`time_class: slow`) can be skipped by setting `exclude_slow=True`
-* Use `FORCE_REBUILD` judiciously: it forces a clean clone, else `git pull` is used
+Once your script is ready, run the pipeline as shown above.  The
+project will be built inside a builder container and each enabled
+analyzer will run against the checked‑out source tree.  Remember to
+execute the pipeline from the `tools/sast-pipeline` directory so that
+relative mounts work correctly.

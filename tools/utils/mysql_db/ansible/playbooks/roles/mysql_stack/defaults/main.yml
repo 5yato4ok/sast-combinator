@@ -5,6 +5,15 @@ mysql_user: "app"
 mysql_port: 3306
 mysql_timezone: "UTC"
 
+# Where to mount the whole device (shared base mountpoint)
+mysql_device_mountpoint: "/mnt/storage"
+
+# Subdirectory on that device to hold MySQL data/config
+mysql_subdir_name: "mysql"
+
+# Use bind-mount from <device>/<subdir> to mysql_stack_root (/srv/mysql)
+mysql_bind_mount: true
+
 # Set passwords via inventory/group_vars, --extra-vars, or Ansible Vault
 mysql_root_password: ""
 mysql_app_password:  ""

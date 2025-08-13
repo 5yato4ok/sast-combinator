@@ -19,7 +19,7 @@ repo/
 │     ├─ hosts.ini
 │     └─ group_vars/
 │        ├─ db.yml
-│        └─ vault.example.yml
+│        └─ vault.yml < Edit to change default passwords
 ├─ playbooks/
 │  └─ site.yml
 └─ roles/
@@ -32,7 +32,11 @@ repo/
 
 ## Basic deployment
 ```bash
-ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml       -e mysql_root_password='StrongRoot!' -e mysql_app_password='StrongApp!'
+ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml -e mysql_root_password='StrongRoot!' -e mysql_app_password='StrongApp!'
+```
+Or by vault.yaml
+```bash
+ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml --extra-vars "@inventories/prod/group_vars/vault.yml"
 ```
 > Prefer Ansible Vault for secrets (see below).
 
@@ -44,17 +48,27 @@ ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml --tags backup_
 ## Restore from dump
 Put the dump file on the remote host first, then:
 ```bash
-ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml       --tags restore       -e mysql_restore_src="/srv/mysql/backups/app_YYYYmmdd_HHMMSS.sql.gz"       -e mysql_restore_drop_db=true
+ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml --tags restore -e mysql_restore_src="/srv/mysql/backups/app_YYYYmmdd_HHMMSS.sql.gz" -e mysql_restore_drop_db=true
 ```
 
 ## Storage auto-mount & migration
 To format a new disk, migrate existing data, and mount it at `mysql_stack_root` in one go:
 ```bash
-ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml       -e mysql_manage_storage=true       -e mysql_mount_device=/dev/sdb       -e mysql_mount_fstype=ext4       -e mysql_mount_create_fs=true       -e mysql_migrate_existing=true
+ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml \
+  -e mysql_manage_storage=true \
+  -e mysql_mount_device=/dev/sdb \
+  -e mysql_device_mountpoint=/mnt/storage \
+  -e mysql_subdir_name=mysql \
+  -e mysql_mount_fstype=ext4 \
+  -e mysql_mount_create_fs=true \
+  -e mysql_migrate_existing=true
 ```
 The role will:
-1) stop the stack, 2) mount the disk at `/mnt/mysql_migrate`, 3) rsync data,
-4) add an `/etc/fstab` entry by UUID and mount at `/srv/mysql`, 5) bring the stack back up.
+1) Mounts the entire device at mysql_device_mountpoint (e.g., /mnt/storage). 
+2) Creates the subdirectory mysql_data_dir = /mnt/storage/mysql. 
+3) Copies the current data into it (if mysql_migrate_existing is enabled). 
+4) Bind-mounts mysql_data_dir → /srv/mysql (so the role/Compose don’t need to change anything). 
+5) Brings the stack back up.
 
 **Use with care**: make sure `/dev/sdb` is the correct device.
 
@@ -70,6 +84,6 @@ mysql_app_password:  "StrongApp!"
 ```
 Then run the playbook with:
 ```bash
-ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml       --extra-vars "@inventories/prod/group_vars/vault.yml"
+ansible-playbook -i inventories/prod/hosts.ini playbooks/site.yml --extra-vars "@inventories/prod/group_vars/vault.yml"
 ```
 Alternatively, pass secrets via `-e` or your CI secret manager.

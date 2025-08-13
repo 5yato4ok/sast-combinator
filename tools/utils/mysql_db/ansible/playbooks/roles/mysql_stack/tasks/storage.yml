@@ -3,11 +3,12 @@
     name: [ rsync, e2fsprogs, util-linux ]
     state: present
 
-- name: Validate mysql_mount_device provided
+- name: Validate required vars
   ansible.builtin.assert:
     that:
       - mysql_mount_device | length > 0
-    fail_msg: "Set mysql_mount_device (e.g. /dev/sdb)."
+      - mysql_device_mountpoint | length > 0
+    fail_msg: "Set mysql_mount_device (e.g. /dev/sdb) and mysql_device_mountpoint (e.g. /mnt/storage)."
 
 - name: Stop stack before storage changes
   community.docker.docker_compose_v2:
@@ -15,9 +16,9 @@
     state: absent
   ignore_errors: true
 
-- name: Create temp mount dir
+- name: Ensure base mountpoint exists
   ansible.builtin.file:
-    path: "{{ mysql_storage_temp_mount }}"
+    path: "{{ mysql_device_mountpoint }}"
     state: directory
     mode: "0755"
 
@@ -34,44 +35,50 @@
     force: false
   when: mysql_mount_create_fs | bool and (fs_type.rc != 0 or fs_type.stdout | length == 0)
 
-- name: Mount device at temp to stage data
-  ansible.posix.mount:
-    path: "{{ mysql_storage_temp_mount }}"
-    src: "{{ mysql_mount_device }}"
-    fstype: "{{ mysql_mount_fstype }}"
-    opts: "{{ mysql_mount_opts }}"
-    state: mounted
-
-- name: Rsync current data into new disk (if any)
-  ansible.builtin.shell: >
-    rsync -aHAX --info=progress2 {{ mysql_stack_root }}/ {{ mysql_storage_temp_mount }}/
-  when: mysql_migrate_existing | bool
-  args:
-    warn: false
-
 - name: Get UUID of device
   ansible.builtin.command: blkid -s UUID -o value {{ mysql_mount_device }}
   register: dev_uuid
   changed_when: false
 
-- name: Unmount temp mount
+- name: Persist device mount in fstab and mount it
   ansible.posix.mount:
-    path: "{{ mysql_storage_temp_mount }}"
-    state: unmounted
+    path: "{{ mysql_device_mountpoint }}"
+    src: "UUID={{ dev_uuid.stdout }}"
+    fstype: "{{ mysql_mount_fstype }}"
+    opts: "{{ mysql_mount_opts }}"
+    state: mounted
 
-- name: Ensure final mountpoint exists
+- name: Compute target MySQL data dir on device
+  ansible.builtin.set_fact:
+    mysql_data_dir: "{{ mysql_device_mountpoint.rstrip('/') + '/' + mysql_subdir_name }}"
+
+- name: Ensure MySQL target directory exists on the device
+  ansible.builtin.file:
+    path: "{{ mysql_data_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Rsync current data into device subdir (if any)
+  ansible.builtin.shell: >
+    rsync -aHAX --info=progress2 {{ mysql_stack_root }}/ {{ mysql_data_dir }}/
+  when: mysql_migrate_existing | bool
+  args:
+    warn: false
+
+- name: Ensure mysql_stack_root exists
   ansible.builtin.file:
     path: "{{ mysql_stack_root }}"
     state: directory
     mode: "0755"
 
-- name: Persist mount in fstab and mount it
+- name: Bind-mount device subdir onto mysql_stack_root
   ansible.posix.mount:
     path: "{{ mysql_stack_root }}"
-    src: "UUID={{ dev_uuid.stdout }}"
-    fstype: "{{ mysql_mount_fstype }}"
-    opts: "{{ mysql_mount_opts }}"
+    src: "{{ mysql_data_dir }}"
+    fstype: none
+    opts: bind
     state: mounted
+  when: mysql_bind_mount | bool
 
 - name: Bring stack back up
   community.docker.docker_compose_v2:

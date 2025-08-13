@@ -99,14 +99,18 @@ echo "[+] Output will be saved to: $REPORT_DIR"
 
 mkdir -p "$REPORT_DIR"
 
-CodeChecker analyze "$COMPILE_COMMANDS_PATH" --output "$REPORT_DIR"
+if CodeChecker analyze "$COMPILE_COMMANDS_PATH" --output "$REPORT_DIR"; then
+    echo "[✓] CodeChecker analyze completed with no critical issues."
+else
+    echo "[!] CodeChecker found issues or exited with non-zero status (possibly 2)."
+fi
 
 echo "[✓] CodeChecker analysis complete."
 
 echo "[+] Generating JSON report: $JSON_PATH"
 
 if CodeChecker parse -e json --trim-path-prefix "$INPUT_DIR" -o "$JSON_PATH" "$REPORT_DIR"; then
-    echo "[✓] CodeChecker completed with no critical issues."
+    echo "[✓] CodeChecker parse completed with no critical issues."
 else
-    echo "[!] CodeChecker found issues or exited with non-zero status (possibly 2)."
+    echo "[!] CodeChecker parse found issues or exited with non-zero status (possibly 2)."
 fi

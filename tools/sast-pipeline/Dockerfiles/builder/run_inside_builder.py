@@ -40,5 +40,6 @@ if __name__ == "__main__":
         exclude_slow=False,
         project_path=project_path,
         output_dir="/shared/output",
-        builder_container = builder_container
+        builder_container = builder_container,
+        analyzers_to_run=["codechecker"]
     )

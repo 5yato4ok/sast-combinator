@@ -3,21 +3,32 @@ analyzers:
     type: simple
     image: sast-cppcheck
     time_class: fast
+    # The format of the output produced by this analyzer.
+    # Supported values are:
+    #   - sarif      → results are saved in SARIF (JSON) format
+    #   - codechecker → results are saved in CodeChecker unified JSON
+    #
+    # This field is consumed by defectdojo_api when determining how to
+    # import the report into DefectDojo. See tools/sast‑pipeline/defectdojo_api.py
+    output_type: sarif
 
   - name: devskim
     type: simple
     image: sast-devskim
     time_class: medium
+    output_type: sarif
 
   - name: flawfinder
     type: simple
     image: sast-flawfinder
     time_class: fast
+    output_type: sarif
 
   - name: snyk
     type: simple
     image: sast-snyk
     time_class: medium
+    output_type: sarif
     env:
       - SNYK_TOKEN
 
@@ -26,6 +37,7 @@ analyzers:
     image: sast-semgrep
     time_class: medium
     enabled: true
+    output_type: sarif
     env:
       - SEMGREP_APP_TOKEN
 
@@ -34,6 +46,10 @@ analyzers:
     image: sast-builder-codechecker
     time_class: slow
     enabled: true
+    # CodeChecker produces a unified JSON report that can be imported into
+    # DefectDojo using the "Codechecker Report native" importer.  The
+    # defectdojo_api module will map this value to the appropriate scan type.
+    output_type: codechecker
     env:
       - COMPILE_COMMANDS_PATH
       - COMPILER_PATH

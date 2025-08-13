@@ -1,6 +1,0 @@
-# Example file for Ansible Vault.
-# Create an encrypted version with:
-#   ansible-vault create inventories/prod/group_vars/vault.yml
-# Then put the same keys below with strong values.
-mysql_root_password: "StrongRoot_ChangeMe"
-mysql_app_password:  "StrongApp_ChangeMe"

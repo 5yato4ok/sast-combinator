@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import subprocess
 import os
+import re
 import uuid
 import selectors
 import logging
@@ -44,33 +45,35 @@ def image_exists(image_name: str) -> bool:
     return result.stdout.strip() != ""
 
 
+_LEVEL_TOKEN_RE = re.compile(r'\[(DEBUG|INFO|WARNING|WARN|ERROR|ERR|CRITICAL|CRIT)\]', re.IGNORECASE)
+
 def _log_container_line(line: str, stream: str = "stdout") -> None:
-    """
-    Emit a single line from container output to the appropriate logging level.
+    text = line.rstrip("\r\n")
 
-    Log level is chosen based on simple heuristics:
-      * Lines starting with ``[x]`` are logged as errors.
-      * Lines starting with ``[!]`` are logged as warnings.
-      * Lines starting with ``[+]``, ``[✓]`` or ``[=]`` are logged as info.
-      * Unknown prefixes on stderr become warnings; on stdout become debug.
+    last = None
+    for last in _LEVEL_TOKEN_RE.finditer(text):
+        pass
 
-    :param line: The raw line of output.
-    :param stream: Either ``stdout`` or ``stderr`` to indicate the source.
-    """
-    if not line:
-        return
-    text = line.strip()
-    if len(text) == 0:
-        return
-    if text.startswith("[x]"):
-        level_func = log.error
-    elif text.startswith("[!]"):
-        level_func = log.warning
-    elif text.startswith("[+]") or text.startswith("[✓]") or text.startswith("[=]"):
-        level_func = log.info
+    if last:
+        level = last.group(1).upper()
+        msg = text[last.end():].lstrip()
+
+        if level in ("WARN", "WARNING"):
+            log.warning(msg); return
+        if level in ("ERR", "ERROR"):
+            log.error(msg); return
+        if level in ("CRIT", "CRITICAL"):
+            log.critical(msg); return
+        if level == "DEBUG":
+            log.debug(msg); return
+        # INFO by default
+        log.info(msg); return
+
+    # fallback: if there is no [LEVEL] — stderr -> WARNING, stdout -> INFO
+    if stream == "stderr":
+        log.warning(text)
     else:
-        level_func = log.warning if stream == "stderr" else log.debug
-    level_func(text)
+        log.info(text)
 
 
 def run_container(
@@ -166,8 +169,7 @@ def build_image(
     context_dir: str,
     dockerfile: Optional[str] = None,
     build_args: Optional[Dict[str, str]] = None,
-    check: bool = True,
-    workdir: Optional[str] = None,
+    check: bool = True
 ) -> None:
     """Build a Docker image with optional build arguments and logging.
 
@@ -193,16 +195,7 @@ def build_image(
     if dockerfile:
         cmd += ["-f", dockerfile]
     # Context directory
-    cmd += [context_dir]
-
-    # Determine working directory: when dockerfile is relative path outside context,
-    # we need to set cwd accordingly. For simplicity, use the directory part of context_dir.
-    # The caller is responsible for passing appropriate context_dir and dockerfile.
-    # Use the provided working directory, if any.  If workdir is None, the
-    # current working directory will be used.  When context_dir and
-    # dockerfile are relative paths, callers should set workdir to the
-    # directory from which those paths make sense.
-    cwd = workdir
+    cmd += ["."]
 
     # Function to log each build line
     def log_build_line(line: str) -> None:
@@ -220,7 +213,7 @@ def build_image(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        cwd=cwd,
+        cwd=context_dir,
         bufsize=1,
     ) as proc:
         assert proc.stdout is not None

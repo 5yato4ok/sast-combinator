@@ -32,11 +32,13 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import logging
 from typing import Dict, Any, Optional
 
 import yaml  # type: ignore
 import requests
 
+log = logging.getLogger(__name__)
 
 def load_dojo_config(path: str) -> Dict[str, Any]:
     """Load DefectDojo connection settings from a YAML file.
@@ -186,14 +188,15 @@ def upload_results(
         try:
             scan_type = resolve_scan_type(output_type)
         except ValueError as e:
-            print(f"[!] {e}. Skipping analyzer '{name}'.")
+            log.warning(f"[ERROR] {e}. Skipping analyzer '{name}'.")
             continue
         ext = "sarif" if output_type.lower() == "sarif" else "json"
         report_file = os.path.join(output_dir, f"{name}_result.{ext}")
         if not os.path.isfile(report_file):
-            print(f"[!] Report file not found for analyzer '{name}': {report_file}")
+            log.warning(f"[ERROR] Report file not found for analyzer '{name}': {report_file}")
             continue
         try:
+            log.info(f"Started to upload {name} report to DefectDojo")
             resp = upload_report(
                 analyzer_name=name,
                 dojo_cfg=dojo_cfg,
@@ -203,7 +206,7 @@ def upload_results(
                 report_path=report_file
             )
             results[name] = resp
-            print(f"[✓] Uploaded {name} report to DefectDojo")
+            log.info(f"Uploaded {name} report to DefectDojo")
         except Exception as exc:
-            print(f"[!] Failed to upload {name} report: {exc}")
+            log.warning(f"Failed to upload {name} report: {exc}")
     return results

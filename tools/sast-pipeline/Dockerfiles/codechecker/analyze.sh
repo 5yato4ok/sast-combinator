@@ -14,38 +14,38 @@ else
     APT_OPTS=""
 fi
 
-echo "[+] Checking..."
+echo "[INFO] Checking..."
 
 if [ -f "$COMPILE_COMMANDS_PATH" ]; then
-    echo "[+] Compile commands exist: $COMPILE_COMMANDS_PATH"
+    echo "[INFO] Compile commands exist: $COMPILE_COMMANDS_PATH"
 else
-    echo "[x] Compile commands not exist: $COMPILE_COMMANDS_PATH"
+    echo "[WARNING] Compile commands not exist: $COMPILE_COMMANDS_PATH"
     exit 2
 fi
 
 if [[ ! -x "$COMPILER_PATH" ]]; then
-    echo "[x] Compiler not found or not executable: $COMPILER_PATH"
+    echo "[WARNING] Compiler not found or not executable: $COMPILER_PATH"
     exit 2
 fi
 
-echo "[+] Setting up environment."
+echo "[INFO] Setting up environment."
 
 COMPILER_DIR="$(dirname "$COMPILER_PATH")"
 
 # Add compiler directory to PATH if not already included
 if [[ ":$PATH:" != *":$COMPILER_DIR:"* ]]; then
     export PATH="$COMPILER_DIR:$PATH"
-    echo "[+] Added to PATH: $COMPILER_DIR"
+    echo "[INFO] Added to PATH: $COMPILER_DIR"
 else
-    echo "[✓] Compiler directory already in PATH: $COMPILER_DIR"
+    echo "[INFO] Compiler directory already in PATH: $COMPILER_DIR"
 fi
 
 COMPILER_NAME="$(basename "$COMPILER_PATH")"
 
 if "$COMPILER_PATH" --version 2>/dev/null | grep -qi "clang"; then
-    echo "[✓] Compiler '$COMPILER_NAME' is a Clang-based compiler"
+    echo "[INFO] Compiler '$COMPILER_NAME' is a Clang-based compiler"
 else
-    echo "[!] Compiler '$COMPILER_NAME' is not Clang — installing system Clang..."
+    echo "[ERROR] Compiler '$COMPILER_NAME' is not Clang — installing system Clang..."
     apt-get update ${APT_OPTS} && apt-get install -y ${APT_OPTS} clang-17
     COMPILER_PATH="$(command -v clang++)"
     COMPILER_DIR="$(dirname "$COMPILER_PATH")"
@@ -54,20 +54,20 @@ fi
 # Extract Clang major version
 CLANG_VERSION_RAW=$("$COMPILER_PATH" --version | grep -o 'clang version [0-9]\+' | awk '{print $3}')
 if [[ -z "$CLANG_VERSION_RAW" ]]; then
-    echo "[x] Unable to detect Clang version."
+    echo "[WARNING] Unable to detect Clang version."
     exit 1
 fi
 
-echo "[+] Detected Clang version: $CLANG_VERSION_RAW"
+echo "[INFO] Detected Clang version: $CLANG_VERSION_RAW"
 
 # Check if diagtool exists in PATH
 if ! command -v diagtool &> /dev/null; then
-    echo "[!] diagtool not found."
-    echo "[+] Installing clang-tools-$CLANG_VERSION_RAW, llvm-$CLANG_VERSION_RAW and clang-tidy-$CLANG_VERSION_RAW..."
+    echo "[ERROR] diagtool not found."
+    echo "[INFO] Installing clang-tools-$CLANG_VERSION_RAW, llvm-$CLANG_VERSION_RAW and clang-tidy-$CLANG_VERSION_RAW..."
 
     # Add LLVM APT repository if not already present
     if ! grep -q "apt.llvm.org" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
-        echo "[+] Adding LLVM APT repository..."
+        echo "[INFO] Adding LLVM APT repository..."
 
         apt-get update ${APT_OPTS}
         apt-get install ${APT_OPTS} -y wget gnupg lsb-release software-properties-common
@@ -80,9 +80,9 @@ if ! command -v diagtool &> /dev/null; then
     apt-get update ${APT_OPTS}
     apt-get install ${APT_OPTS} -y "clang-tools-$CLANG_VERSION_RAW" "llvm-$CLANG_VERSION_RAW" "clang-tidy-$CLANG_VERSION_RAW"
 
-    echo "[✓] Installed clang-tools-$CLANG_VERSION_RAW, clang-tidy-$CLANG_VERSION_RAW and llvm-$CLANG_VERSION_RAW."
+    echo "[INFO] Installed clang-tools-$CLANG_VERSION_RAW, clang-tidy-$CLANG_VERSION_RAW and llvm-$CLANG_VERSION_RAW."
 else
-    echo "[✓] diagtool already available: $(command -v diagtool)"
+    echo "[INFO] diagtool already available: $(command -v diagtool)"
 fi
 
 # Symlink required tools to compiler directory
@@ -93,32 +93,32 @@ for tool in diagtool clang-check scan-build scan-view clang-tidy; do
     if [[ -f "$BIN_PATH" ]]; then
         if [[ ! -f "$LINK_PATH" ]]; then
             ln -s "$BIN_PATH" "$LINK_PATH"
-            echo "[+] Symlinked $tool -> $LINK_PATH"
+            echo "[INFO] Symlinked $tool -> $LINK_PATH"
         else
-            echo "[✓] $tool already symlinked in compiler directory"
+            echo "[INFO] $tool already symlinked in compiler directory"
         fi
     else
-        echo "[!] $tool not found at $BIN_PATH"
+        echo "[ERROR] $tool not found at $BIN_PATH"
     fi
 done
 
-echo "[+] Running CodeChecker on: $COMPILE_COMMANDS_PATH"
-echo "[+] Output will be saved to: $REPORT_DIR"
+echo "[INFO] Running CodeChecker on: $COMPILE_COMMANDS_PATH"
+echo "[INFO] Output will be saved to: $REPORT_DIR"
 
 mkdir -p "$REPORT_DIR"
 
 if CodeChecker analyze "$COMPILE_COMMANDS_PATH" --output "$REPORT_DIR"; then
-    echo "[✓] CodeChecker analyze completed with no critical issues."
+    echo "[INFO] CodeChecker analyze completed with no critical issues."
 else
-    echo "[!] CodeChecker found issues or exited with non-zero status (possibly 3)."
+    echo "[ERROR] CodeChecker found issues or exited with non-zero status (possibly 3)."
 fi
 
-echo "[✓] CodeChecker analysis complete."
+echo "[INFO] CodeChecker analysis complete."
 
-echo "[+] Generating JSON report: $JSON_PATH"
+echo "[INFO] Generating JSON report: $JSON_PATH"
 
 if CodeChecker parse -e json --trim-path-prefix "$INPUT_DIR" -o "$JSON_PATH" "$REPORT_DIR"; then
-    echo "[✓] CodeChecker parse completed with no critical issues."
+    echo "[INFO] CodeChecker parse completed with no critical issues."
 else
-    echo "[!] CodeChecker parse found issues or exited with non-zero status (possibly 2)."
+    echo "[ERROR] CodeChecker parse found issues or exited with non-zero status (possibly 2)."
 fi

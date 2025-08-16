@@ -65,8 +65,7 @@ def build_image_if_needed(image_name: str, dockerfile_dir: str) -> None:
         context_dir=dockerfile_dir,
         dockerfile=None,
         build_args=build_args or None,
-        check=True,
-        workdir=dockerfile_dir,
+        check=True
     )
 
 
@@ -120,6 +119,17 @@ def run_docker(
             check=True,
         )
 
+def env_flag(name: str, default: bool = True) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    val = raw.strip().lower()
+    if val in {"1", "true", "yes", "y", "on"}:
+        return True
+    if val in {"0", "false", "no", "n", "off"}:
+        return False
+
+    return default
 
 def run_selected_analyzers(
     config_path: str,
@@ -161,13 +171,11 @@ def run_selected_analyzers(
         image = analyzer.get("image")
         time_class = analyzer.get("time_class", "medium")
         type = analyzer.get("type", "default")
-        if type == "builder" and os.getenv("NON_COMPILE_PROJECT", True):
-            log.warning(f"Attempt to launch analyzer {analyzer} on non compile project. Skipping...")
+        if type == "builder" and env_flag("NON_COMPILE_PROJECT", True):
+            log.warning(f"Attempt to launch analyzer {name} on non compile project. Skipping...")
             continue
 
-        dockerfile_path = analyzer.get(
-            "dockerfile_path", str(Path("Dockerfiles") / str(name))
-        )
+        dockerfile_path = str(analyzer.get("dockerfile_path", f"/app/Dockerfiles/{name}"))
 
         if exclude_slow and time_class == "slow":
             log.info("Skipping slow analyzer '%s'", name)

@@ -5,10 +5,10 @@ INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
 OUTPUT_FILE="${OUTPUT_DIR}/flawfinder_result.sarif"
 
-echo "[+] Running Flawfinder on: $INPUT_DIR"
-echo "[+] Output will be saved to: $OUTPUT_FILE"
+echo "[INFO] Running Flawfinder on: $INPUT_DIR"
+echo "[INFO] Output will be saved to: $OUTPUT_FILE"
 
 cd "$INPUT_DIR"
 flawfinder --sarif . > "$OUTPUT_FILE"
 
-echo "[✓] Flawfinder analysis complete."
+echo "[INFO] Flawfinder analysis complete."

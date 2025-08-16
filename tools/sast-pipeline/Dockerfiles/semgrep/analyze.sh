@@ -7,16 +7,16 @@ OUTPUT_FILE="${OUTPUT_DIR}/semgrep.sarif"
 
 mkdir -p "$OUTPUT_DIR"
 
-echo "[+] Login to Semgrep..."
+echo "[INFO] Login to Semgrep..."
 semgrep login
 
-echo "[+] Running Semgrep Code analysis..."
+echo "[INFO] Running Semgrep Code analysis..."
 cd "$INPUT_DIR"
 
 if semgrep ci --sarif --sarif-output="$OUTPUT_FILE"; then
-    echo "[✓] Semgrep completed with no critical issues."
+    echo "[INFO] Semgrep completed with no critical issues."
 else
-    echo "[!] Semgrep found issues or exited with non-zero status."
+    echo "[ERROR] Semgrep found issues or exited with non-zero status."
 fi
 
-echo "[✓] Semgrep analysis complete. Results saved to: $OUTPUT_FILE"
+echo "[INFO] Semgrep analysis complete. Results saved to: $OUTPUT_FILE"

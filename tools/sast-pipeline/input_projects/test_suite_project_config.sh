@@ -11,12 +11,12 @@ cd "$PROJECT_BUILD_DIR"
 FORCE_REBUILD=${FORCE_REBUILD:-0}
 
 if [ "$FORCE_REBUILD" == "1" ]; then
-  echo "[!] FORCE_REBUILD=1 → removing existing project..."
+  echo "[WARNING] FORCE_REBUILD=1 → removing existing project..."
   rm -rf "$TEST_SUITE_DIR"
 fi
 
 if [ -d "$TEST_SUITE_DIR" ]; then
-  echo "[=] Project exists. Checking for updates..."
+  echo "[INFO] Project exists. Checking for updates..."
 
   cd "$TEST_SUITE_DIR"
   git fetch origin
@@ -25,14 +25,14 @@ if [ -d "$TEST_SUITE_DIR" ]; then
   REMOTE=$(git rev-parse origin/master)
 
   if [ "$LOCAL" != "$REMOTE" ]; then
-    echo "[+] Updates detected. Pulling changes and rebuilding..."
+    echo "[INFO] Updates detected. Pulling changes and rebuilding..."
     git pull
   else
-    echo "[=] No updates. Skipping build."
+    echo "[INFO] No updates. Skipping build."
   fi
 
 else
-  echo "[+] Cloning fresh copy of project..."
+  echo "[INFO] Cloning fresh copy of project..."
   git clone https://github.com/5yato4ok/cooddy-test-suite.git
 fi
 

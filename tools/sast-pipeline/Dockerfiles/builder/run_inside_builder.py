@@ -10,7 +10,7 @@ load_dotenv(dotenv_path="/app/.env")
 log = logging.getLogger(__name__)
 
 logging.basicConfig(
-    level=getattr(logging, level_name, logging.INFO),
+    level=getattr(logging, os.environ.get("LOG_LEVEL"), logging.INFO),
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 
@@ -25,9 +25,9 @@ if __name__ == "__main__":
         with cc_path.open("w") as f:
             json.dump(filtered, f, indent=2)
 
-        log.info("[✓] compile_commands.json filtered.")
+        log.info("[INFO] compile_commands.json filtered.")
     else:
-        log.info(f"[!] File not found: {cc_path}")
+        log.info(f"[ERROR] File not found: {cc_path}")
 
     builder_container = os.environ.get("BUILDER_CONTAINER")
     if not builder_container:

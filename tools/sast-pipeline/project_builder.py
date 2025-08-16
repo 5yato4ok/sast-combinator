@@ -87,8 +87,7 @@ def configure_project_run_analyses(
         context_dir=context_dir,
         dockerfile=dockerfile_path,
         build_args=build_args,
-        check=True,
-        workdir=context_dir,
+        check=True
     )
 
     # Clean up the copied script

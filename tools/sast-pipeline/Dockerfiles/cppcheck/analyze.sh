@@ -5,8 +5,8 @@ INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
 OUTPUT_FILE="${OUTPUT_DIR}/cppcheck_result.sarif"
 
-echo "[+] Running Cppcheck on: $INPUT_DIR"
-echo "[+] Output will be saved to: $OUTPUT_FILE"
+echo "[INFO] Running Cppcheck on: $INPUT_DIR"
+echo "[INFO] Output will be saved to: $OUTPUT_FILE"
 
 cd "$INPUT_DIR"
 cppcheck \
@@ -16,4 +16,4 @@ cppcheck \
     -j "$(nproc)" \
     .
 
-echo "[✓] Cppcheck analysis complete."
+echo "[INFO] Cppcheck analysis complete."

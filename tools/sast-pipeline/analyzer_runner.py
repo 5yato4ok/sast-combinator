@@ -1,101 +1,181 @@
+"""
+Functions for discovering, building and running analyzers defined in
+``config/analyzers.yaml``.
+
+This version uses the standard ``logging`` module instead of printing
+directly to stdout.  The caller (typically ``run_pipeline.py``) should
+configure the logging level and handlers.  Messages emitted here will
+respect that configuration.  In addition, the Dockerfile path for each
+analyzer can be overridden via an optional ``dockerfile_path`` field in
+the YAML configuration; if not provided, it defaults to ``Dockerfiles/<name>``.
+
+Environment variables required by analyzers (e.g. tokens) are read
+before container launch.  If they are missing, an exception is raised.
+"""
+
+from __future__ import annotations
+
 import subprocess
-import yaml
+import yaml  # type: ignore
 import os
+import logging
 from pathlib import Path
+import docker_utils
+
 
 ANALYZER_ORDER = {
     "fast": 0,
     "medium": 1,
-    "slow": 2
+    "slow": 2,
 }
 
+log = logging.getLogger(__name__)
+
+
 def image_exists(image_name: str) -> bool:
-    result = subprocess.run(
-        ["docker", "images", "-q", image_name],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        text=True
-    )
-    return result.stdout.strip() != ""
+    """
+    Wrapper around :func:`docker_utils.image_exists` for backward
+    compatibility.  Calling this function is equivalent to calling
+    ``docker_utils.image_exists(image_name)``.
+    """
+    return docker_utils.image_exists(image_name)
 
-def build_image_if_needed(image_name: str, dockerfile_dir: str):
-    if image_exists(image_name):
-        print(f"[=] Image '{image_name}' already exists.")
+
+def build_image_if_needed(image_name: str, dockerfile_dir: str) -> None:
+    """Ensure that a Docker image exists for the given analyzer.
+
+    If the image already exists, a debug message is logged and the build
+    is skipped.  Otherwise, the image is built using the specified
+    Dockerfile directory.  The ``LOG_LEVEL`` environment variable is
+    passed as a build argument so that ``apt-get`` commands in the
+    Dockerfile can adjust their verbosity.
+    """
+    if docker_utils.image_exists(image_name):
+        log.debug("Image '%s' already exists; skipping build", image_name)
         return
-    print(f"[+] Building image '{image_name}'...")
-    subprocess.run(
-        ["docker", "build", "-t", image_name, "."],
-        cwd=dockerfile_dir,
-        text=True,
-        check=True
+    log.info("Building image '%s'…", image_name)
+    # Propagate LOG_LEVEL into the build stage if set
+    build_args: dict[str, str] = {}
+    log_level_env = os.environ.get("LOG_LEVEL")
+    if log_level_env:
+        build_args["LOG_LEVEL"] = log_level_env
+    # Use the shared helper to perform the build with logging
+    docker_utils.build_image(
+        image_name=image_name,
+        context_dir=dockerfile_dir,
+        dockerfile=None,
+        build_args=build_args or None,
+        check=True,
+        workdir=dockerfile_dir,
     )
 
 
-def run_docker(image: str, builder_container: str, args: list, project_path: str, output_dir: str,
-               env_vars: list = None):
-    print(f"[>] Running analyzer: {image}")
+def run_docker(
+    image: str,
+    builder_container: str,
+    args: list[str],
+    project_path: str,
+    output_dir: str,
+    env_vars: list[str] | None = None,
+) -> None:
+    """Run a single analyzer container.
 
-    cmd = [
-        "docker", "run", "--rm",
-        #"-v", f"{project_path}:/workspace",         # project source
-        "--volumes-from", builder_container,
-        #"-v", f"{output_dir}:/shared/output"  # result output
-    ]
-
+    :param image: Name of the analyzer image to run.
+    :param builder_container: Name of the builder container whose volumes
+                              will be mounted into this analyzer.
+    :param args: Additional positional arguments to pass to the analyzer.
+    :param project_path: Path of the project on the host (unused but kept for API compatibility).
+    :param output_dir: Output directory on the host (unused but kept for API compatibility).
+    :param env_vars: List of environment variable names to expose to the analyzer.
+    :raises Exception: If a required environment variable is not set.
+    """
+    log.info("Running analyzer image '%s'", image)
+    # Build environment variables dictionary
+    env: dict[str, str] = {}
     if env_vars:
         for var in env_vars:
             if var in os.environ:
-                cmd += ["-e", f"{var}={os.environ[var]}"]
+                env[var] = os.environ[var]
             else:
-                raise Exception(f"[!] Warning: Environment variable '{var}' is not set.")
-
-    cmd += [image] + args
-
-    subprocess.run(cmd, check=True, text=True)
+                raise Exception(f"Required environment variable '{var}' is not set.")
+    if builder_container:
+        # Delegate to the shared docker_utils helper for running containers
+        docker_utils.run_container(
+            image=image,
+            volumes_from=builder_container,
+            env=env or None,
+            args=args,
+            check=True,
+        )
+    else:
+        volumes = {
+            os.path.abspath(project_path): "/workspace",
+            os.path.abspath(output_dir): "/shared/output",
+        }
+        docker_utils.run_container(
+            image=image,
+            volumes=volumes,
+            env=env or None,
+            args=args,
+            check=True,
+        )
 
 
 def run_selected_analyzers(
     config_path: str,
-    analyzers_to_run: list = None,
+    analyzers_to_run: list[str] | None = None,
     exclude_slow: bool = False,
     project_path: str = "./my_project",
     output_dir: str = "/tmp/sast_output",
-    builder_container: str = "builder-env"
-):
-    # Ensure output dir exists
+    builder_container: str = "builder-env",
+) -> None:
+    """Load analyzer definitions and run the selected ones.
+
+    :param config_path: Path to the analyzers YAML file.
+    :param analyzers_to_run: Optional list of analyzer names to run. If
+                             omitted, all enabled analyzers are run.
+    :param exclude_slow: If true, analyzers marked as ``time_class: slow``
+                         are skipped.
+    :param project_path: Path to the project source on the host.
+    :param output_dir: Directory on the host where analyzer results will be written.
+    :param builder_container: Name of the builder container. Its volumes
+                              will be mounted into each analyzer.
+    """
     os.makedirs(output_dir, exist_ok=True)
-
-    # Load analyzers config
-    with open(config_path) as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
-
-    analyzers = config["analyzers"]
-
+    analyzers: list[dict[str, object]] = config.get("analyzers", [])
+    # Filter analyzers by requested names or enabled flag
     if analyzers_to_run:
-        analyzers = [a for a in analyzers if a["name"] in analyzers_to_run]
+        analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run]
     else:
         analyzers = [a for a in analyzers if a.get("enabled", True)]
-
+    # Sort by time_class for predictable ordering
     analyzers.sort(key=lambda a: ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
-
-    print(f"[=] Analyses will be launched for following analyzers: {', '.join([a['name'] for a in analyzers])}")
-
+    log.info(
+        "Selected analyzers: %s",
+        ", ".join([str(a.get("name")) for a in analyzers]),
+    )
     for analyzer in analyzers:
-        name = analyzer["name"]
-        image = analyzer["image"]
+        name = analyzer.get("name")
+        image = analyzer.get("image")
         time_class = analyzer.get("time_class", "medium")
-        dockerfile_path = f"/app/Dockerfiles/{name}"
-
-        if exclude_slow and time_class == "slow":
-            print(f"[!] Skipping '{name}' (marked as slow)")
+        type = analyzer.get("type", "default")
+        if type == "builder" and os.getenv("NON_COMPILE_PROJECT", True):
+            log.warning(f"Attempt to launch analyzer {analyzer} on non compile project. Skipping...")
             continue
 
-        build_image_if_needed(image, dockerfile_path)
+        dockerfile_path = analyzer.get(
+            "dockerfile_path", str(Path("Dockerfiles") / str(name))
+        )
 
+        if exclude_slow and time_class == "slow":
+            log.info("Skipping slow analyzer '%s'", name)
+            continue
+        build_image_if_needed(str(image), dockerfile_path)
         input_path = analyzer.get("input", project_path)
-        args = [input_path, output_dir]
+        args = [str(input_path), str(output_dir)]
+        env_vars = analyzer.get("env", []) or []
+        run_docker(str(image), builder_container, args, project_path, output_dir, env_vars)
 
-        env_vars = analyzer.get("env", [])
-        run_docker(image, builder_container, args, project_path, output_dir, env_vars)
-
-    print("[✓] All selected analyzers completed.")
+    log.info("All selected analyzers completed.")

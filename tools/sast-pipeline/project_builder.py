@@ -1,99 +1,133 @@
+"""
+Utility functions for building a project environment and executing
+analyzers.
+
+This version integrates Python's logging module to emit informative
+messages instead of printing directly to stdout.  Logging enables
+better control over output verbosity (via the root logger configured in
+``run_pipeline.py``) and facilitates redirection to files or other
+handlers without changing this module.
+"""
+
+from __future__ import annotations
+
 import subprocess
 import os
 import shutil
+import logging
 from pathlib import Path
+import docker_utils
 from datetime import datetime
 
 
+log = logging.getLogger(__name__)
+
+
 def image_exists(image_name: str) -> bool:
-    result = subprocess.run(
-        ["docker", "images", "-q", image_name],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        text=True
-    )
-    return result.stdout.strip() != ""
+    """
+    Wrapper around :func:`docker_utils.image_exists` for backward compatibility.
+    """
+    return docker_utils.image_exists(image_name)
 
 
-def configure_project_run_analyses(script_path,
-                                   output_dir,
-                                   image_name="project-builder",
-                                   dockerfile_path="Dockerfiles/builder/Dockerfile",
-                                   project_path="/tmp/my_project",
-                                   force_rebuild=False,
-                                   version=None):
+def configure_project_run_analyses(
+    script_path: str,
+    output_dir: str,
+    image_name: str = "project-builder",
+    dockerfile_path: str = "Dockerfiles/builder/Dockerfile",
+    project_path: str = "/tmp/my_project",
+    force_rebuild: bool = False,
+    version: str | None = None,
+    log_level: str | None = None,
+) -> str:
+    """Build the builder image and run all configured analyzers.
+
+    :param script_path: Path to the project configuration script on the host.
+    :param output_dir: Directory on the host where analysis results will be written.
+    :param image_name: Name of the Docker image for the builder container.
+    :param dockerfile_path: Path to the builder Dockerfile.
+    :param project_path: Directory in the container where the project will be mounted.
+    :param force_rebuild: If True, force a rebuild of the project.
+    :param version: Optional commit or branch name to checkout.
+    :return: Path to the output directory with a timestamp appended.
+    """
 
     context_dir = os.path.abspath(".")  # assume this file is run from the root project
-
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = f"{output_dir}/{timestamp}"
     os.makedirs(output_dir, exist_ok=True)
 
-    print(f"[+] Building builder image: {image_name}")
+    log.info("Building builder image: %s", image_name)
 
-    if image_exists(image_name):
+    if docker_utils.image_exists(image_name):
+        # Remove existing image to force a rebuild
         subprocess.run(
             ["docker", "image", "rm", image_name],
             check=True,
-            text=True
+            text=True,
         )
 
     input_path = Path(script_path).resolve()
-
     if not input_path.exists():
         raise FileNotFoundError(f"Input file does not exist: {input_path}")
 
     context_path = Path(context_dir).resolve()
     target_dir = context_path / "tmp"
-
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    # Copy file
+    # Copy the script into the build context
     target_path = target_dir / input_path.name
     shutil.copy2(input_path, target_path)
-
     relative_config_path = target_path.relative_to(context_path)
 
-    subprocess.run(
-        ["docker", "build", "--build-arg", f"PROJECT_CONFIG_PATH={str(relative_config_path)}", "-t", image_name, "-f",
-         dockerfile_path, "."],
-        cwd=context_dir,  # use full project as build context
+    # Build the builder image with the project config script as a build arg
+    build_args = {"PROJECT_CONFIG_PATH": str(relative_config_path)}
+    docker_utils.build_image(
+        image_name=image_name,
+        context_dir=context_dir,
+        dockerfile=dockerfile_path,
+        build_args=build_args,
         check=True,
-        text=True
+        workdir=context_dir,
     )
 
-    # Cleanup after build — here simulated directly
-    # If you want to delete it after actual Docker build, move this to another script
+    # Clean up the copied script
     try:
         target_path.unlink()
-        # Optionally remove the subdirectory if empty
         if not any(target_dir.iterdir()):
             target_dir.rmdir()
     except Exception as e:
-        print(f"[!] Warning: Failed to delete copied file: {e}")
+        log.warning("Failed to delete copied file: %s", e)
 
-    print(f"[>] Running builder container...")
+    log.info("Running builder container…")
     container_name = f"{image_name}_container"
 
-    env_args = [
-        "-e", f"FORCE_REBUILD={'1' if force_rebuild else '0'}",
-        "-e", f"BUILDER_CONTAINER={container_name}",
-    ]
-
+    # Build environment variables dictionary for the builder container
+    env_dict: dict[str, str] = {
+        "FORCE_REBUILD": "1" if force_rebuild else "0",
+        "BUILDER_CONTAINER": container_name,
+    }
+    # Propagate logging level and version if provided
+    if log_level:
+        env_dict["LOG_LEVEL"] = log_level
     if version is not None:
-        env_args += ["-e", f"PROJECT_VERSION={str(version)}"]
+        env_dict["PROJECT_VERSION"] = str(version)
 
-    subprocess.run([
-        "docker", "run", "--rm",
-        "--name", container_name,
-        "-v", f"{os.path.abspath(project_path)}:/workspace",
-        "-v", f"{os.path.abspath(output_dir)}:/shared/output",
-        "-v", "/var/run/docker.sock:/var/run/docker.sock",  # For running child analyses containers
-        *env_args,
-        image_name
-    ], check=True, text=True)
+    # Construct volume mapping for the builder container
+    volumes = {
+        os.path.abspath(project_path): "/workspace",
+        os.path.abspath(output_dir): "/shared/output",
+        "/var/run/docker.sock": "/var/run/docker.sock",
+    }
 
-    print("[✓] Builder + analysis finished.")
-    print (f"[✓] Result saved in {output_dir}")
+    # Run the builder container using the shared Docker helper
+    docker_utils.run_container(
+        image=image_name,
+        name=container_name,
+        volumes=volumes,
+        env=env_dict,
+        check=True,
+    )
 
+    log.info("Builder and analysis finished. Results saved in %s", output_dir)
     return output_dir

@@ -14,7 +14,7 @@ echo "[+] Preparing project directory..."
 mkdir -p "$PROJECT_BUILD_DIR"
 
 if [ "$FORCE_REBUILD" = "1" ]; then
-  echo "[!] FORCE_REBUILD=1 → removing existing project..."
+  echo "[=] FORCE_REBUILD=1 → removing existing project..."
   rm -rf "$NX_OPEN_DIR"
 fi
 

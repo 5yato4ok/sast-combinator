@@ -126,7 +126,7 @@ def upload_report(
             data=data,
             files=files,
             verify=dojo_cfg.get("verify_ssl", True),
-            timeout=120,
+            #timeout=120,
         )
     if response.status_code >= 400:
         try:

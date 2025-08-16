@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY analyzer_runner.py /app/
+COPY docker_utils.py /app/
 COPY config/analyzers.yaml /app/config/analyzers.yaml
 COPY ${PROJECT_CONFIG_PATH} /app/project_config.sh
 COPY Dockerfiles/builder/run_inside_builder.py /app/

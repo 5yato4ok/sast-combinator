@@ -25,6 +25,7 @@ if [[ "${NON_COMPILE_PROJECT:-1}" -eq 0 ]]; then
 
   if [ -z "$compiler" ]; then
       echo "[x] Warning: Failed to extract compiler"
+      exit 1
   fi
 
   export COMPILER_PATH=${compiler}

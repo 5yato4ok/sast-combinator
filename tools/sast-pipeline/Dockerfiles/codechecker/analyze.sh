@@ -4,7 +4,15 @@ set -e
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
 REPORT_DIR="${OUTPUT_DIR}/codechecker-reports"
-JSON_PATH="${OUTPUT_DIR}/flawfinder_result.json"
+JSON_PATH="${OUTPUT_DIR}/codechecker_result.json"
+
+# Determine quiet options for apt-get based on LOG_LEVEL
+LOG_LEVEL="${LOG_LEVEL:-INFO}"
+if [[ "${LOG_LEVEL}" != "DEBUG" ]]; then
+    APT_OPTS="-qq"
+else
+    APT_OPTS=""
+fi
 
 echo "[+] Checking..."
 
@@ -38,7 +46,7 @@ if "$COMPILER_PATH" --version 2>/dev/null | grep -qi "clang"; then
     echo "[✓] Compiler '$COMPILER_NAME' is a Clang-based compiler"
 else
     echo "[!] Compiler '$COMPILER_NAME' is not Clang — installing system Clang..."
-    apt-get update && apt-get install -y clang-17
+    apt-get update ${APT_OPTS} && apt-get install -y ${APT_OPTS} clang-17
     COMPILER_PATH="$(command -v clang++)"
     COMPILER_DIR="$(dirname "$COMPILER_PATH")"
 fi
@@ -61,16 +69,16 @@ if ! command -v diagtool &> /dev/null; then
     if ! grep -q "apt.llvm.org" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
         echo "[+] Adding LLVM APT repository..."
 
-        apt-get update
-        apt-get install -y wget gnupg lsb-release software-properties-common
+        apt-get update ${APT_OPTS}
+        apt-get install ${APT_OPTS} -y wget gnupg lsb-release software-properties-common
 
         wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
         echo "deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-$CLANG_VERSION_RAW main" \
             > /etc/apt/sources.list.d/llvm.list
     fi
 
-    apt-get update
-    apt-get install -y "clang-tools-$CLANG_VERSION_RAW" "llvm-$CLANG_VERSION_RAW" "clang-tidy-$CLANG_VERSION_RAW"
+    apt-get update ${APT_OPTS}
+    apt-get install ${APT_OPTS} -y "clang-tools-$CLANG_VERSION_RAW" "llvm-$CLANG_VERSION_RAW" "clang-tidy-$CLANG_VERSION_RAW"
 
     echo "[✓] Installed clang-tools-$CLANG_VERSION_RAW, clang-tidy-$CLANG_VERSION_RAW and llvm-$CLANG_VERSION_RAW."
 else
@@ -102,7 +110,7 @@ mkdir -p "$REPORT_DIR"
 if CodeChecker analyze "$COMPILE_COMMANDS_PATH" --output "$REPORT_DIR"; then
     echo "[✓] CodeChecker analyze completed with no critical issues."
 else
-    echo "[!] CodeChecker found issues or exited with non-zero status (possibly 2)."
+    echo "[!] CodeChecker found issues or exited with non-zero status (possibly 3)."
 fi
 
 echo "[✓] CodeChecker analysis complete."

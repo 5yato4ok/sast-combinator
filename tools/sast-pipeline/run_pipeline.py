@@ -114,7 +114,7 @@ def main() -> None:
         ),
     )
     parser.add_argument(
-        "--log-level",
+        "--log_level",
         required=False,
         default="INFO",
         help="Logging level (e.g. DEBUG, INFO, WARNING, ERROR). Defaults to INFO.",
@@ -151,7 +151,7 @@ def main() -> None:
         args.output_dir,
         force_rebuild=args.project_force_rebuild,
         version=args.project_version,
-        log_level=args.log_level,
+        log_level=level_name,
     )
 
     # Optionally upload results

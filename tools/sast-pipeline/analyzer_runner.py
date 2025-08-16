@@ -138,6 +138,7 @@ def run_selected_analyzers(
     project_path: str = "./my_project",
     output_dir: str = "/tmp/sast_output",
     builder_container: str = "builder-env",
+    log_level: str | None = None
 ) -> None:
     """Load analyzer definitions and run the selected ones.
 
@@ -184,6 +185,8 @@ def run_selected_analyzers(
         input_path = analyzer.get("input", project_path)
         args = [str(input_path), str(output_dir)]
         env_vars = analyzer.get("env", []) or []
+        if log_level:
+            env_vars += ["LOG_LEVEL"]
         run_docker(str(image), builder_container, args, project_path, output_dir, env_vars)
 
     log.info("All selected analyzers completed.")

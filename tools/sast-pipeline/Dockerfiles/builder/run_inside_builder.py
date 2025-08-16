@@ -47,5 +47,6 @@ if __name__ == "__main__":
         exclude_slow=False,
         project_path=project_path,
         output_dir="/shared/output",
-        builder_container = builder_container
+        builder_container = builder_container,
+        log_level = os.environ.get("LOG_LEVEL", None)
     )

@@ -56,20 +56,13 @@ analyzers:
       - COMPILE_COMMANDS_PATH
       - COMPILER_PATH
 
-  - name: pysa
-    type: simple
-    image: pysa-analyzer
-    time_class: slow
-    enabled: true
-    output_type: pysa
-    language: ["python"]
-
   - name: horusec
     type: simple
     image: horusec-analyzer
     time_class: medium
     enabled: true
     output_type: sarif
+    volume: "'/var/run/docker.sock': '/var/run/docker.sock'"
     language: ["python", "c", "cpp", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby"]
 
   - name: codeql

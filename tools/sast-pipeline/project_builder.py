@@ -99,13 +99,12 @@ def configure_project_run_analyses(
     except Exception as e:
         log.warning("Failed to delete copied file: %s", e)
 
-    log.info("Running builder container…")
-    container_name = f"{image_name}_container"
+    builder_container_name, pipeline_id = docker_utils.construct_container_name(image_name)
 
     # Build environment variables dictionary for the builder container
     env_dict: dict[str, str] = {
         "FORCE_REBUILD": "1" if force_rebuild else "0",
-        "BUILDER_CONTAINER": container_name,
+        "BUILDER_CONTAINER": builder_container_name,
     }
     # Propagate logging level and version if provided
     if log_level:
@@ -113,6 +112,7 @@ def configure_project_run_analyses(
     if version is not None:
         env_dict["PROJECT_VERSION"] = str(version)
 
+    env_dict["PIPELINE_ID"] = pipeline_id
     # Construct volume mapping for the builder container
     volumes = {
         os.path.abspath(project_path): "/workspace",
@@ -120,14 +120,23 @@ def configure_project_run_analyses(
         "/var/run/docker.sock": "/var/run/docker.sock",
     }
 
-    # Run the builder container using the shared Docker helper
-    docker_utils.run_container(
-        image=image_name,
-        name=container_name,
-        volumes=volumes,
-        env=env_dict,
-        check=True,
-    )
+    log.info(f"Running builder container {builder_container_name}")
+    try:
+        docker_utils.run_container(
+            image=image_name,
+            name=builder_container_name,
+            volumes=volumes,
+            env=env_dict,
+            check=True,
+        )
+    except KeyboardInterrupt:
+        # Ensure that all containers associated with this pipeline are terminated
+        log.warning("Pipeline interrupted; cleaning up spawned containers…")
+        try:
+            docker_utils.cleanup_pipeline_containers(pipeline_id)
+        except Exception as exc:
+            log.warning("Failed to clean up pipeline containers: %s", exc)
+        raise
 
     log.info("Builder and analysis finished. Results saved in %s", output_dir)
     return output_dir

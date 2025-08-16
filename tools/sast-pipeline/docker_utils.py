@@ -12,10 +12,22 @@ from __future__ import annotations
 
 import subprocess
 import os
+import uuid
+import selectors
 import logging
 from typing import Dict, Optional, Iterable
 
 log = logging.getLogger(__name__)
+
+def construct_container_name(image: str):
+    pipeline_id = os.environ.get("PIPELINE_ID", None)
+    if pipeline_id is None:
+        pipeline_id = uuid.uuid4().hex[:8]
+        os.environ["PIPELINE_ID"] = pipeline_id
+
+    # Construct container name with pipeline ID if available
+    uid = uuid.uuid4().hex[:8]
+    return f"sast_{pipeline_id}_{image}_{uid}", pipeline_id
 
 def image_exists(image_name: str) -> bool:
     """Check whether a Docker image is present locally.
@@ -89,8 +101,18 @@ def run_container(
     :param check: If True, a non-zero exit code raises ``CalledProcessError``.
     """
     cmd: list[str] = ["docker", "run", "--rm"]
-    if name:
-        cmd += ["--name", name]
+    # Always assign a container name to allow for clean termination on interrupt.
+    # If a name was not provided, generate a unique one using a UUID.  This
+    # helps us reference the container when sending kill commands.
+    container_name = name
+    # Determine a pipeline ID from the environment (if set) to tag all containers
+    pipeline_id = os.environ.get("PIPELINE_ID",None)
+    if container_name is None:
+        container_name, pipeline_id = construct_container_name(image)
+    elif pipeline_id and pipeline_id not in name:
+        raise Exception("Incorrect container name, lack of PIPELINE_ID")
+
+    cmd += ["--name", container_name]
     if volumes_from:
         cmd += ["--volumes-from", volumes_from]
     if volumes:
@@ -113,15 +135,30 @@ def run_container(
         bufsize=1,
     ) as proc:
         assert proc.stdout is not None and proc.stderr is not None
-        for line in proc.stdout:
-            _log_container_line(line.rstrip(), stream="stdout")
-        for line in proc.stderr:
-            _log_container_line(line.rstrip(), stream="stderr")
+        sel = selectors.DefaultSelector()
+        # Register both stdout and stderr file descriptors
+        sel.register(proc.stdout, selectors.EVENT_READ, data=("stdout", proc.stdout))
+        sel.register(proc.stderr, selectors.EVENT_READ, data=("stderr", proc.stderr))
+        while True:
+            events = sel.select()
+            if not events:
+                break
+            for key, _ in events:
+                stream_name, fileobj = key.data
+                line = fileobj.readline()
+                if line:
+                    _log_container_line(line.rstrip("\n"), stream=stream_name)
+                else:
+                    # EOF reached on this stream
+                    sel.unregister(fileobj)
+                    fileobj.close()
+            # If both stdout and stderr have been closed, we're done
+            if not sel.get_map():
+                break
         returncode = proc.wait()
         if check and returncode != 0:
             raise subprocess.CalledProcessError(returncode, cmd)
         return None
-
 
 def build_image(
     *,
@@ -192,3 +229,50 @@ def build_image(
         returncode = proc.wait()
         if check and returncode != 0:
             raise subprocess.CalledProcessError(returncode, cmd)
+
+def cleanup_pipeline_containers(pipeline_id: str) -> None:
+    """Remove all Docker containers associated with the given pipeline ID.
+
+    Containers launched by :func:`run_container` include the pipeline ID in
+    their names (``sast_<pipeline_id>_...``).  This helper lists all such
+    containers—both running and stopped—and forcibly removes them.  It is
+    intended to be called by host-level code when a pipeline is aborted or
+    interrupted to ensure no orphaned containers continue running.
+
+    :param pipeline_id: The identifier of the pipeline whose containers
+        should be cleaned up.  If empty or None, the function does nothing.
+    """
+    if not pipeline_id:
+        return
+    try:
+        # List all containers (running or exited) whose names start with the pipeline prefix
+        result = subprocess.run(
+            [
+                "docker",
+                "ps",
+                "-a",
+                "--filter",
+                f"name=sast_{pipeline_id}",
+                "--format",
+                "{{.Names}}",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        names = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        if not names:
+            return
+        for name in names:
+            try:
+                subprocess.run(
+                    ["docker", "rm", "-f", name],
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                log.info("Removed pipeline container %s", name)
+            except Exception as exc:
+                log.warning("Failed to remove container %s: %s", name, exc)
+    except Exception as exc:
+        log.warning("Failed to clean up pipeline containers for %s: %s", pipeline_id, exc)

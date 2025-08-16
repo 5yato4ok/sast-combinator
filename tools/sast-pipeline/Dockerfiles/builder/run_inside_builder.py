@@ -9,6 +9,11 @@ import os
 load_dotenv(dotenv_path="/app/.env")
 log = logging.getLogger(__name__)
 
+logging.basicConfig(
+    level=getattr(logging, level_name, logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
 if __name__ == "__main__":
     cc_path = Path("/workspace/build-tmp/nx_open/build/compile_commands.json")
     if cc_path.exists():

@@ -145,6 +145,7 @@ def main() -> None:
 
     # Build project and run analyses
     log.info("Building builder image and running analyzers…")
+
     results_path = configure_project_run_analyses(
         args.script,
         args.output_dir,

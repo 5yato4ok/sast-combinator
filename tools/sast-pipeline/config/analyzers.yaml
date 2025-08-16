@@ -2,6 +2,7 @@ analyzers:
   - name: cppcheck
     type: simple
     image: sast-cppcheck
+    language: ["cpp"]
     time_class: fast
     # The format of the output produced by this analyzer.
     # Supported values are:
@@ -50,6 +51,55 @@ analyzers:
     # DefectDojo using the "Codechecker Report native" importer.  The
     # defectdojo_api module will map this value to the appropriate scan type.
     output_type: codechecker
+    language: ["c", "cpp"]
     env:
       - COMPILE_COMMANDS_PATH
       - COMPILER_PATH
+
+  - name: pysa
+    type: simple
+    image: pysa-analyzer
+    time_class: slow
+    enabled: true
+    output_type: pysa
+    language: ["python"]
+
+  - name: horusec
+    type: simple
+    image: horusec-analyzer
+    time_class: medium
+    enabled: true
+    output_type: sarif
+    language: ["python", "c", "cpp", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby"]
+
+  - name: codeql
+    type: builder
+    image: codeql-analyzer
+    time_class: slow
+    enabled: true
+    output_type: sarif
+    language: ["python", "cpp", "csharp", "javascript", "typescript", "java", "go", "ruby", "swift"]
+    env:
+      - CODEQL_LANGUAGE
+
+  - name: bearer
+    type: simple
+    image: bearer-analyzer
+    time_class: medium
+    enabled: true
+    output_type: sarif
+    language: ["python", "javascript", "typescript", "ruby", "php", "java", "go"]
+
+  - name: sonarqube
+    type: simple
+    image: sonarqube-analyzer
+    time_class: medium
+    enabled: false
+    output_type: sonarqube
+    language: ["python", "c", "cpp", "csharp", "javascript", "typescript", "java", "go"]
+    env:
+      - SONAR_HOST_URL
+      - SONAR_TOKEN
+      - SONAR_PROJECT_KEY
+      - SONAR_ORGANIZATION
+      - SONAR_SCANNER_OPTS

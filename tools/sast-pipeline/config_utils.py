@@ -15,10 +15,10 @@ class AnalyzersConfigHelper:
     def __init__(self, config_path, ):
         self.config_path = config_path
         with open(config_path, "r", encoding="utf-8") as f:
-            config = yaml.safe_load(f)
+            self.config = yaml.safe_load(f)
 
         self.analyzers = AnalyzersConfigHelper.expand_analyzers(
-            config.get("analyzers", []),
+            self.config.get("analyzers", []),
             allowed_langs=self.languages or None,
             keep_parent=False
         )
@@ -40,9 +40,16 @@ class AnalyzersConfigHelper:
         if not self.analyzers:
             raise Exception("Analyzers list is empty")
 
+        # Getting names without configurations
         supported_analyzers = list({analyzer.get("name")
-                               for analyzer in self.analyzers})
+                               for analyzer in self.config.get("analyzers", [])})
         return supported_analyzers
+
+    def get_all_images(self):
+        result = set()
+        for analyzer in self.analyzers:
+            result.add(analyzer.get("image"))
+        return result
 
     def get_supported_languages(self):
         if not self.analyzers:
@@ -51,9 +58,18 @@ class AnalyzersConfigHelper:
         if self.languages:
             return  self.languages
 
-        self.languages = list({analyzer.get("language")
-                               for analyzer in self.analyzers
-                               if "language" in analyzer})
+        langs_in_order = set()
+
+        for a in self.analyzers:
+            lang = a.get("language")
+            if isinstance(lang, str):
+                langs_in_order.add(lang)
+            elif isinstance(lang, (list, tuple, set)):
+                for x in lang:
+                    if isinstance(x, str):
+                        langs_in_order.add(x)
+
+        self.languages = list(langs_in_order)
 
         return self.languages
 

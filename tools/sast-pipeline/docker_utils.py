@@ -51,7 +51,7 @@ def image_exists(image_name: str) -> bool:
 
 _LEVEL_TOKEN_RE = re.compile(r'\[(DEBUG|INFO|WARNING|WARN|ERROR|ERR|CRITICAL|CRIT)\]', re.IGNORECASE)
 
-def _log_container_line(line: str, stream: str = "stdout") -> None:
+def _log_container_line(line: str, stream: str = "stdout", log_addition:str = "") -> None:
     text = line.rstrip("\r\n")
 
     last = None
@@ -60,7 +60,7 @@ def _log_container_line(line: str, stream: str = "stdout") -> None:
 
     if last:
         level = last.group(1).upper()
-        msg = text[last.end():].lstrip()
+        msg = log_addition + text[last.end():].lstrip()
 
         if level in ("WARN", "WARNING"):
             log.warning(msg); return
@@ -75,11 +75,11 @@ def _log_container_line(line: str, stream: str = "stdout") -> None:
 
     # fallback: if there is no [LEVEL] — stderr -> WARNING, stdout -> INFO
     if stream == "stderr":
-        log.warning(text)
+        log.warning(log_addition + text)
     else:
-        log.info(text)
+        log.info(log_addition + text)
 
-def run_logged_cmd(cmd):
+def run_logged_cmd(cmd, log_addition=None):
     with subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -173,7 +173,7 @@ def run_container(
     if args:
         cmd += list(args)
 
-    run_logged_cmd(cmd)
+    run_logged_cmd(cmd, f"[{image}]")
 
 def build_image(
     *,
@@ -216,9 +216,9 @@ def build_image(
         txt = line.strip()
         lower = txt.lower()
         if "error" in lower or "failed" in lower:
-            log.error(txt)
+            log.error(f"[build {image_name}]{txt}")
         else:
-            log.info(txt)
+            log.info(f"[build {image_name}]{txt}")
 
     with subprocess.Popen(
         cmd,

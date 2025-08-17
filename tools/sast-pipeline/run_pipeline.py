@@ -22,11 +22,19 @@ from project_builder import configure_project_run_analyses
 from defectdojo_api import upload_results
 import yaml  # type: ignore
 import config_utils
+from docker_utils import delete_image_if_exist
 
+log = logging.getLogger(__name__)
 
 load_dotenv(dotenv_path=".env")
 ANALYZERS_CONFIG = config_utils.AnalyzersConfigHelper(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "analyzers.yaml"))
+
+def cleanup(analyzer_config_path):
+    log.info(f"Trying to delete file {analyzer_config_path}")
+
+    if os.path.exists(analyzer_config_path):
+        os.remove(analyzer_config_path)
 
 def load_config(path: str) -> dict:
     """Load a YAML configuration file if it exists.
@@ -148,6 +156,17 @@ def main() -> None:
         help="Select used analyzers. Note: if the analyzer doesn't support provided language it will be excluded.",
     )
 
+    parser.add_argument(
+        "--rebuild_analyzers",
+        required=False,
+        nargs="?",
+        default=False,
+        const=True,
+        help=(
+            "Force a fresh rebuild of the analyzers images"
+        ),
+    )
+
     args = parser.parse_args()
 
     # Apply configuration file overrides
@@ -163,7 +182,11 @@ def main() -> None:
         level=getattr(logging, level_name, logging.INFO),
         format="%(asctime)s [%(levelname)s] %(message)s",
     )
-    log = logging.getLogger(__name__)
+    log = logging.getLogger(__name__) # TODO: check if requires to rewrite
+
+    if args.rebuild_analyzers:
+        for image in ANALYZERS_CONFIG.get_all_images():
+            delete_image_if_exist(image)
 
     # Validate required arguments after config merging
     if not args.script:
@@ -204,6 +227,8 @@ def main() -> None:
             log.debug("%s: %s", analyzer_name, resp)
     else:
         log.info("No DefectDojo product specified. Skipping upload.")
+
+    #cleanup(tmp_analyzer_config_path)
 
 
 if __name__ == "__main__":

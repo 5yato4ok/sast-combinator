@@ -30,6 +30,7 @@ it can be swapped out for any other DefectDojo client library if available.
 from __future__ import annotations
 
 import json
+import yaml
 import os
 from pathlib import Path
 import logging
@@ -188,7 +189,7 @@ def upload_results(
             log.error(f"{e}. Skipping analyzer '{name}'.")
             continue
 
-        report_file = config.get_analyzer_result_file_name(analyzer)
+        report_file = os.path.join(output_dir, config.get_analyzer_result_file_name(analyzer))
         if not os.path.isfile(report_file):
             log.error(f" Report file not found for analyzer '{name}': {report_file}")
             continue

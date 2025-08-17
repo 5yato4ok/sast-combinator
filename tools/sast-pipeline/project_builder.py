@@ -24,16 +24,18 @@ from datetime import datetime
 log = logging.getLogger(__name__)
 
 
-
 def configure_project_run_analyses(
-    script_path: str,
-    output_dir: str,
-    image_name: str = "project-builder",
-    dockerfile_path: str = "Dockerfiles/builder/Dockerfile",
-    project_path: str = "/tmp/my_project",
-    force_rebuild: bool = False,
-    version: str | None = None,
-    log_level: str | None = None,
+        script_path: str,
+        output_dir: str,
+        languages,
+        image_name: str = "project-builder",
+        dockerfile_path: str = "Dockerfiles/builder/Dockerfile",
+        project_path: str = "/tmp/my_project",
+        force_rebuild: bool = False,
+        version: str | None = None,
+        log_level: str | None = None,
+        skip_slow: bool = False,
+        analyzers=None
 ) -> str:
     """Build the builder image and run all configured analyzers.
 
@@ -47,6 +49,8 @@ def configure_project_run_analyses(
     :return: Path to the output directory with a timestamp appended.
     """
 
+    if analyzers is None:
+        analyzers = []
     context_dir = os.path.abspath(".")  # assume this file is run from the root project
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = f"{output_dir}/{timestamp}"
@@ -54,13 +58,7 @@ def configure_project_run_analyses(
 
     log.info("Building builder image: %s", image_name)
 
-    if docker_utils.image_exists(image_name):
-        # Remove existing image to force a rebuild
-        subprocess.run(
-            ["docker", "image", "rm", image_name],
-            check=True,
-            text=True,
-        )
+    docker_utils.delete_image_if_exist(image_name)
 
     input_path = Path(script_path).resolve()
     if not input_path.exists():
@@ -106,7 +104,7 @@ def configure_project_run_analyses(
     if version is not None:
         env_dict["PROJECT_VERSION"] = str(version)
 
-    tmp_analyzer_config_path = config_utils.prepare_pipeline_analyzer_config()
+    tmp_analyzer_config_path = config_utils.prepare_pipeline_analyzer_config(languages, skip_slow, analyzers)
     env_dict["PIPELINE_ID"] = pipeline_id
     # Construct volume mapping for the builder container
     volumes = {

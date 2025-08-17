@@ -79,6 +79,46 @@ def _log_container_line(line: str, stream: str = "stdout") -> None:
     else:
         log.info(text)
 
+def run_logged_cmd(cmd):
+    with subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+    ) as proc:
+        assert proc.stdout is not None and proc.stderr is not None
+        sel = selectors.DefaultSelector()
+        # Register both stdout and stderr file descriptors
+        sel.register(proc.stdout, selectors.EVENT_READ, data=("stdout", proc.stdout))
+        sel.register(proc.stderr, selectors.EVENT_READ, data=("stderr", proc.stderr))
+        while True:
+            events = sel.select()
+            if not events:
+                break
+            for key, _ in events:
+                stream_name, fileobj = key.data
+                line = fileobj.readline()
+                if line:
+                    _log_container_line(line.rstrip("\n"), stream=stream_name)
+                else:
+                    # EOF reached on this stream
+                    sel.unregister(fileobj)
+                    fileobj.close()
+            # If both stdout and stderr have been closed, we're done
+            if not sel.get_map():
+                break
+        returncode = proc.wait()
+        if returncode != 0:
+            raise subprocess.CalledProcessError(returncode, cmd)
+        return None
+
+def delete_image_if_exist(image_name):
+    if not image_exists(image_name):
+        return
+
+    run_logged_cmd(["docker", "image", "rm", image_name])
+
 
 def run_container(
     *,
@@ -133,39 +173,7 @@ def run_container(
     if args:
         cmd += list(args)
 
-    # Stream stdout/stderr to the logger while the container runs
-    with subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        bufsize=1,
-    ) as proc:
-        assert proc.stdout is not None and proc.stderr is not None
-        sel = selectors.DefaultSelector()
-        # Register both stdout and stderr file descriptors
-        sel.register(proc.stdout, selectors.EVENT_READ, data=("stdout", proc.stdout))
-        sel.register(proc.stderr, selectors.EVENT_READ, data=("stderr", proc.stderr))
-        while True:
-            events = sel.select()
-            if not events:
-                break
-            for key, _ in events:
-                stream_name, fileobj = key.data
-                line = fileobj.readline()
-                if line:
-                    _log_container_line(line.rstrip("\n"), stream=stream_name)
-                else:
-                    # EOF reached on this stream
-                    sel.unregister(fileobj)
-                    fileobj.close()
-            # If both stdout and stderr have been closed, we're done
-            if not sel.get_map():
-                break
-        returncode = proc.wait()
-        if check and returncode != 0:
-            raise subprocess.CalledProcessError(returncode, cmd)
-        return None
+    run_logged_cmd(cmd)
 
 def build_image(
     *,
@@ -262,12 +270,7 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
             return
         for name in names:
             try:
-                subprocess.run(
-                    ["docker", "rm", "-f", name],
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
+                run_logged_cmd(["docker", "rm", "-f", name])
                 log.info("Removed pipeline container %s", name)
             except Exception as exc:
                 log.warning("Failed to remove container %s: %s", name, exc)

@@ -13,6 +13,14 @@ class AnalyzersConfigHelper:
     def get_analyzers(self):
         return self.analyzers
 
+    def get_supported_analyzers(self):
+        if not self.analyzers:
+            raise Exception("Analyzers list is empty")
+
+        supported_analyzers = list({analyzer.get("name")
+                               for analyzer in self.analyzers})
+        return supported_analyzers
+
     def get_supported_languages(self):
         if not self.analyzers:
             raise Exception("Analyzers list is empty")
@@ -27,5 +35,5 @@ class AnalyzersConfigHelper:
         return self.languages
 
 
-    def prepare_pipeline_analyzer_config(self):
+    def prepare_pipeline_analyzer_config(self, languages, skip_slow, target_analyzers):
         pass

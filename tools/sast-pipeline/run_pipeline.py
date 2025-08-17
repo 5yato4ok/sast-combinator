@@ -124,11 +124,29 @@ def main() -> None:
         help="Logging level (e.g. DEBUG, INFO, WARNING, ERROR). Defaults to INFO.",
     )
     parser.add_argument(
-        "--language",
-        required=True,
+        "--languages",
+        required=False,
         nargs="+",
         choices=ANALYZERS_CONFIG.get_supported_languages(),
-        help="Select language to filter used analyzers",
+        help="Select languages to filter used analyzers. Can select one or several supported choices",
+    )
+
+    parser.add_argument(
+        "--skip_slow",
+        required=False,
+        nargs="?",
+        default=False,
+        const=True,
+        help="Filter out slow analyzers.",
+    )
+
+    parser.add_argument(
+        "--analyzers",
+        required=False,
+        nargs="+",
+        default=[],
+        choices=ANALYZERS_CONFIG.get_supported_analyzers(),
+        help="Select used analyzers. Note: if the analyzer doesn't support provided language it will be excluded.",
     )
 
     args = parser.parse_args()
@@ -154,6 +172,9 @@ def main() -> None:
     if not args.output_dir:
         parser.error("--output_dir is required (either via CLI or config file)")
 
+    if not args.languages:
+        parser.error("--languages is required (either via CLI or config file)")
+
     # Build project and run analyses
     log.info("Building builder image and running analyzers…")
 
@@ -163,6 +184,9 @@ def main() -> None:
         force_rebuild=args.project_force_rebuild,
         version=args.project_version,
         log_level=level_name,
+        languages=args.languages,
+        skip_slow = args.skip_slow,
+        analyzers=args.analyzers
     )
 
     # Optionally upload results

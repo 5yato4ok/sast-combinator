@@ -2,7 +2,7 @@ analyzers:
   - name: cppcheck
     type: simple
     image: sast-cppcheck
-    language: ["cpp"]
+    language: [ "cpp" ]
     time_class: fast
     # The format of the output produced by this analyzer.
     # Supported values are:
@@ -18,18 +18,21 @@ analyzers:
     image: sast-devskim
     time_class: medium
     output_type: sarif
+    language: [ "c", "objc","cpp","csharp","cobol","go","java", "javascript", "typescript", "php", "powershell", "python","ruby","rust","sql","swift" ]
 
   - name: flawfinder
     type: simple
     image: sast-flawfinder
     time_class: fast
     output_type: sarif
+    language: [ "c", "cpp" ]
 
   - name: snyk
     type: simple
     image: sast-snyk
     time_class: medium
     output_type: sarif
+    language: [ "c", "cpp", "go", "elixir", "java", "kotlin", "javascript", "dotnet", "php", "python","ruby", "rust", "scala","swift","objc","typescript" ]
     env:
       - SNYK_TOKEN
 
@@ -39,6 +42,7 @@ analyzers:
     time_class: medium
     enabled: false
     output_type: sarif
+    language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
     env:
       - SEMGREP_APP_TOKEN
 
@@ -51,7 +55,7 @@ analyzers:
     # DefectDojo using the "Codechecker Report native" importer.  The
     # defectdojo_api module will map this value to the appropriate scan type.
     output_type: codechecker
-    language: ["c", "cpp"]
+    language: [ "c", "cpp" ]
     env:
       - COMPILE_COMMANDS_PATH
       - COMPILER_PATH
@@ -63,7 +67,7 @@ analyzers:
     enabled: true
     output_type: sarif
     volume: "'/var/run/docker.sock': '/var/run/docker.sock'"
-    language: ["python", "c", "cpp", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby"]
+    language: [ "python","terraform", "c", "php", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby" ]
 
   - name: codeql
     type: builder
@@ -71,7 +75,7 @@ analyzers:
     time_class: slow
     enabled: true
     output_type: sarif
-    language: ["python", "cpp", "csharp", "javascript", "typescript", "java", "go", "ruby", "swift"]
+    language: [ "python", "cpp", "c", "csharp", "javascript", "typescript", "java", "kotlin", "go", "ruby", "swift" , "rust"]
     env:
       - CODEQL_LANGUAGE
 
@@ -81,7 +85,7 @@ analyzers:
     time_class: medium
     enabled: true
     output_type: sarif
-    language: ["python", "javascript", "typescript", "ruby", "php", "java", "go"]
+    language: [ "python", "javascript", "typescript", "ruby", "php", "java" ]
 
   - name: sonarqube
     type: simple
@@ -89,7 +93,7 @@ analyzers:
     time_class: medium
     enabled: false
     output_type: sonarqube
-    language: ["python", "c", "cpp", "csharp", "javascript", "typescript", "java", "go"]
+    language: [ "python", "c", "cpp", "csharp", "javascript", "typescript", "java", "go" ]
     env:
       - SONAR_HOST_URL
       - SONAR_TOKEN

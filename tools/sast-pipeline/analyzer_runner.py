@@ -1,6 +1,6 @@
 """
 Functions for discovering, building and running analyzers defined in
-``config/analyzers.yaml``.
+analyzer config.
 
 This version uses the standard ``logging`` module instead of printing
 directly to stdout.  The caller (typically ``run_pipeline.py``) should
@@ -21,7 +21,7 @@ import os
 import logging
 from pathlib import Path
 import docker_utils
-
+import config_utils
 
 ANALYZER_ORDER = {
     "fast": 0,
@@ -30,16 +30,6 @@ ANALYZER_ORDER = {
 }
 
 log = logging.getLogger(__name__)
-
-
-def image_exists(image_name: str) -> bool:
-    """
-    Wrapper around :func:`docker_utils.image_exists` for backward
-    compatibility.  Calling this function is equivalent to calling
-    ``docker_utils.image_exists(image_name)``.
-    """
-    return docker_utils.image_exists(image_name)
-
 
 def build_image_if_needed(image_name: str, dockerfile_dir: str) -> None:
     """Ensure that a Docker image exists for the given analyzer.
@@ -153,12 +143,12 @@ def run_selected_analyzers(
                               will be mounted into each analyzer.
     """
     os.makedirs(output_dir, exist_ok=True)
-    with open(config_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-    analyzers: list[dict[str, object]] = config.get("analyzers", [])
+    config_helper = config_utils.AnalyzersConfigHelper(config_path)
+
+    analyzers = config_helper.get_analyzers()
     # Filter analyzers by requested names or enabled flag
     if analyzers_to_run:
-        analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run]
+        analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
     else:
         analyzers = [a for a in analyzers if a.get("enabled", True)]
     # Sort by time_class for predictable ordering

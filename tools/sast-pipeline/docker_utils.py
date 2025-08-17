@@ -20,11 +20,15 @@ from typing import Dict, Optional, Iterable
 
 log = logging.getLogger(__name__)
 
-def construct_container_name(image: str):
+def get_pipeline_id() -> str:
     pipeline_id = os.environ.get("PIPELINE_ID", None)
     if pipeline_id is None:
         pipeline_id = uuid.uuid4().hex[:8]
         os.environ["PIPELINE_ID"] = pipeline_id
+    return pipeline_id
+
+def construct_container_name(image: str):
+    pipeline_id = get_pipeline_id()
 
     # Construct container name with pipeline ID if available
     uid = uuid.uuid4().hex[:8]

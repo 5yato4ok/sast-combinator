@@ -17,17 +17,12 @@ import shutil
 import logging
 from pathlib import Path
 import docker_utils
+import config_utils
 from datetime import datetime
 
 
 log = logging.getLogger(__name__)
 
-
-def image_exists(image_name: str) -> bool:
-    """
-    Wrapper around :func:`docker_utils.image_exists` for backward compatibility.
-    """
-    return docker_utils.image_exists(image_name)
 
 
 def configure_project_run_analyses(
@@ -111,12 +106,14 @@ def configure_project_run_analyses(
     if version is not None:
         env_dict["PROJECT_VERSION"] = str(version)
 
+    tmp_analyzer_config_path = config_utils.prepare_pipeline_analyzer_config()
     env_dict["PIPELINE_ID"] = pipeline_id
     # Construct volume mapping for the builder container
     volumes = {
         os.path.abspath(project_path): "/workspace",
         os.path.abspath(output_dir): "/shared/output",
         "/var/run/docker.sock": "/var/run/docker.sock",
+        tmp_analyzer_config_path : "/app/config/analyzers.yaml"
     }
 
     log.info(f"Running builder container {builder_container_name}")

@@ -21,8 +21,12 @@ from dotenv import load_dotenv
 from project_builder import configure_project_run_analyses
 from defectdojo_api import upload_results
 import yaml  # type: ignore
+import config_utils
+
 
 load_dotenv(dotenv_path=".env")
+ANALYZERS_CONFIG = config_utils.AnalyzersConfigHelper(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "analyzers.yaml"))
 
 def load_config(path: str) -> dict:
     """Load a YAML configuration file if it exists.
@@ -118,6 +122,13 @@ def main() -> None:
         required=False,
         default="INFO",
         help="Logging level (e.g. DEBUG, INFO, WARNING, ERROR). Defaults to INFO.",
+    )
+    parser.add_argument(
+        "--language",
+        required=True,
+        nargs="+",
+        choices=ANALYZERS_CONFIG.get_supported_languages(),
+        help="Select language to filter used analyzers",
     )
 
     args = parser.parse_args()

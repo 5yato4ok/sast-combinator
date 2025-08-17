@@ -3,7 +3,7 @@ set -e
 
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-OUTPUT_FILE="${OUTPUT_DIR}/semgrep_result.sarif"
+OUTPUT_FILE="${OUTPUT_DIR}/${3:-semgrep_result.sarif}"
 
 mkdir -p "$OUTPUT_DIR"
 

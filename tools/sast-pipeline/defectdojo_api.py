@@ -35,7 +35,7 @@ from pathlib import Path
 import logging
 from typing import Dict, Any, Optional
 
-import yaml  # type: ignore
+import config_utils
 import requests
 
 log = logging.getLogger(__name__)
@@ -172,11 +172,8 @@ def upload_results(
     if dojo_token is None:
         raise Exception("Environmental variable DEFECT_DOJO_TOKEN is not set up")
 
-    # Load analyzers configuration
-    analyzers_path = Path(analyzers_cfg_path).expanduser().resolve()
-    with analyzers_path.open("r", encoding="utf-8") as f:
-        analyzers_config = yaml.safe_load(f) or {}
-    analyzers_list = analyzers_config.get("analyzers", [])
+    config = config_utils.AnalyzersConfigHelper(Path(analyzers_cfg_path).expanduser().resolve())
+    analyzers_list = config.get_analyzers()
 
     results: Dict[str, Any] = {}
     for analyzer in analyzers_list:
@@ -188,12 +185,12 @@ def upload_results(
         try:
             scan_type = resolve_scan_type(output_type)
         except ValueError as e:
-            log.warning(f"[ERROR] {e}. Skipping analyzer '{name}'.")
+            log.error(f"{e}. Skipping analyzer '{name}'.")
             continue
-        ext = "sarif" if output_type.lower() == "sarif" else "json"
-        report_file = os.path.join(output_dir, f"{name}_result.{ext}")
+
+        report_file = config.get_analyzer_result_file_name(analyzer)
         if not os.path.isfile(report_file):
-            log.warning(f"[ERROR] Report file not found for analyzer '{name}': {report_file}")
+            log.error(f" Report file not found for analyzer '{name}': {report_file}")
             continue
         try:
             log.info(f"Started to upload {name} report to DefectDojo")
@@ -208,5 +205,5 @@ def upload_results(
             results[name] = resp
             log.info(f"Uploaded {name} report to DefectDojo")
         except Exception as exc:
-            log.warning(f"Failed to upload {name} report: {exc}")
+            log.error(f"Failed to upload {name} report: {exc}")
     return results

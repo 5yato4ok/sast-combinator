@@ -3,7 +3,7 @@ set -e
 
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-OUTPUT_FILE="${OUTPUT_DIR}/cppcheck_result.sarif"
+OUTPUT_FILE="${OUTPUT_DIR}/${3:-cppcheck_result.sarif}"
 
 echo "[INFO] Running Cppcheck on: $INPUT_DIR"
 echo "[INFO] Output will be saved to: $OUTPUT_FILE"

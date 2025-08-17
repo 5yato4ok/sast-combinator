@@ -3,7 +3,7 @@
 set -euo pipefail
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-OUTPUT_FILE="${OUTPUT_DIR}/bearer_result.sarif"
+OUTPUT_FILE="${OUTPUT_DIR}/${3:-bearer_result.sarif}"
 
 
 mkdir -p "$OUTPUT_DIR"

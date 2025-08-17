@@ -4,7 +4,7 @@ set -e
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
 REPORT_DIR="${OUTPUT_DIR}/codechecker-reports"
-JSON_PATH="${OUTPUT_DIR}/codechecker_result.json"
+JSON_PATH="${OUTPUT_DIR}/${3:-codechecker_result.json}"
 
 # Determine quiet options for apt-get based on LOG_LEVEL
 LOG_LEVEL="${LOG_LEVEL:-INFO}"

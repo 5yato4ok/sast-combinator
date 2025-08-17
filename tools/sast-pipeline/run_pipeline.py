@@ -132,12 +132,11 @@ def main() -> None:
     )
 
     parser.add_argument(
-        "--skip_slow",
+        "--time_class_level",
         required=False,
-        nargs="?",
         default=False,
-        const=True,
-        help="Filter out slow analyzers.",
+        choices=ANALYZERS_CONFIG.get_analyzers_time_class(),
+        help="Analyzers time class level.",
     )
 
     parser.add_argument(
@@ -171,21 +170,21 @@ def main() -> None:
         parser.error("--script is required (either via CLI or config file)")
     if not args.output_dir:
         parser.error("--output_dir is required (either via CLI or config file)")
-
     if not args.languages:
         parser.error("--languages is required (either via CLI or config file)")
 
     # Build project and run analyses
     log.info("Building builder image and running analyzers…")
 
-    results_path = configure_project_run_analyses(
+    results_path, tmp_analyzer_config_path = configure_project_run_analyses(
         args.script,
         args.output_dir,
+        languages=args.languages,
+        analyzer_config=ANALYZERS_CONFIG,
         force_rebuild=args.project_force_rebuild,
         version=args.project_version,
         log_level=level_name,
-        languages=args.languages,
-        skip_slow = args.skip_slow,
+        min_time_class = args.time_class_level,
         analyzers=args.analyzers
     )
 
@@ -196,7 +195,7 @@ def main() -> None:
         )
         results = upload_results(
             output_dir=results_path,
-            analyzers_cfg_path="config/analyzers.yaml",
+            analyzers_cfg_path=tmp_analyzer_config_path,
             product_name=args.dojo_product_name,
             dojo_config_path=args.dojo_config,
         )

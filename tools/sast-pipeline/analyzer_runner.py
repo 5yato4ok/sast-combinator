@@ -23,11 +23,6 @@ from pathlib import Path
 import docker_utils
 import config_utils
 
-ANALYZER_ORDER = {
-    "fast": 0,
-    "medium": 1,
-    "slow": 2,
-}
 
 log = logging.getLogger(__name__)
 
@@ -152,11 +147,12 @@ def run_selected_analyzers(
     else:
         analyzers = [a for a in analyzers if a.get("enabled", True)]
     # Sort by time_class for predictable ordering
-    analyzers.sort(key=lambda a: ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
+    analyzers.sort(key=lambda a: config_helper.ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
     log.info(
         "Selected analyzers: %s",
         ", ".join([str(a.get("name")) for a in analyzers]),
     )
+
     for analyzer in analyzers:
         name = analyzer.get("name")
         image = analyzer.get("image")
@@ -173,7 +169,8 @@ def run_selected_analyzers(
             continue
         build_image_if_needed(str(image), dockerfile_path)
         input_path = analyzer.get("input", project_path)
-        args = [str(input_path), str(output_dir)]
+        output_file_name = config_helper.get_analyzer_result_file_name(analyzer)
+        args = [str(input_path), str(output_dir), str(output_file_name)]
         env_vars = analyzer.get("env", []) or []
         if log_level:
             env_vars += ["LOG_LEVEL"]

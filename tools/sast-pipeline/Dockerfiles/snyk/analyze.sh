@@ -3,7 +3,7 @@ set -e
 
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-OUTPUT_FILE="${OUTPUT_DIR}/snyk_result.sarif"
+OUTPUT_FILE="${OUTPUT_DIR}/${3:-snyk_result.sarif}"
 
 if [[ -z "${SNYK_TOKEN}" ]]; then
     echo "[ERROR] SNYK_TOKEN is not set. Use -e SNYK_TOKEN=... when running container."

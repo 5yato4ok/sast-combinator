@@ -28,15 +28,16 @@ def configure_project_run_analyses(
         script_path: str,
         output_dir: str,
         languages,
+        analyzer_config,
         image_name: str = "project-builder",
         dockerfile_path: str = "Dockerfiles/builder/Dockerfile",
         project_path: str = "/tmp/my_project",
         force_rebuild: bool = False,
         version: str | None = None,
         log_level: str | None = None,
-        skip_slow: bool = False,
+        min_time_class: str = "",
         analyzers=None
-) -> str:
+):
     """Build the builder image and run all configured analyzers.
 
     :param script_path: Path to the project configuration script on the host.
@@ -104,7 +105,7 @@ def configure_project_run_analyses(
     if version is not None:
         env_dict["PROJECT_VERSION"] = str(version)
 
-    tmp_analyzer_config_path = config_utils.prepare_pipeline_analyzer_config(languages, skip_slow, analyzers)
+    tmp_analyzer_config_path = analyzer_config.prepare_pipeline_analyzer_config(languages, min_time_class, analyzers)
     env_dict["PIPELINE_ID"] = pipeline_id
     # Construct volume mapping for the builder container
     volumes = {
@@ -133,4 +134,4 @@ def configure_project_run_analyses(
         raise
 
     log.info("Builder and analysis finished. Results saved in %s", output_dir)
-    return output_dir
+    return output_dir, tmp_analyzer_config_path

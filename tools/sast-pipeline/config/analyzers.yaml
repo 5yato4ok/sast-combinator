@@ -66,18 +66,68 @@ analyzers:
     time_class: medium
     enabled: true
     output_type: sarif
-    volume: "'/var/run/docker.sock': '/var/run/docker.sock'"
+    volume: "'/var/run/docker.sock': '/var/run/docker.sock'" #TODO: add check volume exists
     language: [ "python","terraform", "c", "php", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby" ]
 
   - name: codeql
-    type: builder
-    image: codeql-analyzer
-    time_class: slow
+    language_specific_containers: true
     enabled: true
     output_type: sarif
     language: [ "python", "cpp", "c", "csharp", "javascript", "typescript", "java", "kotlin", "go", "ruby", "swift" , "rust"]
-    env:
-      - CODEQL_LANGUAGE
+    configuration:
+      - python:
+          image: codeql-python
+          dockerfile_path: "/app/Dockerfiles/codeql/python/"
+          result_file: "codeql_python.sarif"
+      - cpp:
+          enabled: false
+          type: builder
+          image: codeql-cpp
+          dockerfile_path: "/app/Dockerfiles/codeql/cpp/"
+          result_file: "codeql_cpp.sarif"
+      - c:
+          enabled: false
+          type: builder
+          image: codeql-cpp
+          dockerfile_path: "/app/Dockerfiles/codeql/cpp/"
+          result_file: "codeql_c.sarif"
+      - csharp:
+          image: codeql-csharp
+          dockerfile_path: "/app/Dockerfiles/codeql/csharp/"
+          result_file: "codeql_csharp.sarif"
+      - javascript:
+          image: codeql-javascript
+          dockerfile_path: "/app/Dockerfiles/codeql/javascript/"
+          result_file: "codeql_javascript.sarif"
+      - typescript:
+          image: codeql-typescript
+          dockerfile_path: "/app/Dockerfiles/codeql/typescript/"
+          result_file: "codeql_typescript.sarif"
+      - typescript:
+          image: codeql-java
+          dockerfile_path: "/app/Dockerfiles/codeql/java/"
+          result_file: "codeql_java.sarif"
+      - kotlin:
+          image: codeql-kotlin
+          dockerfile_path: "/app/Dockerfiles/codeql/kotlin/"
+          result_file: "codeql_kotlin.sarif"
+      - go:
+          image: codeql-go
+          dockerfile_path: "/app/Dockerfiles/codeql/go/"
+          result_file: "codeql_go.sarif"
+      - ruby:
+          image: codeql-ruby
+          dockerfile_path: "/app/Dockerfiles/codeql/ruby/"
+          result_file: "codeql_ruby.sarif"
+      - swift:
+          image: codeql-swift
+          dockerfile_path: "/app/Dockerfiles/codeql/swift/"
+          result_file: "codeql_swift.sarif"
+      - rust:
+          image: codeql-rust
+          enabled: false
+          dockerfile_path: "/app/Dockerfiles/codeql/rust/"
+          result_file: "codeql_rust.sarif"
 
   - name: bearer
     type: simple

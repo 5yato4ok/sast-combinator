@@ -14,6 +14,6 @@ codeql database create "$DB_DIR" --language="python" --source-root "$INPUT_DIR"
 QPKG="codeql/python-queries"
 echo "[INFO] Analyzing with $QPKG"
 
-codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE"
+codeql database analyze --download "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE"
 
 echo "[INFO] Results at $OUTPUT_FILE"

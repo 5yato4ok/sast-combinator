@@ -1,7 +1,11 @@
 import yaml
 import os
 import copy
+import logging
 from docker_utils import get_pipeline_id
+
+log = logging.getLogger(__name__)
+
 
 class AnalyzersConfigHelper:
     ANALYZER_ORDER = {
@@ -13,10 +17,15 @@ class AnalyzersConfigHelper:
     languages = None
 
     def __init__(self, config_path, ):
+        if not os.path.exists(config_path):
+            raise Exception(f"Config by path {config_path} not exist")
+
         self.config_path = config_path
         with open(config_path, "r", encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
 
+        log.debug(f"Analyzer config: {self.config}")
+        
         self.analyzers = AnalyzersConfigHelper.expand_analyzers(
             self.config.get("analyzers", []),
             allowed_langs=self.languages or None,
@@ -113,10 +122,12 @@ class AnalyzersConfigHelper:
                     child = copy.deepcopy(parent)
                     # Remove the entire configuration from child variant
                     child.pop("configuration", None)
+                    child.pop("language_specific_containers", None)
                     # Enforce language to the single one
                     child["language"] = [lang]
                     # Effective name for logs/IDs
                     child["name"] = f'{parent.get("name")}_{lang}'
+                    child["parent"] = parent.get("name")
                     # Let child config override parent fields (image, type, dockerfile_path, etc.)
                     if isinstance(cfg, dict):
                         child.update(cfg)
@@ -182,7 +193,8 @@ class AnalyzersConfigHelper:
             langs = set(analyzer.get("language", []))
             has_lang = bool(allowed_langs & langs)
             time_ok = AnalyzersConfigHelper.get_level(analyzer.get("time_class", "slow")) <= max_level
-            name_ok = True if not target_set else analyzer.get("name") in target_set
+            name_ok = True if not target_set else (
+                        analyzer.get("name") in target_set or analyzer.get("parent") in target_set)
 
             if not (has_lang and time_ok and name_ok):
                 continue

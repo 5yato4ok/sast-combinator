@@ -89,7 +89,6 @@ def run_docker(
             volumes_from=builder_container,
             env=env or None,
             args=args,
-            check=True,
         )
     else:
         volumes = {
@@ -101,7 +100,6 @@ def run_docker(
             volumes=volumes,
             env=env or None,
             args=args,
-            check=True,
         )
 
 def env_flag(name: str, default: bool = True) -> bool:
@@ -141,11 +139,15 @@ def run_selected_analyzers(
     config_helper = config_utils.AnalyzersConfigHelper(config_path)
 
     analyzers = config_helper.get_analyzers()
+    log.info(f" Analyzers: {analyzers}")
     # Filter analyzers by requested names or enabled flag
     if analyzers_to_run:
         analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
     else:
         analyzers = [a for a in analyzers if a.get("enabled", True)]
+
+    if not analyzers:
+        log.warning("No analyzers to launch")
     # Sort by time_class for predictable ordering
     analyzers.sort(key=lambda a: config_helper.ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
     log.info(

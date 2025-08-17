@@ -79,7 +79,7 @@ def _log_container_line(line: str, stream: str = "stdout", log_addition:str = ""
     else:
         log.info(log_addition + text)
 
-def run_logged_cmd(cmd, log_addition=None):
+def run_logged_cmd(cmd, log_addition=""):
     with subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -100,7 +100,7 @@ def run_logged_cmd(cmd, log_addition=None):
                 stream_name, fileobj = key.data
                 line = fileobj.readline()
                 if line:
-                    _log_container_line(line.rstrip("\n"), stream=stream_name)
+                    _log_container_line(line.rstrip("\n"), stream=stream_name, log_addition=log_addition)
                 else:
                     # EOF reached on this stream
                     sel.unregister(fileobj)
@@ -128,7 +128,6 @@ def run_container(
     volumes: Optional[Dict[str, str]] = None,
     env: Optional[Dict[str, str]] = None,
     args: Optional[Iterable[str]] = None,
-    check: bool = True,
 ) -> subprocess.CompletedProcess | None:
     """Run a Docker container with optional volume and environment configuration.
 
@@ -173,7 +172,7 @@ def run_container(
     if args:
         cmd += list(args)
 
-    run_logged_cmd(cmd, f"[{image}]")
+    run_logged_cmd(cmd, f"[{image}] ")
 
 def build_image(
     *,
@@ -216,9 +215,9 @@ def build_image(
         txt = line.strip()
         lower = txt.lower()
         if "error" in lower or "failed" in lower:
-            log.error(f"[build {image_name}]{txt}")
+            log.error(f"[build {image_name}] {txt}")
         else:
-            log.info(f"[build {image_name}]{txt}")
+            log.info(f"[build {image_name}] {txt}")
 
     with subprocess.Popen(
         cmd,

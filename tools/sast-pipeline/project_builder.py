@@ -122,7 +122,6 @@ def configure_project_run_analyses(
             name=builder_container_name,
             volumes=volumes,
             env=env_dict,
-            check=True,
         )
     except KeyboardInterrupt:
         # Ensure that all containers associated with this pipeline are terminated

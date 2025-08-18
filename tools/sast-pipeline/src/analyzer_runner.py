@@ -139,7 +139,7 @@ def run_selected_analyzers(
     config_helper = config_utils.AnalyzersConfigHelper(config_path)
 
     analyzers = config_helper.get_analyzers()
-    log.debug(f" Analyzers: {analyzers}")
+    log.info(f" Analyzers: {analyzers}")
     # Filter analyzers by requested names or enabled flag
     if analyzers_to_run:
         analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
@@ -176,12 +176,6 @@ def run_selected_analyzers(
         env_vars = analyzer.get("env", []) or []
         if log_level:
             env_vars += ["LOG_LEVEL"]
-        try:
-            run_docker(str(image), builder_container, args, project_path, output_dir, env_vars)
-        except KeyboardInterrupt:
-            raise
-        except Exception as exc:
-            log.warning(f"Error occurred during launching of {name} : {exc}.")
-
+        run_docker(str(image), builder_container, args, project_path, output_dir, env_vars)
 
     log.info("All selected analyzers completed.")

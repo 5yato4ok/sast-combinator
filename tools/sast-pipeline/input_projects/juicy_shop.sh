@@ -33,7 +33,8 @@ if [ -d "$JUICY_SHOP_DIR" ]; then
 
 else
   echo "[INFO] Installing nodejs..."
-  apt-get update && apt-get install -y nodejs npm
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y nodejs
 
   echo "[INFO] Cloning fresh copy of project..."
   git clone https://github.com/juice-shop/juice-shop.git --depth 1

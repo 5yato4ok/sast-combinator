@@ -13,7 +13,7 @@ RUN mkdir -p /opt/codeql && \
         ln -s /opt/codeql*/codeql /usr/local/bin/codeql
 
 # Install query packs for LANGUAGE
-RUN codeql pack install codeql/ruby-queries
+RUN codeql pack download codeql/ruby-queries
 
 WORKDIR /workspace
 COPY analyze.sh /usr/local/bin/analyze.sh

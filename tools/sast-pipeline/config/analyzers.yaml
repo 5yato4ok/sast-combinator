@@ -39,8 +39,7 @@ analyzers:
   - name: semgrep
     type: simple
     image: sast-semgrep
-    time_class: medium
-    enabled: false
+    time_class: slow
     output_type: sarif
     language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
     env:

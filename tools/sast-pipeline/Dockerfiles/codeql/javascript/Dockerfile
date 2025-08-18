@@ -13,7 +13,7 @@ RUN mkdir -p /opt/codeql && \
         ln -s /opt/codeql*/codeql /usr/local/bin/codeql
 
 
-RUN codeql pack install codeql/javascript-queries
+RUN codeql pack download codeql/javascript-queries
 
 WORKDIR /workspace
 COPY analyze.sh /usr/local/bin/analyze.sh

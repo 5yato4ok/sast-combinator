@@ -82,35 +82,27 @@ analyzers:
       - cpp:
           enabled: false
           type: builder
-          image: codeql-cpp
+          image: codeql-c-cpp
           dockerfile_path: "/app/Dockerfiles/codeql/cpp/"
           result_file: "codeql_cpp.sarif"
       - c:
-          enabled: false
-          type: builder
-          image: codeql-cpp
-          dockerfile_path: "/app/Dockerfiles/codeql/cpp/"
-          result_file: "codeql_c.sarif"
+          inherits: cpp
       - csharp:
           image: codeql-csharp
           dockerfile_path: "/app/Dockerfiles/codeql/csharp/"
           result_file: "codeql_csharp.sarif"
       - javascript:
-          image: codeql-javascript
+          image: codeql-javascript-typescript
           dockerfile_path: "/app/Dockerfiles/codeql/javascript/"
           result_file: "codeql_javascript.sarif"
       - typescript:
-          image: codeql-typescript
-          dockerfile_path: "/app/Dockerfiles/codeql/typescript/"
-          result_file: "codeql_typescript.sarif"
-      - typescript:
-          image: codeql-java
+          inherits: javascript
+      - java:
+          image: codeql-java-kotlin
           dockerfile_path: "/app/Dockerfiles/codeql/java/"
           result_file: "codeql_java.sarif"
       - kotlin:
-          image: codeql-kotlin
-          dockerfile_path: "/app/Dockerfiles/codeql/kotlin/"
-          result_file: "codeql_kotlin.sarif"
+          inherits: java
       - go:
           image: codeql-go
           dockerfile_path: "/app/Dockerfiles/codeql/go/"
@@ -123,11 +115,6 @@ analyzers:
           image: codeql-swift
           dockerfile_path: "/app/Dockerfiles/codeql/swift/"
           result_file: "codeql_swift.sarif"
-      - rust:
-          image: codeql-rust
-          enabled: false
-          dockerfile_path: "/app/Dockerfiles/codeql/rust/"
-          result_file: "codeql_rust.sarif"
 
   - name: bearer
     type: simple

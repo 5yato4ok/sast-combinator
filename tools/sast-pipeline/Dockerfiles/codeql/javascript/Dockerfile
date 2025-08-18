@@ -12,7 +12,7 @@ RUN mkdir -p /opt/codeql && \
         rm /tmp/codeql.zip && \
         ln -s /opt/codeql*/codeql /usr/local/bin/codeql
 
-# Install query packs for LANGUAGE
+
 RUN codeql pack install codeql/javascript-queries
 
 WORKDIR /workspace

@@ -12,6 +12,8 @@ RUN mkdir -p /opt/codeql && \
         rm /tmp/codeql.zip && \
         ln -s /opt/codeql*/codeql /usr/local/bin/codeql
 
+RUN codeql pack download codeql/python-queries
+
 WORKDIR /workspace
 COPY analyze.sh /analyze.sh
 RUN chmod +x /analyze.sh

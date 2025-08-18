@@ -25,11 +25,10 @@ class AnalyzersConfigHelper:
             self.config = yaml.safe_load(f)
 
         log.debug(f"Analyzer config: {self.config}")
-        
+
         self.analyzers = AnalyzersConfigHelper.expand_analyzers(
             self.config.get("analyzers", []),
-            allowed_langs=self.languages or None,
-            keep_parent=False
+            allowed_langs=self.languages or None
         )
 
     @staticmethod
@@ -87,61 +86,90 @@ class AnalyzersConfigHelper:
         return AnalyzersConfigHelper.ANALYZER_ORDER.get(time_class, 100)
 
     @staticmethod
-    def expand_analyzers(analyzers, allowed_langs=None, keep_parent=False):
-        """
-        Expand analyzers that have language_specific_containers=True:
-          - For each {<lang>: { ... }} entry in `configuration` produce a new analyzer.
-          - Child config overrides parent fields (image, type, dockerfile_path, etc).
-          - Sets `language` to [<lang>] and adds `effective_name` = "<name>[<lang>]".
-        Args:
-          analyzers: list[dict] — original analyzers.
-          allowed_langs: Optional[set/iterable] — if provided, keep only those langs.
-          keep_parent: bool — if True, also keep the original parent analyzer.
-        Returns:
-          list[dict] — flattened analyzers.
-        """
+    def expand_analyzers(analyzers, allowed_langs=None):
+
         if allowed_langs is not None and not isinstance(allowed_langs, set):
             allowed_langs = set(allowed_langs)
 
-        result = []
+        out = []
+
         for parent in analyzers:
-            if parent.get("language_specific_containers") and isinstance(parent.get("configuration"), list):
-                seen = set()
-                for entry in parent["configuration"]:
-                    # Each entry expected like { "python": {image: ..., ...} }
-                    if not isinstance(entry, dict) or len(entry) != 1:
-                        continue
-                    lang, cfg = next(iter(entry.items()))
-                    if allowed_langs and lang not in allowed_langs:
-                        continue
-                    if lang in seen:
-                        # Skip duplicates; keeps the first occurrence
-                        continue
-                    seen.add(lang)
+            cfg_list = parent.get("configuration")
+            if not (parent.get("language_specific_containers") and isinstance(cfg_list, list)):
+                out.append(copy.deepcopy(parent))
+                continue
 
-                    child = copy.deepcopy(parent)
-                    # Remove the entire configuration from child variant
-                    child.pop("configuration", None)
-                    child.pop("language_specific_containers", None)
-                    # Enforce language to the single one
-                    child["language"] = [lang]
-                    # Effective name for logs/IDs
-                    child["name"] = f'{parent.get("name")}_{lang}'
-                    child["parent"] = parent.get("name")
-                    # Let child config override parent fields (image, type, dockerfile_path, etc.)
-                    if isinstance(cfg, dict):
-                        child.update(cfg)
+            cfg_map = {}
+            for e in cfg_list:
+                if isinstance(e, dict) and len(e) == 1:
+                    lang, cfg = next(iter(e.items()))
+                    cfg_map[lang] = dict(cfg) if isinstance(cfg, dict) else {}
 
-                    result.append(child)
+            def ensure_no_extra_keys(lang, cfg):
+                extra = {k for k in cfg.keys() if k not in {"inherits", "inherits_from"}}
+                if extra:
+                    raise ValueError(
+                        f"Analyzer '{parent.get('name')}', language '{lang}': "
+                        f"inherits-groups do not support overrides: unexpected keys {sorted(extra)}"
+                    )
 
-                if keep_parent:
-                    # Optionally keep the parent as-is (rarely needed)
-                    result.append(copy.deepcopy(parent))
-            else:
-                # Analyzer without language-specific containers remains as-is
-                result.append(copy.deepcopy(parent))
+            visiting = set()
+            root_cache = {}
 
-        return result
+            def get_root(lang):
+                if lang in root_cache:
+                    return root_cache[lang]
+                if lang not in cfg_map:
+                    raise ValueError(
+                        f"Language '{lang}' not defined in configuration of '{parent.get('name')}'. "
+                        f"'inherits' must refer to a language in the SAME configuration."
+                    )
+                if lang in visiting:
+                    raise ValueError(f"Cycle in inherits for analyzer '{parent.get('name')}', language '{lang}'")
+
+                visiting.add(lang)
+                cfg = cfg_map[lang]
+                base = cfg.get("inherits") or cfg.get("inherits_from")
+                if base:
+                    if base not in cfg_map:
+                        raise ValueError(
+                            f"Analyzer '{parent.get('name')}', language '{lang}': inherits='{base}' "
+                            f"must refer to a language in the SAME configuration (not found)."
+                        )
+
+                    ensure_no_extra_keys(lang, cfg)
+                    root = get_root(base)
+                else:
+                    root = lang
+                visiting.remove(lang)
+                root_cache[lang] = root
+                return root
+
+            groups = {}
+            for lang in cfg_map.keys():
+                root = get_root(lang)
+                groups.setdefault(root, set()).add(lang)
+
+            for root_lang, langs in groups.items():
+                final_langs = list(sorted(langs if allowed_langs is None else (langs & allowed_langs)))
+                if not final_langs:
+                    continue
+
+                child = copy.deepcopy(parent)
+                child.pop("configuration", None)
+                child.pop("language_specific_containers", None)
+                child["parent"] = parent.get("name")
+                child["name"] = f"{parent.get('name')}_{root_lang}"
+                child["language"] = final_langs
+
+                root_cfg = cfg_map.get(root_lang, {})
+                for k, v in root_cfg.items():
+                    if k !="inherits":
+                        child[k] = v
+
+                out.append(child)
+
+        return out
 
     @staticmethod
     def get_image_name(analyzer):

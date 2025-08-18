@@ -19,11 +19,11 @@ DB_DIR="/tmp/codeql-db-swift"
 rm -rf "$DB_DIR" && mkdir -p "$DB_DIR"
 
 echo "[INFO] Creating CodeQL DB for swift"
-codeql database create "$DB_DIR" --language="swift" --source-root "$INPUT_DIR" --verbosity="${LOG_LEVEL}"
+codeql database create "$DB_DIR" --language="swift" --source-root "$INPUT_DIR" --verbosity="${LOG_LEVEL}" -j "${JOBS}"
 
-QPKG="codeql/java-queries:codeql-suites/swift-extended.qls"
+QPKG="codeql/swift-queries:codeql-suites/swift-extended.qls"
 echo "[INFO] Analyzing with $QPKG"
 
-codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}"
+codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}" -j "${JOBS}"
 
 echo "[INFO] Results at $OUTPUT_FILE"

@@ -85,33 +85,46 @@ def run_logged_cmd(cmd, log_addition=""):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        bufsize=1,
+        bufsize=0,   # без доп. буферизации в Python
     ) as proc:
-        assert proc.stdout is not None and proc.stderr is not None
+        assert proc.stdout and proc.stderr
+        # Сделать пайпы неблокирующими
+        os.set_blocking(proc.stdout.fileno(), False)
+        os.set_blocking(proc.stderr.fileno(), False)
+
         sel = selectors.DefaultSelector()
-        # Register both stdout and stderr file descriptors
         sel.register(proc.stdout, selectors.EVENT_READ, data=("stdout", proc.stdout))
         sel.register(proc.stderr, selectors.EVENT_READ, data=("stderr", proc.stderr))
-        while True:
-            events = sel.select()
-            if not events:
-                break
-            for key, _ in events:
-                stream_name, fileobj = key.data
-                line = fileobj.readline()
-                if line:
-                    _log_container_line(line.rstrip("\n"), stream=stream_name, log_addition=log_addition)
-                else:
-                    # EOF reached on this stream
-                    sel.unregister(fileobj)
-                    fileobj.close()
-            # If both stdout and stderr have been closed, we're done
-            if not sel.get_map():
-                break
-        returncode = proc.wait()
-        if returncode != 0:
-            raise subprocess.CalledProcessError(returncode, cmd)
-        return None
+
+        try:
+            while True:
+                events = sel.select(timeout=0.1)  # small timeout
+                for key, _ in events:
+                    stream_name, fileobj = key.data
+                    chunk = fileobj.read()
+                    if chunk:  # if several chunks without \n
+                        for line in chunk.splitlines():
+                            _log_container_line(line, stream=stream_name, log_addition=log_addition)
+                    else:
+                        # EOF
+                        sel.unregister(fileobj)
+
+                # exit when process is exit and threads is finished
+                if proc.poll() is not None and not sel.get_map():
+                    break
+
+            returncode = proc.wait()
+            if returncode != 0:
+                raise subprocess.CalledProcessError(returncode, cmd)
+            return None
+        finally:
+            # close related resources
+            for key in list(sel.get_map().values()):
+                try:
+                    sel.unregister(key.fileobj)
+                except Exception:
+                    pass
+            sel.close()
 
 def delete_image_if_exist(image_name):
     if not image_exists(image_name):

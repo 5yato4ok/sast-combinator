@@ -1,8 +1,16 @@
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
+#TODO: java version must be from project configuration
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        bash ca-certificates curl git unzip jq \
-     && rm -rf /var/lib/apt/lists/*
+    bash ca-certificates curl git unzip jq openjdk-21-jdk \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN curl -L -o /tmp/kotlin.zip \
+      https://github.com/JetBrains/kotlin/releases/download/v1.9.25/kotlin-compiler-1.9.25.zip \
+ && unzip /tmp/kotlin.zip -d /opt/ \
+ && rm /tmp/kotlin.zip \
+ && ln -sf /opt/kotlinc/bin/kotlinc /usr/local/bin/kotlinc \
+ && ln -sf /opt/kotlinc/bin/kotlin /usr/local/bin/kotlin
 
 # Install CodeQL CLI
 ARG CODEQL_VERSION=2.18.4

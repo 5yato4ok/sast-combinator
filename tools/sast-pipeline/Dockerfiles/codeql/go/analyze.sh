@@ -21,9 +21,9 @@ rm -rf "$DB_DIR" && mkdir -p "$DB_DIR"
 echo "[INFO] Creating CodeQL DB for go"
 codeql database create "$DB_DIR" --language="go" --source-root "$INPUT_DIR" --verbosity="${LOG_LEVEL}"
 
-QPKG="codeql/java-queries:codeql-suites/go-security-extended.qls"
+QPKG="codeql/go-queries:codeql-suites/go-security-extended.qls"
 echo "[INFO] Analyzing with $QPKG"
 
-codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}"
+codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}" -j "${JOBS}"
 
 echo "[INFO] Results at $OUTPUT_FILE"

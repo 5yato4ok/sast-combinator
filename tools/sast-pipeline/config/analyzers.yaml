@@ -39,6 +39,7 @@ analyzers:
   - name: semgrep
     type: simple
     image: sast-semgrep
+    enabled: true
     time_class: slow
     output_type: sarif
     language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
@@ -72,6 +73,8 @@ analyzers:
     language_specific_containers: true
     enabled: true
     output_type: sarif
+    env:
+      - JOBS
     language: [ "python", "cpp", "c", "csharp", "javascript", "typescript", "java", "kotlin", "go", "ruby", "swift" , "rust"]
     configuration:
       - python:
@@ -90,6 +93,12 @@ analyzers:
           image: codeql-csharp
           dockerfile_path: "/app/Dockerfiles/codeql/csharp/"
           result_file: "codeql_csharp.sarif"
+          type: builder
+          env:
+            - DOTNET_PATH
+            - LIB_PATH
+            - JOBS
+
       - javascript:
           image: codeql-javascript-typescript
           dockerfile_path: "/app/Dockerfiles/codeql/javascript/"

@@ -12,7 +12,7 @@ chmod +x project_config.sh
 
 source ./project_config.sh
 
-if [[ "${NON_COMPILE_PROJECT:-1}" -eq 0 ]]; then
+if [[ "${NON_COMPILE_PROJECT:-1}" -eq 0 && -n "${COMPILE_COMMANDS_PATH:-}" ]]; then
 
   echo "[INFO] Looking for compiler path in $COMPILE_COMMANDS_PATH"
 

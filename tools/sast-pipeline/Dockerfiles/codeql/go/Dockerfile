@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        bash ca-certificates curl git unzip jq \
+        bash ca-certificates curl git unzip golang-go jq \
      && rm -rf /var/lib/apt/lists/*
 
 # Install CodeQL CLI

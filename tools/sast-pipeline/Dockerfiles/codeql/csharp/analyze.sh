@@ -4,6 +4,11 @@ INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
 OUTPUT_FILE="${OUTPUT_DIR}/${3:-codeql_csharp.sarif}"
 LOG_LEVEL="${LOG_LEVEL:-progress}"
+export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+export DOTNET_CLI_TELEMETRY_OPTOUT=1
+export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+export PATH="$DOTNET_PATH:$PATH"
+export LD_LIBRARY_PATH="${LIB_PATH}:${LD_LIBRARY_PATH-}"
 
 LOG_LEVEL="$(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]')"
 
@@ -19,12 +24,11 @@ DB_DIR="/tmp/codeql-db-csharp"
 rm -rf "$DB_DIR" && mkdir -p "$DB_DIR"
 
 echo "[INFO] Creating CodeQL DB for csharp"
-set +e
-codeql database create "$DB_DIR" --language="csharp" --source-root "$INPUT_DIR" --verbosity="${LOG_LEVEL}"
+codeql database create "$DB_DIR" --language="csharp" --source-root "$INPUT_DIR" --verbosity="${LOG_LEVEL}" -j "${JOBS}"
 
-QPKG="codeql/java-queries:codeql-suites/csharp-security-extended.qls"
+QPKG="codeql/csharp-queries:codeql-suites/csharp-security-extended.qls"
 echo "[INFO] Analyzing with $QPKG"
 
-codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}"
+codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}" -j "${JOBS}"
 
 echo "[INFO] Results at $OUTPUT_FILE"

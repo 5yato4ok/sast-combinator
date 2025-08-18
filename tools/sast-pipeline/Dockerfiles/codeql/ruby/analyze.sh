@@ -19,12 +19,11 @@ DB_DIR="/tmp/codeql-db-ruby"
 rm -rf "$DB_DIR" && mkdir -p "$DB_DIR"
 
 echo "[INFO] Creating CodeQL DB for ruby"
-set +e
-codeql database create "$DB_DIR" --language="ruby" --source-root "$INPUT_DIR"
+codeql database create "$DB_DIR" --language="ruby" --source-root "$INPUT_DIR" -j "${JOBS}"
 
-QPKG="codeql/java-queries:codeql-suites/ruby-security-extended.qls"
+QPKG="codeql/ruby-queries:codeql-suites/ruby-security-extended.qls"
 echo "[INFO] Analyzing with $QPKG"
-set +e
-codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE"
+
+codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" -j "${JOBS}"
 
 echo "[INFO] Results at $OUTPUT_FILE"

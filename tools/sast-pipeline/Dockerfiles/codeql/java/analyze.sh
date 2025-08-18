@@ -20,10 +20,10 @@ DB_DIR="/tmp/codeql-db-java"
 rm -rf "$DB_DIR" && mkdir -p "$DB_DIR"
 
 echo "[INFO] Creating CodeQL DB for java-kotlin"
-codeql database create "$DB_DIR" --language="java-kotlin" --source-root "$INPUT_DIR" --verbosity="${LOG_LEVEL}"
+codeql database create "$DB_DIR" --language="java-kotlin" --source-root "$INPUT_DIR" --verbosity="${LOG_LEVEL}" -j "${JOBS}"
 
 QPKG="codeql/java-queries:codeql-suites/java-security-extended.qls"
 echo "[INFO] Analyzing with $QPKG"
-codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}"
+codeql database analyze "$DB_DIR" "$QPKG" --format=sarifv2.1.0 --output "$OUTPUT_FILE" --verbosity="${LOG_LEVEL}" -j "${JOBS}"
 
 echo "[INFO] Results at $OUTPUT_FILE"

@@ -228,7 +228,7 @@ def main() -> None:
     else:
         log.info("No DefectDojo product specified. Skipping upload.")
 
-    # cleanup(tmp_analyzer_config_path)
+    cleanup(tmp_analyzer_config_path)
 
 
 if __name__ == "__main__":

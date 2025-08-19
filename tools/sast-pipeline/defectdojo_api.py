@@ -24,7 +24,9 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, List, Tuple
 from repo_info import read_repo_params
+from dotenv import load_dotenv
 import config_utils
+import urllib3
 
 import requests
 
@@ -39,6 +41,7 @@ logger = logging.getLogger("defectdojo")
 if not logger.handlers:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ------------------------------ configuration ------------------------------
 
 @dataclass
@@ -69,10 +72,10 @@ def load_dojo_config(config_path: str) -> DojoConfig:
 
     verify_ssl = DojoConfig._parse_bool(os.environ.get("DEFECTDOJO_VERIFY_SSL"), bool(dd.get("verify_ssl", True)))
     minimum_severity = os.environ.get("DEFECTDOJO_MIN_SEVERITY") or dd.get("minimum_severity", "Info")
-    name_mode = dd.get("name_mode", "analyzer-branch-sha")
-    if name_mode not in ("analyzer", "analyzer-branch", "analyzer-branch-sha"):
-        logger.warning("Unknown name_mode '%s'; falling back to 'analyzer-branch-sha'", name_mode)
-        name_mode = "analyzer-branch-sha"
+    name_mode = dd.get("name_mode", "analyzer-sha")
+    if name_mode not in ("analyzer", "analyzer-branch", "analyzer-sha"):
+        logger.warning("Unknown name_mode '%s'; falling back to 'analyzer-sha'", name_mode)
+        name_mode = "analyzer-sha"
     return DojoConfig(url=url.rstrip("/"), verify_ssl=verify_ssl, minimum_severity=minimum_severity, name_mode=name_mode)
 
 # ------------------------------ analyzers + scan_type (cached) -------------
@@ -140,21 +143,21 @@ def _get_or_create_product(session: requests.Session, base: str, product_name: s
     for p in r.json().get("results", []):
         if p.get("name") == product_name:
             return p
-    r = session.post(f"{base}/api/v2/products/", data={"name": product_name})
+    r = session.post(f"{base}/api/v2/products/", json={"name": product_name})
     r.raise_for_status()
     return r.json()
 
-def _ensure_engagement(session: requests.Session, base: str, product_id: int, name: str,
+def _ensure_engagement(session: requests.Session, base: str, product_name: int, name: str,
                        repo_url: Optional[str], branch_tag: Optional[str], commit_hash: Optional[str],
                        engagement_type: str = "CI/CD") -> Dict[str, Any]:
-    r = session.get(f"{base}/api/v2/engagements/", params={"product": product_id, "name": name})
+    r = session.get(f"{base}/api/v2/engagements/", params={"product_name": product_name, "name": name})
     r.raise_for_status()
     results = r.json().get("results", [])
     if results:
         eng = results[0]
         patch = {}
-        if repo_url and eng.get("repo") != repo_url:
-            patch["repo"] = repo_url
+        if repo_url and eng.get("source_code_management_uri") != repo_url:
+            patch["source_code_management_uri"] = repo_url
         if branch_tag and eng.get("branch_tag") != branch_tag:
             patch["branch_tag"] = branch_tag
         if commit_hash and eng.get("commit_hash") != commit_hash:
@@ -165,14 +168,14 @@ def _ensure_engagement(session: requests.Session, base: str, product_id: int, na
             eng = r.json()
         return eng
 
-    data = {"name": name, "product": product_id, "engagement_type": engagement_type}
+    data = {"name": name, "product_name": product_name, "engagement_type": engagement_type}
     if repo_url:
-        data["repo"] = repo_url
+        data["source_code_management_uri"] = repo_url
     if branch_tag:
         data["branch_tag"] = branch_tag
     if commit_hash:
         data["commit_hash"] = commit_hash
-    r = session.post(f"{base}/api/v2/engagements/", data=data)
+    r = session.post(f"{base}/api/v2/engagements/", json=data)
     r.raise_for_status()
     return r.json()
 
@@ -190,16 +193,9 @@ def _get_findings_for_test(session: requests.Session, base: str, test_id: int) -
         offset += limit
     return items
 
-def _post_finding_meta(session: requests.Session, base: str, finding_id: int, name: str, value: str) -> Dict[str, Any]:
-    r = session.get(f"{base}/api/v2/finding_meta/", params={"finding": finding_id, "name": name})
-    r.raise_for_status()
-    j = r.json()
-    if j.get("count"):
-        meta_id = j["results"][0]["id"]
-        r = session.patch(f"{base}/api/v2/finding_meta/{meta_id}/", data={"name": name, "value": value})
-        r.raise_for_status()
-        return r.json()
-    r = session.post(f"{base}/api/v2/finding_meta/", data={"finding": str(finding_id), "name": name, "value": value})
+def _post_finding_meta(session: requests.Session, base: str, finding_id: int, name: str, value: str):
+    url = f"{base.rstrip('/')}/api/v2/findings/{finding_id}/metadata/"
+    r = session.post(url, json={"name": name, "value": value})
     r.raise_for_status()
     return r.json()
 
@@ -266,7 +262,7 @@ def upload_report(
 
     # Engagement
     engagement_name = _derive_engagement_name(analyzer_name, branch_tag, commit_hash, cfg.name_mode)
-    engagement = _ensure_engagement(session, base, product["id"], engagement_name, repo_url, branch_tag, commit_hash, "CI/CD")
+    engagement = _ensure_engagement(session, base, product["name"], engagement_name, repo_url, branch_tag, commit_hash, "CI/CD")
     logger.info("Using engagement '%s' (id=%s)", engagement_name, engagement["id"])
 
     # Import
@@ -308,6 +304,7 @@ def upload_report(
     linker = LinkBuilder()
     enriched = 0
     ref = commit_hash or branch_tag
+    logger.info(f"Start enriching {len(findings)} findings")
     for f in findings:
         try:
             file_path = f.get("file_path") or ""
@@ -364,3 +361,97 @@ def upload_results(
         results.append(res)
 
     return results
+
+
+
+def enrich_existing_findings(
+    dojo_config_path: str,
+    product_name: Optional[str] = None,
+    only_missing: bool = True,
+) -> int:
+    """
+    Enrich existing findings with finding_meta['sourcefile_link'] using repo/ref from their Engagement.
+    Uses `related_fields=true` to fetch engagement data inline (no extra GETs per finding).
+    Skips findings when engagement or repo/ref info is unavailable.
+    """
+    cfg = load_dojo_config(dojo_config_path)
+    token = os.environ.get("DEFECTDOJO_TOKEN") or ""
+    if not token:
+        raise ValueError("Missing DEFECTDOJO_TOKEN environment variable.")
+
+    session, base = _dojo_session(cfg, token)
+    linker = LinkBuilder()
+
+    params = {"limit": 200, "related_fields": "true"}
+    if product_name is not None:
+        params["product_name"] = product_name
+
+    updated = 0
+    offset = 0
+
+    while True:
+        page_params = dict(params)
+        page_params["offset"] = offset
+        r = session.get(f"{base}/api/v2/findings/", params=page_params)
+        r.raise_for_status()
+        j = r.json()
+        findings = j.get("results", [])
+
+        if not findings:
+            break
+        total_num = len(findings)
+        for f in findings:
+            try:
+                fid = f.get("id")
+                file_path = f.get("file_path") or ""
+                if not fid or not file_path:
+                    continue
+
+                # Pull engagement from related_fields.test.engagement
+                rf = f.get("related_fields") or {}
+                test_rf = rf.get("test") or {}
+                engagement = test_rf.get("engagement") or {}
+                repo_url = engagement.get("source_code_management_uri", None)
+                if not repo_url:
+                    full_engagement_r = session.get(f"{base}/api/v2/engagements/{engagement["id"]}")
+                    full_engagement_r.raise_for_status()
+                    full_engagement = full_engagement_r.json()
+                    repo_url = full_engagement.get("source_code_management_uri", None)
+                ref = engagement.get("commit_hash") or engagement.get("branch_tag")
+                if not (repo_url and (ref or True)):  # ref may be None, builder will default to master
+                    if not repo_url:
+                        continue
+
+                if only_missing:
+                    mr = session.get(f"{base}/api/v2/findings/{fid}/metadata/")
+                    mr.raise_for_status()
+                    mr_json = mr.json()
+                    if "sourcefile_link" in mr_json:
+                        continue
+
+                link = linker.build(repo_url, file_path, ref)
+                if not link:
+                    continue
+
+                _post_finding_meta(session, base, fid, "sourcefile_link", link)
+                updated += 1
+                if updated % 100 == 0:
+                    logger.info(f"Processed {updated} findings. Left {(total_num - updated)}")
+
+            except Exception as e:
+                logger.warning("Failed to enrich finding id=%s: %s", f.get("id"), e)
+                continue
+
+        if not j.get("next"):
+            break
+        offset += params["limit"]
+
+    logger.info("Bulk enrichment complete. Updated findings: %s", updated)
+    return updated
+
+
+if __name__ == "__main__":
+    load_dotenv(dotenv_path=".env")
+    enrich_existing_findings(dojo_config_path="config/defectdojo.yaml",product_name="VulnerableSharpApp", only_missing=True)
+    enrich_existing_findings(dojo_config_path="config/defectdojo.yaml",product_name="juicy_shop", only_missing=True)
+    enrich_existing_findings(dojo_config_path="config/defectdojo.yaml", product_name="nx_open", only_missing=True)

@@ -17,23 +17,140 @@ All comments are in English.
 """
 
 from __future__ import annotations
-
-import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from repo_info import read_repo_params
+from requests.adapters import HTTPAdapter
+from typing import Any, Dict, Optional, List, Tuple
 import json
 import logging
-from dataclasses import dataclass
-from typing import Any, Dict, Optional, List, Tuple
-from repo_info import read_repo_params
-from dotenv import load_dotenv
-import config_utils
-import urllib3
-
+import os
 import requests
+import threading
+from dotenv import load_dotenv
+from urllib3.util.retry import Retry
+import urllib3
+import config_utils
 
 try:
     import yaml  # type: ignore
 except Exception:
     yaml = None
+
+
+# === Parallel HTTP helpers ===
+_thread_local = threading.local()
+
+def _make_session_like(proto: requests.Session) -> requests.Session:
+    s = requests.Session()
+    # Copy critical session attributes
+    s.headers.update(proto.headers)
+    s.cookies.update(proto.cookies)
+    try:
+        s.verify = proto.verify
+    except Exception:
+        pass
+    try:
+        s.cert = proto.cert
+    except Exception:
+        pass
+    try:
+        s.trust_env = proto.trust_env
+    except Exception:
+        pass
+    # Copy proxies/auth if defined
+    if getattr(proto, "proxies", None):
+        s.proxies.update(proto.proxies)
+    if getattr(proto, "auth", None):
+        s.auth = proto.auth
+
+    # Beef up pool size & retries for concurrency
+    retry = Retry(total=3, backoff_factor=0.3, status_forcelist=(429, 500, 502, 503, 504))
+    adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=retry)
+    s.mount("http://", adapter)
+    s.mount("https://", adapter)
+    return s
+
+def _tls_session(proto: requests.Session) -> requests.Session:
+    """Thread-local clone of the base session."""
+    if not hasattr(_thread_local, "session"):
+        _thread_local.session = _make_session_like(proto)
+    return _thread_local.session
+
+def _fetch_engagement(base: str, eng_id: int, proto_sess: requests.Session, cache: dict, cache_lock: threading.Lock) -> dict:
+    with cache_lock:
+        if eng_id in cache:
+            return cache[eng_id]
+    s = _tls_session(proto_sess)
+    r = s.get(f"{base}/api/v2/engagements/{eng_id}/")
+    r.raise_for_status()
+    data = r.json()
+    with cache_lock:
+        cache[eng_id] = data
+    return data
+
+def _has_sourcefile_link(base: str, finding_id: int, proto_sess: requests.Session) -> bool:
+    s = _tls_session(proto_sess)
+    r = s.get(f"{base}/api/v2/findings/{finding_id}/metadata/", params={"name": "sourcefile_link"})
+    r.raise_for_status()
+    js = r.json()
+    if isinstance(js, dict) and "results" in js:
+        return any(m.get("name") == "sourcefile_link" for m in js.get("results", []))
+    if isinstance(js, list):
+        return any(m.get("name") == "sourcefile_link" for m in js)
+    return False
+
+def _post_finding_meta_json(proto_sess: requests.Session, base: str, finding_id: int, name: str, value: str) -> None:
+    s = _tls_session(proto_sess)
+    url = f"{base.rstrip('/')}/api/v2/findings/{finding_id}/metadata/"
+    r = s.post(url, json={"name": name, "value": value})
+    r.raise_for_status()
+
+def _process_one_finding(
+    f: dict,
+    base: str,
+    linker,
+    only_missing: bool,
+    proto_sess: requests.Session,
+    eng_cache: dict,
+    eng_cache_lock: threading.Lock,
+    logger=None,
+) -> int:
+    try:
+        fid = f.get("id")
+        file_path = f.get("file_path") or ""
+        if not fid or not file_path:
+            return 0
+
+        rf = f.get("related_fields") or {}
+        test_rf = rf.get("test") or {}
+        engagement = test_rf.get("engagement") or {}
+        repo_url = engagement.get("source_code_management_uri")
+        ref = engagement.get("commit_hash") or engagement.get("branch_tag")
+
+        if not repo_url:
+            eng_id = engagement.get("id")
+            if not eng_id:
+                return 0
+            full_eng = _fetch_engagement(base, eng_id, proto_sess, eng_cache, eng_cache_lock)
+            repo_url = full_eng.get("source_code_management_uri")
+            ref = ref or full_eng.get("commit_hash") or full_eng.get("branch_tag")
+            if not repo_url:
+                return 0
+
+        if only_missing and _has_sourcefile_link(base, fid, proto_sess):
+            return 0
+
+        link = linker.build(repo_url, file_path, ref)
+        if not link:
+            return 0
+
+        _post_finding_meta_json(proto_sess, base, fid, "sourcefile_link", link)
+        return 1
+    except Exception as e:
+        if logger:
+            logger.warning("Failed to enrich finding id=%s: %s", f.get("id"), e)
+        return 0
 
 # ------------------------------ logging ------------------------------------
 
@@ -47,7 +164,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 @dataclass
 class DojoConfig:
     url: str
-    verify_ssl: bool = True
+    verify_ssl: bool = False
     minimum_severity: str = "Info"
     name_mode: str = "analyzer-sha"  # analyzer | analyzer-branch | analyzer-branch-sha | analyzer-sha
 
@@ -305,25 +422,35 @@ def upload_report(
     enriched = 0
     ref = commit_hash or branch_tag
     logger.info(f"Start enriching {len(findings)} findings")
-    for f in findings:
+    # Parallel enrichment of metadata for this report
+    _workers = max(1, (os.cpu_count() or 4))
+    enriched = 0
+
+    def _enrich_one(f):
+        nonlocal enriched
         try:
             file_path = f.get("file_path") or ""
             link = linker.build(repo_url or "", file_path, ref)
             if link:
-                _post_finding_meta(session, base, f["id"], "sourcefile_link", link)
-                enriched += 1
+                _post_finding_meta_json(session, base, f["id"], "sourcefile_link", link)
+                return 1
         except Exception as e:
             logger.warning("Failed to enrich finding %s: %s", f.get("id"), e)
+        return 0
 
-    logger.info("Enriched findings: %s/%s", enriched, imported_count)
-    return ImportResult(
-        engagement_id=engagement["id"],
-        engagement_name=engagement_name,
-        test_id=test_id,
-        imported_findings=imported_count,
-        enriched_count=enriched,
-        raw=import_resp,
-    )
+    with ThreadPoolExecutor(max_workers=_workers) as ex:
+        for res in ex.map(_enrich_one, findings):
+            enriched += res
+
+        logger.info("Enriched findings: %s/%s", enriched, imported_count)
+        return ImportResult(
+            engagement_id=engagement["id"],
+            engagement_name=engagement_name,
+            test_id=test_id,
+            imported_findings=imported_count,
+            enriched_count=enriched,
+            raw=import_resp,
+        )
 
 # ------------------------------ directory entry -----------------------------
 
@@ -368,6 +495,7 @@ def enrich_existing_findings(
     dojo_config_path: str,
     product_name: Optional[str] = None,
     only_missing: bool = True,
+    max_workers: Optional[int] = None,
 ) -> int:
     """
     Enrich existing findings with finding_meta['sourcefile_link'] using repo/ref from their Engagement.
@@ -379,79 +507,65 @@ def enrich_existing_findings(
     if not token:
         raise ValueError("Missing DEFECTDOJO_TOKEN environment variable.")
 
-    session, base = _dojo_session(cfg, token)
+    proto_sess, base = _dojo_session(cfg, token)
     linker = LinkBuilder()
 
     params = {"limit": 200, "related_fields": "true"}
     if product_name is not None:
         params["product_name"] = product_name
 
-    updated = 0
+    updated_total = 0
     offset = 0
 
+    eng_cache = {}
+    eng_cache_lock = threading.Lock()
+
+    if max_workers is None:
+        max_workers = max(1, (os.cpu_count() or 4))
+
     while True:
-        page_params = dict(params)
-        page_params["offset"] = offset
-        r = session.get(f"{base}/api/v2/findings/", params=page_params)
+        page_params = dict(params, offset=offset)
+        r = proto_sess.get(f"{base}/api/v2/findings/", params=page_params)
         r.raise_for_status()
         j = r.json()
         findings = j.get("results", [])
-
         if not findings:
             break
-        total_num = len(findings)
-        for f in findings:
-            try:
-                fid = f.get("id")
-                file_path = f.get("file_path") or ""
-                if not fid or not file_path:
-                    continue
 
-                # Pull engagement from related_fields.test.engagement
-                rf = f.get("related_fields") or {}
-                test_rf = rf.get("test") or {}
-                engagement = test_rf.get("engagement") or {}
-                repo_url = engagement.get("source_code_management_uri", None)
-                if not repo_url:
-                    full_engagement_r = session.get(f"{base}/api/v2/engagements/{engagement["id"]}")
-                    full_engagement_r.raise_for_status()
-                    full_engagement = full_engagement_r.json()
-                    repo_url = full_engagement.get("source_code_management_uri", None)
-                ref = engagement.get("commit_hash") or engagement.get("branch_tag")
-                if not (repo_url and (ref or True)):  # ref may be None, builder will default to master
-                    if not repo_url:
-                        continue
+        processed_on_page = 0
+        with ThreadPoolExecutor(max_workers=max_workers) as ex:
+            futures = [
+                ex.submit(
+                    _process_one_finding,
+                    f,
+                    base,
+                    linker,
+                    only_missing,
+                    proto_sess,
+                    eng_cache,
+                    eng_cache_lock,
+                    logger,
+                )
+                for f in findings
+            ]
+            for fut in as_completed(futures):
+                processed_on_page += fut.result()
+                if processed_on_page and processed_on_page % 100 == 0:
+                    logger.info("Processed %d findings on this page", processed_on_page)
 
-                if only_missing:
-                    mr = session.get(f"{base}/api/v2/findings/{fid}/metadata/")
-                    mr.raise_for_status()
-                    mr_json = mr.json()
-                    if "sourcefile_link" in mr_json:
-                        continue
-
-                link = linker.build(repo_url, file_path, ref)
-                if not link:
-                    continue
-
-                _post_finding_meta(session, base, fid, "sourcefile_link", link)
-                updated += 1
-                if updated % 100 == 0:
-                    logger.info(f"Processed {updated} findings. Left {(total_num - updated)}")
-
-            except Exception as e:
-                logger.warning("Failed to enrich finding id=%s: %s", f.get("id"), e)
-                continue
+        updated_total += processed_on_page
+        logger.info("Page done: +%d updated (total: %d)", processed_on_page, updated_total)
 
         if not j.get("next"):
             break
         offset += params["limit"]
 
-    logger.info("Bulk enrichment complete. Updated findings: %s", updated)
-    return updated
+    logger.info("Bulk enrichment complete. Updated findings: %s", updated_total)
+    return updated_total
 
 
 if __name__ == "__main__":
     load_dotenv(dotenv_path=".env")
     enrich_existing_findings(dojo_config_path="config/defectdojo.yaml",product_name="VulnerableSharpApp", only_missing=True)
-    enrich_existing_findings(dojo_config_path="config/defectdojo.yaml",product_name="juicy_shop", only_missing=True)
-    enrich_existing_findings(dojo_config_path="config/defectdojo.yaml", product_name="nx_open", only_missing=True)
+    #enrich_existing_findings(dojo_config_path="config/defectdojo.yaml",product_name="juicy_shop", only_missing=True)
+    #enrich_existing_findings(dojo_config_path="config/defectdojo.yaml", product_name="nx_open", only_missing=True)

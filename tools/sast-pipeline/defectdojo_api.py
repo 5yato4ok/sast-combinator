@@ -1,210 +1,357 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Helper functions for uploading static analysis results to DefectDojo via the
-v2 REST API.
+defectdojo_api.py
 
-This module encapsulates loading DefectDojo connection settings from a YAML
-configuration file, mapping custom analyzer output types to DefectDojo scan
-types, and performing the import of reports for a given product.
+Single-file helper to:
+- load DefectDojo config (YAML + environment overrides)
+- resolve scan_type (from analyzers.yaml or auto by file extension)
+- upload a report to DefectDojo (auto-create product/engagement)
+- create metadata "sourcefile_link" for all findings produced by the import
 
-Usage example:
+NOTES
+- Engagement naming: defaults to "<analyzer>-<short_sha>" if local Git info is available,
+  otherwise falls back to "<analyzer>". You can change NAME_MODE below.
+- New engagement per commit is recommended for immutable source links. As an alternative,
+  you could keep one engagement per branch and store the commit in Test.build_id.
 
->>> from defectdojo_api import upload_results
->>> upload_results(
-...     output_dir="/tmp/sast_output",
-...     analyzers_cfg_path="config/analyzers.yaml",
-...     product_name="Test_suite",
-...     dojo_config_path="config/defectdojo.yaml",
-... )
+Environment variables
+- DEFECTDOJO_TOKEN (required): API token
 
-The analyzers configuration must specify an `output_type` for each analyzer
-(e.g. ``sarif`` or ``codechecker``). The file names of reports are
-constructed as ``{analyzer_name}_result.{ext}``, where the extension is
-derived from the output type (``.sarif`` for SARIF and ``.json`` for
-CodeChecker unified JSON). If a report file is missing, a warning is
-printed and that analyzer's report is skipped.
-
-While this implementation uses the raw HTTP API directly via ``requests``,
-it can be swapped out for any other DefectDojo client library if available.
 """
 
 from __future__ import annotations
 
-import json
-import yaml
 import os
-from pathlib import Path
-import logging
-from typing import Dict, Any, Optional
+import re
+import json
+from dataclasses import dataclass
+from typing import Any, Dict, Optional, List, Tuple
+from repo_info import read_repo_params
 
-import config_utils
 import requests
 
-log = logging.getLogger(__name__)
+try:
+    import yaml  # type: ignore
+except Exception as e:
+    yaml = None
 
-def load_dojo_config(path: str) -> Dict[str, Any]:
-    """Load DefectDojo connection settings from a YAML file.
+# ------------------------------ configuration ------------------------------
 
-    The YAML file must have a top-level ``defectdojo`` section with at least
-    ``url`` and ``token``. Optionally, ``verify_ssl`` can be provided to
-    disable SSL certificate verification.
+@dataclass
+class DojoConfig:
+    url: str
+    verify_ssl: bool = True
+    minimum_severity: str = "Info"
 
-    :param path: Path to the YAML configuration file.
-    :return: A dictionary with keys ``url``, ``token`` and optionally
-             ``verify_ssl``.
-    :raises FileNotFoundError: if the file does not exist.
-    :raises KeyError: if required keys are missing.
+    @staticmethod
+    def _parse_bool(v: Optional[str], default: bool) -> bool:
+        if v is None:
+            return default
+        return str(v).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+def load_dojo_config(config_path: str) -> DojoConfig:
+    """Load YAML config and apply environment overrides."""
+    if yaml is None:
+        raise RuntimeError("PyYAML is required. Install 'pyyaml'.")
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    dd = data.get("defectdojo", {}) or {}
+    url = os.environ.get("DEFECTDOJO_URL") or dd.get("url") or ""
+    if not url:
+        raise ValueError("Missing DefectDojo URL (defectdojo.url or DEFECTDOJO_URL).")
+
+    verify_ssl = DojoConfig._parse_bool(os.environ.get("DEFECTDOJO_VERIFY_SSL"), bool(dd.get("verify_ssl", True)))
+    minimum_severity = os.environ.get("DEFECTDOJO_MIN_SEVERITY") or dd.get("minimum_severity", "Info")
+    return DojoConfig(url=url.rstrip("/"), verify_ssl=verify_ssl, minimum_severity=minimum_severity)
+
+# ------------------------------ scan type logic ----------------------------
+
+def resolve_scan_type(analyzers_cfg_path: Optional[str], analyzer_name: Optional[str], report_path: str) -> str:
     """
-    config_path = Path(path).expanduser().resolve()
-    if not config_path.is_file():
-        raise FileNotFoundError(f"DefectDojo config not found: {config_path}")
-    with config_path.open("r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f) or {}
-    if "defectdojo" not in cfg:
-        raise KeyError(f"Expected top‑level 'defectdojo' key in {config_path}")
-    dojo_cfg = cfg["defectdojo"]
-    if "url" not in dojo_cfg:
-        raise KeyError(f"Missing 'url' in defectdojo config: {config_path}")
-    return dojo_cfg
-
-
-def resolve_scan_type(output_type: str) -> str:
-    """Map an analyzer output_type to the appropriate DefectDojo scan_type.
-
-    The mapping is defined here centrally. If additional formats are added
-    in analyzers.yaml, extend this mapping accordingly.
-
-    :param output_type: The lower‑case output format defined for the analyzer.
-    :return: A string accepted by DefectDojo's ``import-scan`` API as
-             ``scan_type``.
-    :raises ValueError: if the output_type is unknown.
+    Decide scan_type. Priority:
+      1) analyzers.yaml mapping: analyzers[<name>].scan_type
+      2) file extension heuristic (SARIF preferred)
     """
-    mapping = {
-        "sarif": "SARIF",
-        "codechecker": "Codechecker Report native",
-    }
-    key = (output_type or "").strip().lower()
-    if key not in mapping:
-        supported = ", ".join(sorted(mapping.keys()))
-        raise ValueError(f"Unknown output_type '{output_type}'. Supported: {supported}")
-    return mapping[key]
+    # 1) analyzers.yaml mapping
+    if analyzers_cfg_path and analyzer_name and os.path.exists(analyzers_cfg_path):
+        try:
+            with open(analyzers_cfg_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            mapping = (data.get("analyzers") or {}).get(analyzer_name) or {}
+            st = mapping.get("output_type")
+            if st:
+                return st
+        except Exception:
+            pass
 
+    # 2) extension heuristic
+    base, ext = os.path.splitext(report_path.lower())
+    if ext in (".sarif", ".sarif.json"):
+        return "SARIF"
+    if ext == ".xml":
+        return "Generic XML Import"
+    if ext == ".json":
+        # Light SARIF detection
+        try:
+            with open(report_path, "r", encoding="utf-8") as f:
+                head = f.read(4096)
+            if '"$schema"' in head and "sarif" in head.lower():
+                return "SARIF"
+        except Exception:
+            pass
+        return "Generic Findings Import"
+    # Fallback
+    return "SARIF"
+
+# ------------------------------ HTTP helpers -------------------------------
+
+def _dojo_session(cfg: DojoConfig, token: str) -> Tuple[requests.Session, str]:
+    s = requests.Session()
+    s.headers.update({"Authorization": f"Token {token}"})
+    s.verify = cfg.verify_ssl
+    return s, cfg.url
+
+def _get_or_create_product(session: requests.Session, base: str, product_name: str) -> Dict[str, Any]:
+    r = session.get(f"{base}/api/v2/products/", params={"name": product_name})
+    r.raise_for_status()
+    for p in r.json().get("results", []):
+        if p.get("name") == product_name:
+            return p
+    r = session.post(f"{base}/api/v2/products/", data={"name": product_name})
+    r.raise_for_status()
+    return r.json()
+
+def _detect_scm_type(repo_url: str) -> str:
+    from urllib.parse import urlparse
+    host = urlparse(repo_url).netloc.lower()
+    if "github" in host:
+        return "github"
+    if "gitlab" in host:
+        return "gitlab"
+    if "bitbucket.org" in host:
+        return "bitbucket-cloud"
+    if "bitbucket" in host:
+        return "bitbucket-server"
+    if "gitea" in host:
+        return "gitea"
+    if "codeberg" in host:
+        return "codeberg"
+    if "dev.azure.com" in host or "visualstudio.com" in host:
+        return "azure"
+    return "generic"
+
+def _build_source_link(repo_url: str, file_path: str, ref: Optional[str]) -> Optional[str]:
+    """Build a repository link WITHOUT a line anchor (#L)."""
+    if not repo_url or not file_path:
+        return None
+    scm = _detect_scm_type(repo_url)
+    ref = ref or "master"
+    fp = file_path.lstrip("/")
+
+    if scm == "github":
+        return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
+    if scm == "gitlab":
+        return f"{repo_url.rstrip('/')}/-/blob/{ref}/{fp}"
+    if scm == "bitbucket-cloud":
+        return f"{repo_url.rstrip('/')}/src/{ref}/{fp}"
+    if scm == "bitbucket-server":
+        return f"{repo_url.rstrip('/')}/browse/{fp}?at={ref}"
+    if scm in ("gitea", "codeberg"):
+        return f"{repo_url.rstrip('/')}/src/{ref}/{fp}"
+    if scm == "azure":
+        return f"{repo_url.rstrip('/')}/?path=/{fp}&version=GC{ref}"
+    return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
+
+def _ensure_engagement(session: requests.Session, base: str, product_id: int, name: str,
+                       repo_url: Optional[str], branch_tag: Optional[str], commit_hash: Optional[str],
+                       engagement_type: str = "CI/CD") -> Dict[str, Any]:
+    r = session.get(f"{base}/api/v2/engagements/", params={"product": product_id, "name": name})
+    r.raise_for_status()
+    results = r.json().get("results", [])
+    if results:
+        eng = results[0]
+        patch = {}
+        if repo_url and eng.get("repo") != repo_url:
+            patch["repo"] = repo_url
+        if branch_tag and eng.get("branch_tag") != branch_tag:
+            patch["branch_tag"] = branch_tag
+        if commit_hash and eng.get("commit_hash") != commit_hash:
+            patch["commit_hash"] = commit_hash
+        if patch:
+            r = session.patch(f"{base}/api/v2/engagements/{eng['id']}/", data=patch)
+            r.raise_for_status()
+            return r.json()
+        return eng
+
+    data = {"name": name, "product": product_id, "engagement_type": engagement_type}
+    if repo_url:
+        data["repo"] = repo_url
+    if branch_tag:
+        data["branch_tag"] = branch_tag
+    if commit_hash:
+        data["commit_hash"] = commit_hash
+    r = session.post(f"{base}/api/v2/engagements/", data=data)
+    r.raise_for_status()
+    return r.json()
+
+def _get_findings_for_test(session: requests.Session, base: str, test_id: int) -> List[int]:
+    ids: List[int] = []
+    limit, offset = 200, 0
+    while True:
+        r = session.get(f"{base}/api/v2/findings/", params={"test": test_id, "limit": limit, "offset": offset})
+        r.raise_for_status()
+        j = r.json()
+        ids.extend([f["id"] for f in j.get("results", [])])
+        if not j.get("next"):
+            break
+        offset += limit
+    return ids
+
+def _get_finding(session: requests.Session, base: str, finding_id: int) -> Dict[str, Any]:
+    r = session.get(f"{base}/api/v2/findings/{finding_id}/")
+    r.raise_for_status()
+    return r.json()
+
+def _post_finding_meta(session: requests.Session, base: str, finding_id: int, name: str, value: str) -> Dict[str, Any]:
+    r = session.get(f"{base}/api/v2/finding_meta/", params={"finding": finding_id, "name": name})
+    r.raise_for_status()
+    j = r.json()
+    if j.get("count"):
+        meta_id = j["results"][0]["id"]
+        r = session.patch(f"{base}/api/v2/finding_meta/{meta_id}/", data={"name": name, "value": value})
+        r.raise_for_status()
+        return r.json()
+    r = session.post(f"{base}/api/v2/finding_meta/", data={"finding": str(finding_id), "name": name, "value": value})
+    r.raise_for_status()
+    return r.json()
+
+def _derive_engagement_name(analyzer_name: str, commit: Optional[str], name_mode = "analyzer-sha") -> str:
+    """Generate engagement name according to NAME_MODE."""
+    short = (commit or "")[:8] if commit else None
+    if name_mode == "analyzer":
+        return analyzer_name
+    # default
+    return "-".join([x for x in [analyzer_name, short] if x]) or analyzer_name
 
 def upload_report(
-    analyzer_name,
-    dojo_cfg: Dict,
+    analyzer_name: str,
+    dojo_cfg: Dict[str, Any] | DojoConfig,
     dojo_token: str,
     product_name: str,
     scan_type: str,
-    report_path: str
+    report_path: str,
+    repo_path: str = "."
 ) -> Dict[str, Any]:
-    """Upload a single report file to DefectDojo.
-
-    :param dojo_cfg: Dict, containing configuration for Defect Dojo
-    :param dojo_token: API token for authentication.
-    :param product_name: ID of the product (project) to attach the scan to.
-    :param scan_type: Type of scan, as understood by DefectDojo.
-    :param report_path: Path to the report file on disk.
-    :return: Parsed JSON response from DefectDojo.
-    :raises Exception: if the HTTP request fails or returns a non‑2xx status.
     """
-    dojo_url = dojo_cfg.get("url")
-    api_endpoint = "/api/v2/import-scan/"
-    full_url = dojo_url.rstrip("/") + api_endpoint
-    headers = {"Authorization": f"Token {dojo_token}"}
+    Upload the report and enrich all created findings with finding_meta['sourcefile_link'].
+    - analyzer_name: logical analyzer key (used in analyzers.yaml and for engagement naming)
+    - dojo_cfg: dict like loaded YAML or DojoConfig
+    - dojo_token: API token
+    - product_name: Product to import into (created if missing)
+    - scan_type: Dojo scan type (you already compute it outside)
+    - report_path: path to the analyzer report
+    - repo_path: local Git repo path for deriving repo_url/branch/commit
+
+    Returns: import JSON extended with 'enriched_findings' and 'engagement' meta.
+    """
+    cfg = dojo_cfg if isinstance(dojo_cfg, DojoConfig) else DojoConfig(
+        url=(dojo_cfg.get("defectdojo", {}) or {}).get("url", ""),
+        verify_ssl=bool((dojo_cfg.get("defectdojo", {}) or {}).get("verify_ssl", True)),
+        minimum_severity=(dojo_cfg.get("defectdojo", {}) or {}).get("minimum_severity", "Info"),
+    )
+    session, base = _dojo_session(cfg, dojo_token)
+
+    # 1) product
+    product = _get_or_create_product(session, base, product_name)
+
+    # 2) repo info from local Git
+    repo_url = branch_tag = commit_hash = None
+    try:
+        info = read_repo_params(repo_path or os.environ.get("GIT_REPO_PATH", "."))
+        repo_url, branch_tag, commit_hash = info.repo_url, info.branch_tag, info.commit_hash
+    except Exception:
+        pass  # best-effort
+
+    # 3) engagement
+    engagement_name = _derive_engagement_name(analyzer_name, branch_tag, commit_hash)
+    engagement = _ensure_engagement(session, base, product["id"], engagement_name, repo_url, branch_tag, commit_hash, "CI/CD")
+
+    # 4) import-scan
     data = {
         "scan_type": scan_type,
-        "product_name": str(product_name),
+        "engagement": str(engagement["id"]),
+        "minimum_severity": cfg.minimum_severity,
         "active": "true",
-        "verified": "true",
-        "engagement_name": analyzer_name,
-        "minimum_severity": dojo_cfg.get("minimum_severity", "Info"),
-        "auto_create_context" : dojo_cfg.get("auto_create_context", "true")
+        "verified": "false",
+        "close_old_findings": "false",
     }
-    file_name = os.path.basename(report_path)
-    with open(report_path, "rb") as f:
-        files = {"file": (file_name, f)}
-        response = requests.post(
-            full_url,
-            headers=headers,
-            data=data,
-            files=files,
-            verify=dojo_cfg.get("verify_ssl", True),
-            #timeout=120,
-        )
-    if response.status_code >= 400:
-        try:
-            err_msg = response.json()
-        except Exception:
-            err_msg = response.text
-        raise Exception(
-            f"DefectDojo upload failed with status {response.status_code}: {err_msg}"
-        )
-    try:
-        return response.json()
-    except Exception:
-        return {"status_code": response.status_code, "text": response.text}
+    if commit_hash:
+        data["build_id"] = commit_hash
 
+    with open(report_path, "rb") as f:
+        files = {"file": (os.path.basename(report_path), f, "application/octet-stream")}
+        r = session.post(f"{base}/api/v2/import-scan/", data=data, files=files)
+        r.raise_for_status()
+        import_resp = r.json()
+
+    # 5) collect finding IDs produced by this import
+    finding_ids: List[int] = []
+    if isinstance(import_resp, dict):
+        if "findings" in import_resp and isinstance(import_resp["findings"], list):
+            finding_ids = [fi.get("id") if isinstance(fi, dict) else fi for fi in import_resp["findings"]]
+        elif "test" in import_resp and import_resp.get("test"):
+            test_id = import_resp["test"]
+            if isinstance(test_id, dict):
+                test_id = test_id.get("id")
+            if isinstance(test_id, int):
+                finding_ids = _get_findings_for_test(session, base, test_id)
+
+    # 6) enrich each finding with sourcefile_link
+    enriched = 0
+    ref = commit_hash or branch_tag
+    for fid in finding_ids:
+        try:
+            f = _get_finding(session, base, fid)
+            file_path = f.get("file_path") or ""
+            link = _build_source_link(repo_url or "", file_path, ref)
+            if link:
+                _post_finding_meta(session, base, fid, "sourcefile_link", link)
+                enriched += 1
+        except Exception:
+            continue
+
+    import_resp["enriched_findings"] = enriched
+    import_resp["engagement"] = {"id": engagement["id"], "name": engagement_name}
+    return import_resp
 
 def upload_results(
-    output_dir: str,
-    analyzers_cfg_path: str,
-    product_name: str | int,
-    dojo_config_path: str,
+    config_path: str,
+    analyzers_cfg_path: Optional[str],
+    product_name: str,
+    analyzer_name: str,
+    report_path: str,
+    repo_path: str = "."
 ) -> Dict[str, Any]:
-    """Upload all analyzer reports from a directory into DefectDojo.
-
-    This function reads the analyzers configuration to determine which
-    analyzers were run, their output types, and therefore the expected file
-    names for their reports. For each enabled analyzer, it looks for a
-    report file in ``output_dir`` named ``{analyzer_name}_result.{ext}`` where
-    the extension is ``sarif`` for SARIF output types and ``json`` for
-    CodeChecker output. Missing files are skipped with a warning. Successful
-    uploads are collected into a dictionary keyed by analyzer name.
-
-    :param output_dir: Directory containing the analyzer result files.
-    :param analyzers_cfg_path: Path to the analyzers YAML file.
-    :param product_name: DefectDojo product/project identifier.
-    :param dojo_config_path: Path to the DefectDojo connection YAML.
-    :return: A mapping of analyzer names to upload responses.
     """
-    dojo_cfg = load_dojo_config(dojo_config_path)
+    - Loads Dojo config + token from env
+    - Resolves scan_type (analyzers.yaml or heuristics)
+    - Calls upload_report() which will also enrich findings with sourcefile_link
+    """
+    cfg = load_dojo_config(config_path)
+    token = os.environ.get("DEFECTDOJO_TOKEN") or ""
+    if not token:
+        raise ValueError("Missing DEFECTDOJO_TOKEN environment variable.")
 
-    dojo_token = os.environ.get("DEFECT_DOJO_TOKEN", None)
-    if dojo_token is None:
-        raise Exception("Environmental variable DEFECT_DOJO_TOKEN is not set up")
-
-    config = config_utils.AnalyzersConfigHelper(Path(analyzers_cfg_path).expanduser().resolve())
-    analyzers_list = config.get_analyzers()
-
-    results: Dict[str, Any] = {}
-    for analyzer in analyzers_list:
-        # Skip disabled analyzers
-        if not analyzer.get("enabled", True):
-            continue
-        name = analyzer.get("name")
-        output_type = analyzer.get("output_type", "sarif")
-        try:
-            scan_type = resolve_scan_type(output_type)
-        except ValueError as e:
-            log.error(f"{e}. Skipping analyzer '{name}'.")
-            continue
-
-        report_file = os.path.join(output_dir, config.get_analyzer_result_file_name(analyzer))
-        if not os.path.isfile(report_file):
-            log.error(f" Report file not found for analyzer '{name}': {report_file}")
-            continue
-        try:
-            log.info(f"Started to upload {name} report to DefectDojo")
-            resp = upload_report(
-                analyzer_name=name,
-                dojo_cfg=dojo_cfg,
-                dojo_token=dojo_token,
-                product_name=product_name,
-                scan_type=scan_type,
-                report_path=report_file
-            )
-            results[name] = resp
-            log.info(f"Uploaded {name} report to DefectDojo")
-        except Exception as exc:
-            log.error(f"Failed to upload {name} report: {exc}")
-    return results
+    scan_type = resolve_scan_type(analyzers_cfg_path, analyzer_name, report_path)
+    return upload_report(
+        analyzer_name=analyzer_name,
+        dojo_cfg=cfg,
+        dojo_token=token,
+        product_name=product_name,
+        scan_type=scan_type,
+        report_path=report_path,
+        repo_path=repo_path,
+    )

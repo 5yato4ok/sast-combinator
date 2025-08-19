@@ -11,27 +11,27 @@ analyzers:
     #
     # This field is consumed by defectdojo_api when determining how to
     # import the report into DefectDojo. See tools/sast‑pipeline/defectdojo_api.py
-    output_type: sarif
+    output_type: "SARIF"
 
   - name: devskim
     type: simple
     image: sast-devskim
     time_class: medium
-    output_type: sarif
+    output_type: "SARIF"
     language: [ "c", "objc","cpp","csharp","cobol","go","java", "javascript", "typescript", "php", "powershell", "python","ruby","rust","sql","swift" ]
 
   - name: flawfinder
     type: simple
     image: sast-flawfinder
     time_class: fast
-    output_type: sarif
+    output_type: "SARIF"
     language: [ "c", "cpp" ]
 
   - name: snyk
     type: simple
     image: sast-snyk
     time_class: medium
-    output_type: sarif
+    output_type: "SARIF"
     language: [ "c", "cpp", "go", "elixir", "java", "kotlin", "javascript", "dotnet", "php", "python","ruby", "rust", "scala","swift","objc","typescript" ]
     env:
       - SNYK_TOKEN
@@ -41,7 +41,7 @@ analyzers:
     image: sast-semgrep
     enabled: true
     time_class: slow
-    output_type: sarif
+    output_type: "SARIF"
     language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
     env:
       - SEMGREP_APP_TOKEN
@@ -51,10 +51,7 @@ analyzers:
     image: sast-builder-codechecker
     time_class: slow
     enabled: true
-    # CodeChecker produces a unified JSON report that can be imported into
-    # DefectDojo using the "Codechecker Report native" importer.  The
-    # defectdojo_api module will map this value to the appropriate scan type.
-    output_type: codechecker
+    output_type: "Codechecker Report native"
     language: [ "c", "cpp" ]
     env:
       - COMPILE_COMMANDS_PATH
@@ -65,14 +62,14 @@ analyzers:
     image: horusec-analyzer
     time_class: medium
     enabled: true
-    output_type: sarif
+    output_type: "SARIF"
     volume: "'/var/run/docker.sock': '/var/run/docker.sock'" #TODO: add check volume exists
     language: [ "python","terraform", "c", "php", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby" ]
 
   - name: codeql
     language_specific_containers: true
     enabled: true
-    output_type: sarif
+    output_type: "SARIF"
     env:
       - JOBS
     language: [ "python", "cpp", "c", "csharp", "javascript", "typescript", "java", "kotlin", "go", "ruby", "swift" , "rust"]
@@ -129,7 +126,7 @@ analyzers:
     image: bearer-analyzer
     time_class: medium
     enabled: true
-    output_type: sarif
+    output_type: "SARIF"
     language: [ "python", "javascript", "typescript", "ruby", "php", "java" ]
 
   - name: sonarqube

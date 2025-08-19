@@ -16,3 +16,4 @@ defectdojo:
 #  Critical - Critical
   minimum_severity: "Info"
   auto_create_context: true
+  name_mode: "analyzer-sha"

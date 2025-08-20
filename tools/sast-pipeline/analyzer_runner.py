@@ -19,6 +19,7 @@ import subprocess
 import yaml  # type: ignore
 import os
 import logging
+import json
 from pathlib import Path
 import docker_utils
 import config_utils
@@ -150,10 +151,14 @@ def run_selected_analyzers(
         log.warning("No analyzers to launch")
     # Sort by time_class for predictable ordering
     analyzers.sort(key=lambda a: config_helper.ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
+    analyzers_names = [str(a.get("name")) for a in analyzers]
     log.info(
         "Selected analyzers: %s",
-        ", ".join([str(a.get("name")) for a in analyzers]),
+        ", ".join(analyzers_names),
     )
+    launch_info = dict()
+    launch_info["project_path"] = project_path
+    launch_info["launched_analyzers"] = analyzers_names
 
     for analyzer in analyzers:
         name = analyzer.get("name")
@@ -172,6 +177,7 @@ def run_selected_analyzers(
         build_image_if_needed(str(image), dockerfile_path)
         input_path = analyzer.get("input", project_path)
         output_file_name = config_helper.get_analyzer_result_file_name(analyzer)
+
         args = [str(input_path), str(output_dir), str(output_file_name)]
         env_vars = analyzer.get("env", []) or []
         if log_level:
@@ -183,5 +189,6 @@ def run_selected_analyzers(
         # except Exception as exc:
         #     log.warning(f"Error occurred during launching of {name} : {exc}.")
 
-
+    with open(os.path.join(output_dir, "launch_description.json"), "w", encoding="utf-8") as f:
+        json.dump(launch_info, f, indent=4, ensure_ascii=False)
     log.info("All selected analyzers completed.")

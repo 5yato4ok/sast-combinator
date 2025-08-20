@@ -19,11 +19,13 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import logging
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class RepoParams:
@@ -130,6 +132,8 @@ def read_repo_params(repo_dir: str | Path) -> RepoParams:
     branch = run_git(repo, ["rev-parse", "--abbrev-ref", "HEAD"])
     commit = run_git(repo, ["rev-parse", "HEAD"])
     web_url, scm = normalize_origin_to_web_url(origin)
+
+    logger.info(f"Found git info. branch {branch}. commit {commit}. web url {web_url}. scm {scm}")
 
     # In detached HEAD state, branch can be 'HEAD'; treat as None
     if branch.upper() == "HEAD":

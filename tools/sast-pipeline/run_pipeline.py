@@ -199,7 +199,7 @@ def main() -> None:
     # Build project and run analyses
     log.info("Building builder image and running analyzers…")
 
-    results_path, tmp_analyzer_config_path = configure_project_run_analyses(
+    launch_description = configure_project_run_analyses(
         args.script,
         args.output_dir,
         languages=args.languages,
@@ -217,18 +217,19 @@ def main() -> None:
             "Uploading reports to DefectDojo product %s…", args.dojo_product_name
         )
         results = upload_results(
-            output_dir=results_path,
-            analyzers_cfg_path=tmp_analyzer_config_path,
+            output_dir=launch_description["output_dir"],
+            analyzers_cfg_path=launch_description["tmp_analyzer_config_path"],
             product_name=args.dojo_product_name,
             dojo_config_path=args.dojo_config,
+            repo_path=launch_description["project_path"]
         )
         log.info("DefectDojo upload complete.")
-        for analyzer_name, resp in results.items():
-            log.debug("%s: %s", analyzer_name, resp)
+        for result in results:
+            log.debug("%s: imported findings %d", result.engagement_name, result.imported_findings)
     else:
         log.info("No DefectDojo product specified. Skipping upload.")
 
-    cleanup(tmp_analyzer_config_path)
+    cleanup(launch_description["tmp_analyzer_config_path"])
 
 
 if __name__ == "__main__":

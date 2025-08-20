@@ -50,7 +50,7 @@ class AnalyzersConfigHelper:
 
         # Getting names without configurations
         supported_analyzers = list({analyzer.get("name")
-                               for analyzer in self.config.get("analyzers", [])})
+                                    for analyzer in self.config.get("analyzers", []) if analyzer.get("enabled", True)})
         return supported_analyzers
 
     def get_all_images(self):
@@ -94,6 +94,8 @@ class AnalyzersConfigHelper:
         out = []
 
         for parent in analyzers:
+            if not parent.get("enabled", True):
+                log.debug(f"Skipping disabled analyzer {parent.get('name')}")
             cfg_list = parent.get("configuration")
             if not (parent.get("language_specific_containers") and isinstance(cfg_list, list)):
                 out.append(copy.deepcopy(parent))
@@ -174,10 +176,6 @@ class AnalyzersConfigHelper:
     @staticmethod
     def get_image_name(analyzer):
         return analyzer.get("image")
-
-    @staticmethod
-    def get_dockerfile_path(analyzer):
-        pass
 
     @staticmethod
     def _filter_language_specific_config(config, allowed_langs):

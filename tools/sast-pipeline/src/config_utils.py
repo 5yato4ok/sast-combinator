@@ -235,7 +235,10 @@ class AnalyzersConfigHelper:
                 )
             filtered.append(item)
 
-        filename = os.path.join(f"/tmp/sast_pipeline_{get_pipeline_id()}_analyzers_config.yml")
+        config_dir = "/tmp/sast_pipeline_config"
+        os.makedirs(config_dir,exist_ok=True)
+        filename = os.path.join(config_dir, f"sast_pipeline_{get_pipeline_id()}_analyzers_config.yml")
+
         with open(filename, "w", encoding="utf-8") as f:
             yaml.dump({"analyzers": filtered}, f, sort_keys=False, allow_unicode=True)
 

@@ -15,19 +15,19 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-    cc_path = Path("/workspace/build-tmp/nx_open/build/compile_commands.json")
-    if cc_path.exists():
-        with cc_path.open() as f:
-            data = json.load(f)
-
-        filtered = data[:10]
-
-        with cc_path.open("w") as f:
-            json.dump(filtered, f, indent=2)
-
-        log.info("[INFO] compile_commands.json filtered.")
-    else:
-        log.info(f"[ERROR] File not found: {cc_path}")
+    # cc_path = Path("/workspace/build-tmp/nx_open/build/compile_commands.json")
+    # if cc_path.exists():
+    #     with cc_path.open() as f:
+    #         data = json.load(f)
+    #
+    #     filtered = data[:10]
+    #
+    #     with cc_path.open("w") as f:
+    #         json.dump(filtered, f, indent=2)
+    #
+    #     log.info("[INFO] compile_commands.json filtered.")
+    # else:
+    #     log.info(f"[ERROR] File not found: {cc_path}")
 
     builder_container = os.environ.get("BUILDER_CONTAINER")
     if not builder_container:

@@ -17,6 +17,7 @@ import shutil
 import logging
 from pathlib import Path
 import docker_utils
+import json
 import config_utils
 from datetime import datetime
 
@@ -133,4 +134,23 @@ def configure_project_run_analyses(
         raise
 
     log.info("Builder and analysis finished. Results saved in %s", output_dir)
-    return output_dir, tmp_analyzer_config_path
+
+    with open(os.path.join(output_dir, "launch_description.json"), 'r', encoding="utf-8") as f:
+        launch_data = json.load(f)
+
+    print(project_path)
+    def replace_in_dict(obj, target_path):
+        if isinstance(obj, dict):
+            return {k: replace_in_dict(v, target_path) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_in_dict(i, target_path) for i in obj]
+        elif isinstance(obj, str):
+            return obj.replace("/workspace/", f"{target_path}/") #TODO: remove build-tmp everywhere
+        else:
+            return obj
+
+    launch_data = replace_in_dict(launch_data, project_path)
+    launch_data["output_dir"] = output_dir
+    launch_data["tmp_analyzer_config_path"] = tmp_analyzer_config_path
+
+    return launch_data

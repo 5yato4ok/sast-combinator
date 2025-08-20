@@ -16,6 +16,7 @@ analyzers:
   - name: devskim
     type: simple
     image: sast-devskim
+    enabled: false
     time_class: medium
     output_type: "SARIF"
     language: [ "c", "objc","cpp","csharp","cobol","go","java", "javascript", "typescript", "php", "powershell", "python","ruby","rust","sql","swift" ]

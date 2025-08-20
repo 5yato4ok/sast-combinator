@@ -19,9 +19,10 @@ All comments are in English.
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from repo_info import read_repo_params
+from repo_info import read_repo_params, RepoParams
 from requests.adapters import HTTPAdapter
 from typing import Any, Dict, Optional, List, Tuple
+from datetime import date, timedelta
 import json
 import logging
 import os
@@ -37,6 +38,10 @@ try:
 except Exception:
     yaml = None
 
+# ------------------------------ logging ------------------------------------
+
+logger = logging.getLogger(__name__)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # === Parallel HTTP helpers ===
 _thread_local = threading.local()
@@ -152,13 +157,6 @@ def _process_one_finding(
             logger.warning("Failed to enrich finding id=%s: %s", f.get("id"), e)
         return 0
 
-# ------------------------------ logging ------------------------------------
-
-logger = logging.getLogger("defectdojo")
-if not logger.handlers:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ------------------------------ configuration ------------------------------
 
 @dataclass
@@ -264,10 +262,10 @@ def _get_or_create_product(session: requests.Session, base: str, product_name: s
     r.raise_for_status()
     return r.json()
 
-def _ensure_engagement(session: requests.Session, base: str, product_name: int, name: str,
+def _ensure_engagement(session: requests.Session, base: str, product_id: int, name: str,
                        repo_url: Optional[str], branch_tag: Optional[str], commit_hash: Optional[str],
                        engagement_type: str = "CI/CD") -> Dict[str, Any]:
-    r = session.get(f"{base}/api/v2/engagements/", params={"product_name": product_name, "name": name})
+    r = session.get(f"{base}/api/v2/engagements/", params={"product": product_id, "name": name})
     r.raise_for_status()
     results = r.json().get("results", [])
     if results:
@@ -280,18 +278,31 @@ def _ensure_engagement(session: requests.Session, base: str, product_name: int, 
         if commit_hash and eng.get("commit_hash") != commit_hash:
             patch["commit_hash"] = commit_hash
         if patch:
-            r = session.patch(f"{base}/api/v2/engagements/{eng['id']}/", data=patch)
+            r = session.patch(f"{base}/api/v2/engagements/{eng['id']}/", json=patch)
             r.raise_for_status()
             eng = r.json()
+
+        logger.debug(f"Found existing engagement {eng}")
         return eng
 
-    data = {"name": name, "product_name": product_name, "engagement_type": engagement_type}
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    data = {
+        "name": name,
+        "product": product_id,
+        "engagement_type": engagement_type,
+        "target_start": today.isoformat(),
+        "target_end": tomorrow.isoformat(),
+    }
+
     if repo_url:
         data["source_code_management_uri"] = repo_url
     if branch_tag:
         data["branch_tag"] = branch_tag
     if commit_hash:
         data["commit_hash"] = commit_hash
+
+    logger.debug(f"Attempt to create engagement {data}")
     r = session.post(f"{base}/api/v2/engagements/", json=data)
     r.raise_for_status()
     return r.json()
@@ -315,17 +326,6 @@ def _post_finding_meta(session: requests.Session, base: str, finding_id: int, na
     r = session.post(url, json={"name": name, "value": value})
     r.raise_for_status()
     return r.json()
-
-# ------------------------------ Repo info -----------------------------------
-
-def _read_repo_info(repo_path: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    """Best-effort fetch of (repo_url, branch_tag, commit_hash) from local Git via repo_info.read_repo_params."""
-    try:
-        info = read_repo_params(repo_path)
-        return info.repo_url, info.branch_tag, info.commit_hash
-    except Exception as e:
-        logger.error("Repo info unavailable for '%s': %s", repo_path, e)
-        return None, None, None
 
 # ------------------------------ ImportResult --------------------------------
 
@@ -356,7 +356,7 @@ def upload_report(
     product_name: str,
     scan_type: str,
     report_path: str,
-    repo_path: str = "."
+    repo_params: RepoParams
 ) -> ImportResult:
     """Upload a single report and enrich findings with finding_meta['sourcefile_link'] (returns ImportResult)."""
     if not os.path.isfile(report_path):
@@ -374,12 +374,11 @@ def upload_report(
     product = _get_or_create_product(session, base, product_name)
     logger.info("Using product '%s' (id=%s)", product_name, product["id"])
 
-    # Repo info
-    repo_url, branch_tag, commit_hash = _read_repo_info(repo_path or os.environ.get("GIT_REPO_PATH", "."))
-
     # Engagement
-    engagement_name = _derive_engagement_name(analyzer_name, branch_tag, commit_hash, cfg.name_mode)
-    engagement = _ensure_engagement(session, base, product["name"], engagement_name, repo_url, branch_tag, commit_hash, "CI/CD")
+    engagement_name = _derive_engagement_name(analyzer_name, repo_params.branch_tag, repo_params.commit_hash,
+                                              cfg.name_mode)
+    engagement = _ensure_engagement(session, base, product["id"], engagement_name, repo_params.repo_url,
+                                    repo_params.branch_tag, repo_params.commit_hash, "CI/CD")
     logger.info("Using engagement '%s' (id=%s)", engagement_name, engagement["id"])
 
     # Import
@@ -391,8 +390,8 @@ def upload_report(
         "verified": "false",
         "close_old_findings": "false",
     }
-    if commit_hash:
-        data["build_id"] = commit_hash
+    if repo_params.commit_hash:
+        data["build_id"] = repo_params.commit_hash
 
     with open(report_path, "rb") as f:
         files = {"file": (os.path.basename(report_path), f, "application/octet-stream")}
@@ -420,7 +419,7 @@ def upload_report(
     # Enrich metadata
     linker = LinkBuilder()
     enriched = 0
-    ref = commit_hash or branch_tag
+    ref = repo_params.commit_hash or repo_params.branch_tag
     logger.info(f"Start enriching {len(findings)} findings")
     # Parallel enrichment of metadata for this report
     _workers = max(1, (os.cpu_count() or 4))
@@ -430,7 +429,7 @@ def upload_report(
         nonlocal enriched
         try:
             file_path = f.get("file_path") or ""
-            link = linker.build(repo_url or "", file_path, ref)
+            link = linker.build(repo_params.repo_url or "", file_path, ref)
             if link:
                 _post_finding_meta_json(session, base, f["id"], "sourcefile_link", link)
                 return 1
@@ -459,7 +458,7 @@ def upload_results(
     analyzers_cfg_path: Optional[str],
     product_name: str,
     dojo_config_path: str,
-    repo_path: str = "."
+    repo_path: str
 ) -> List[ImportResult]:
     cfg = load_dojo_config(dojo_config_path)
     token = os.environ.get("DEFECTDOJO_TOKEN") or ""
@@ -470,9 +469,14 @@ def upload_results(
 
     results: List[ImportResult] = []
     cfg_helper = config_utils.AnalyzersConfigHelper(analyzers_cfg_path)
+    # Repo info
+    repo_params = read_repo_params(repo_path or os.environ.get("GIT_REPO_PATH", "."))
     for analyzer in cfg_helper.get_analyzers():
         analyzer_name = analyzer.get("name")
         report_path = os.path.join(output_dir, cfg_helper.get_analyzer_result_file_name(analyzer))
+        if not os.path.exists(report_path):
+            logging.error(f"No result on expected path {report_path} for analyzer {analyzer_name}")
+            continue
         scan_type = resolve_scan_type(analyzer)
         logger.info("Processing report: %s (analyzer=%s, scan_type=%s)", report_path, analyzer_name, scan_type)
 
@@ -483,7 +487,7 @@ def upload_results(
             product_name=product_name,
             scan_type=scan_type,
             report_path=report_path,
-            repo_path=repo_path,
+            repo_params=repo_params
         )
         results.append(res)
 
@@ -562,10 +566,3 @@ def enrich_existing_findings(
 
     logger.info("Bulk enrichment complete. Updated findings: %s", updated_total)
     return updated_total
-
-
-if __name__ == "__main__":
-    load_dotenv(dotenv_path=".env")
-    enrich_existing_findings(dojo_config_path="config/defectdojo.yaml",product_name="VulnerableSharpApp", only_missing=True)
-    #enrich_existing_findings(dojo_config_path="config/defectdojo.yaml",product_name="juicy_shop", only_missing=True)
-    #enrich_existing_findings(dojo_config_path="config/defectdojo.yaml", product_name="nx_open", only_missing=True)

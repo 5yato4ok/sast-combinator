@@ -186,6 +186,6 @@ analyzers:
     type: simple
     image: retirejs-analyzer
     time_class: fast
-    output_type: "Retire.js JSON"
+    output_type: "Retire.js Scan"
     language: [ "javascript", "typescript" ]
 

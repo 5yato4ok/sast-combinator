@@ -97,7 +97,7 @@ def _has_sourcefile_link(base: str, finding_id: int, proto_sess: requests.Sessio
     return False
 
 def _delete_finding(session: requests.Session, base: str, finding_id: int):
-    logger.warning(f"Detect {finding_id} contains incorrect filepath, probably the detect in dependency, not code itself. Deleting it")
+    logger.warning(f"Deleting {finding_id}")
     r = session.delete(f"{base}/api/v2/findings/{finding_id}/")
     # DefectDojo returns 204 on successful delete
     if r.status_code in (200, 202, 204):
@@ -236,6 +236,7 @@ class LinkBuilder:
             return None
         scm = self._scm_type(repo_url)
         ref = ref or "master"
+        file_path = file_path.replace("file://","")
         fp = file_path.lstrip("/")
         if scm == "github":
             return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
@@ -264,6 +265,7 @@ class LinkBuilder:
             if 300 <= r.status_code < 400:
                 return True
             if r.status_code == 404:
+                logger.warning(f"Url is not valid repo file: {url}")
                 return False
             return None
         except requests.RequestException:
@@ -444,6 +446,9 @@ def upload_report(
     if repo_params.commit_hash:
         data["build_id"] = repo_params.commit_hash
 
+    logger.debug(f"Attempt to upload report {data} and file {report_path}")
+    if os.path.getsize(report_path) == 0:
+        raise ValueError(f"File {report_path} is empty")
     with open(report_path, "rb") as f:
         files = {"file": (os.path.basename(report_path), f, "application/octet-stream")}
         r = session.post(f"{base}/api/v2/import-scan/", data=data, files=files)
@@ -482,7 +487,7 @@ def upload_report(
             file_path = f.get("file_path") or ""
             link = linker.build(repo_params.repo_url or "", file_path, ref)
             if link:
-                if not linker.remote_link_exists(link):
+                if linker.remote_link_exists(link):
                     _post_finding_meta_json(session, base, f["id"], "sourcefile_link", link)
                 else:
                     _delete_finding(session, base, f["id"])
@@ -534,16 +539,19 @@ def upload_results(
         scan_type = resolve_scan_type(analyzer)
         logger.info("Processing report: %s (analyzer=%s, scan_type=%s)", report_path, analyzer_name, scan_type)
 
-        res = upload_report(
-            analyzer_name=analyzer_name,
-            dojo_cfg=cfg,
-            dojo_token=token,
-            product_name=product_name,
-            scan_type=scan_type,
-            report_path=report_path,
-            repo_params=repo_params
-        )
-        results.append(res)
+        try:
+            res = upload_report(
+                analyzer_name=analyzer_name,
+                dojo_cfg=cfg,
+                dojo_token=token,
+                product_name=product_name,
+                scan_type=scan_type,
+                report_path=report_path,
+                repo_params=repo_params
+            )
+            results.append(res)
+        except Exception as exc:
+            logger.error(f"Error during uploading report. {exc} Continue")
 
     return results
 
@@ -729,4 +737,12 @@ if __name__ == "__main__":
         help="Path to the DefectDojo configuration YAML. Defaults to config/defectdojo.yaml.",
     )
 
+    parser.add_argument(
+        "--repo_path",
+        required=True,
+        help="Path to downloaded repository. Usually locates in /tmp/my_project/build-tmp/{project_name}",
+    )
+
     args = parser.parse_args()
+    upload_results(args.results_path, 'config/analyzers.yaml', args.dojo_product_name, 'config/defectdojo.yaml',
+                   args.repo_path)

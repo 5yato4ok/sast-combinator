@@ -19,7 +19,10 @@ fi
 
 mkdir -p "$OUTPUT_DIR"
 
-retire --path "$INPUT_DIR" --outputformat json $RETIRE_VERBOSE > "$OUTPUT_FILE" || {
+echo "[INFO] Launch retire.js"
+
+cd "$INPUT_DIR"
+retire --path . --outputformat json $RETIRE_VERBOSE > "$OUTPUT_FILE" || {
   echo "[WARN] retire.js returned non-zero (likely findings). Continuing..."
 }
 

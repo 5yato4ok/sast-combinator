@@ -7,9 +7,10 @@ OUTPUT_FILE="${OUTPUT_DIR}/${3:-njsscan_result.sarif}"
 
 mkdir -p "$OUTPUT_DIR"
 
-# njsscan can output SARIF
-njsscan --recursive "$INPUT_DIR" --sarif --output "$OUTPUT_FILE" || {
-  echo "[WARN] njsscan returned non-zero exit code (possibly findings found). Continuing…"
+echo "[INFO] Launch njsscan"
+cd "$INPUT_DIR"
+njsscan . --sarif -o "$OUTPUT_FILE" || {
+  echo "[WARN] njsscan returned non-zero"
 }
 
-echo "[INFO] njsscan results at $OUTPUT_FILE"
+echo "[INFO] njsscan SARIF report → $OUTPUT_FILE"

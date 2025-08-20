@@ -34,6 +34,7 @@ def configure_project_run_analyses(
         dockerfile_path: str = "Dockerfiles/builder/Dockerfile",
         project_path: str = "/tmp/my_project",
         force_rebuild: bool = False,
+        rebuild_images: bool = False,
         version: str | None = None,
         log_level: str | None = None,
         min_time_class: str = "",
@@ -60,7 +61,10 @@ def configure_project_run_analyses(
 
     log.info("Building builder image: %s", image_name)
 
-    docker_utils.delete_image_if_exist(image_name)
+    if rebuild_images:
+        for image in analyzer_config.get_all_images():
+            docker_utils.delete_image_if_exist(image)
+        docker_utils.delete_image_if_exist(image_name)
 
     input_path = Path(script_path).resolve()
     if not input_path.exists():

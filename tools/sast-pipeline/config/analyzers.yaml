@@ -40,7 +40,7 @@ analyzers:
   - name: semgrep
     type: simple
     image: sast-semgrep
-    enabled: true
+    enabled: false
     time_class: slow
     output_type: "SARIF"
     language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
@@ -143,3 +143,49 @@ analyzers:
       - SONAR_PROJECT_KEY
       - SONAR_ORGANIZATION
       - SONAR_SCANNER_OPTS
+
+  - name: qodana
+    language_specific_containers: true
+    output_type: "SARIF"
+    env:
+    language: [ "python", "csharp", "java", "kotlin" ]
+    configuration:
+      - csharp:
+          enabled: false
+          image: qodana-csharp
+          dockerfile_path: "/app/Dockerfiles/qodana/csharp/"
+          result_file: "qodana_csharp.sarif"
+          env:
+            - QODANA_TOKEN
+      - python:
+          image: qodana-python
+          dockerfile_path: "/app/Dockerfiles/qodana/python/"
+          result_file: "qodana_python.sarif"
+      - java:
+          image: qodana-java-kotlin
+          dockerfile_path: "/app/Dockerfiles/qodana/java/"
+          result_file: "qodana_java_kotlin.sarif"
+      - kotlin:
+          inherits: java
+
+  - name: eslint_security
+    type: simple
+    image: eslint-security-analyzer
+    time_class: medium
+    output_type: "SARIF"
+    language: [ "javascript", "typescript" ]
+
+  - name: njsscan
+    type: simple
+    image: njsscan-analyzer
+    time_class: medium
+    output_type: "SARIF"
+    language: [ "javascript", "typescript" ]
+
+  - name: retirejs
+    type: simple
+    image: retirejs-analyzer
+    time_class: fast
+    output_type: "Retire.js JSON"
+    language: [ "javascript", "typescript" ]
+

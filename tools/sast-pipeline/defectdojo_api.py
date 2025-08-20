@@ -1,20 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-DefectDojo upload helper (directory-based).
-
-- Reads DefectDojo config from YAML + env overrides (DEFECTDOJO_TOKEN required).
-- Resolves scan_type (cached) using analyzers.yaml (if provided).
-- For each report:
-    * Ensures Product by name.
-    * Ensures Engagement (name based on YAML 'name_mode': analyzer | analyzer-branch | analyzer-branch-sha).
-    * Auto-fills repo/branch/commit from local Git (repo_path).
-    * Imports the report.
-    * Adds finding_meta['sourcefile_link'] for findings created by this import.
-- Returns a list[ImportResult] (one per report).
-
-All comments are in English.
-"""
 
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -28,6 +13,7 @@ import logging
 import os
 import requests
 import threading
+import argparse
 from dotenv import load_dotenv
 from urllib3.util.retry import Retry
 import urllib3
@@ -41,6 +27,11 @@ except Exception:
 # ------------------------------ logging ------------------------------------
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=getattr(logging, "INFO", logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # === Parallel HTTP helpers ===
@@ -105,10 +96,25 @@ def _has_sourcefile_link(base: str, finding_id: int, proto_sess: requests.Sessio
         return any(m.get("name") == "sourcefile_link" for m in js)
     return False
 
+def _delete_finding(session: requests.Session, base: str, finding_id: int):
+    logger.warning(f"Detect {finding_id} contains incorrect filepath, probably the detect in dependency, not code itself. Deleting it")
+    r = session.delete(f"{base}/api/v2/findings/{finding_id}/")
+    # DefectDojo returns 204 on successful delete
+    if r.status_code in (200, 202, 204):
+        return
+    else:
+        try:
+            r.raise_for_status()
+        except Exception as e:
+            if logger:
+                logger.warning("Failed to delete finding id=%s: %s", finding_id, e)
+
 def _post_finding_meta_json(proto_sess: requests.Session, base: str, finding_id: int, name: str, value: str) -> None:
     s = _tls_session(proto_sess)
     url = f"{base.rstrip('/')}/api/v2/findings/{finding_id}/metadata/"
-    r = s.post(url, json={"name": name, "value": value})
+    data= {"name": name, "value": value}
+    logger.debug(f"Attempt to enrich finding : {data}")
+    r = s.post(url, json=data)
     r.raise_for_status()
 
 def _process_one_finding(
@@ -153,8 +159,7 @@ def _process_one_finding(
         _post_finding_meta_json(proto_sess, base, fid, "sourcefile_link", link)
         return 1
     except Exception as e:
-        if logger:
-            logger.warning("Failed to enrich finding id=%s: %s", f.get("id"), e)
+        logger.warning("Failed to enrich finding id=%s: %s", f.get("id"), e)
         return 0
 
 # ------------------------------ configuration ------------------------------
@@ -246,6 +251,24 @@ class LinkBuilder:
             return f"{repo_url.rstrip('/')}/?path=/{fp}&version=GC{ref}"
         return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
 
+    def remote_link_exists(self, url: str, timeout: int = 5) -> bool | None:
+        """
+          True  – GET 200 или 3xx (file exist),
+          False – 404 (file not exist),
+          None  – some other mistake.
+        """
+        try:
+            r = requests.get(url, allow_redirects=True, timeout=timeout)
+            if r.status_code == 200:
+                return True
+            if 300 <= r.status_code < 400:
+                return True
+            if r.status_code == 404:
+                return False
+            return None
+        except requests.RequestException:
+            return None
+
 # ------------------------------ HTTP helpers --------------------------------
 
 def _dojo_session(cfg: DojoConfig, token: str) -> Tuple[requests.Session, str]:
@@ -254,12 +277,40 @@ def _dojo_session(cfg: DojoConfig, token: str) -> Tuple[requests.Session, str]:
     s.verify = cfg.verify_ssl
     return s, cfg.url
 
+
+def _get_product_by_name(session: requests.Session, base: str, product_name: str) -> Optional[dict]:
+    """Return product object with exact name match, or None."""
+    limit, offset = 200, 0
+    while True:
+        r = session.get(f"{base}/api/v2/products/", params={"name": product_name, "limit": limit, "offset": offset})
+        r.raise_for_status()
+        data = r.json()
+        for p in data.get("results", []):
+            if p.get("name") == product_name:
+                return p
+        if not data.get("next"):
+            break
+        offset += limit
+    return None
+
+def _iter_findings_for_product(session: requests.Session, base: str, product_name: str):
+    """Yield full finding dicts for a given product."""
+    limit, offset = 200, 0
+    while True:
+        r = session.get(f"{base}/api/v2/findings/", params={"product_name": product_name, "limit": limit, "offset": offset})
+        r.raise_for_status()
+        data = r.json()
+        for f in data.get("results", []):
+            yield f
+        if not data.get("next"):
+            break
+        offset += limit
+
 def _get_or_create_product(session: requests.Session, base: str, product_name: str) -> Dict[str, Any]:
-    r = session.get(f"{base}/api/v2/products/", params={"name": product_name})
-    r.raise_for_status()
-    for p in r.json().get("results", []):
-        if p.get("name") == product_name:
-            return p
+    product = _get_product_by_name(session, base, product_name)
+    if product:
+        return product
+
     r = session.post(f"{base}/api/v2/products/", json={"name": product_name})
     r.raise_for_status()
     return r.json()
@@ -377,8 +428,8 @@ def upload_report(
     engagement_name = _derive_engagement_name(analyzer_name, repo_params.branch_tag, repo_params.commit_hash,
                                               dojo_cfg.name_mode)
     engagement = _ensure_engagement(session, base, product["id"], engagement_name, repo_params.repo_url,
-                                    repo_params.branch_tag, repo_params.commit_hash, "CI/CD",
-                                    dojo_cfg.engagement_status)
+                                    repo_params.branch_tag, repo_params.commit_hash, dojo_cfg.engagement_status,
+                                    "CI/CD")
     logger.info("Using engagement '%s' (id=%s)", engagement_name, engagement["id"])
 
     # Import
@@ -425,20 +476,23 @@ def upload_report(
     _workers = max(1, (os.cpu_count() or 4))
     enriched = 0
 
-    def _enrich_one(f):
+    def _process_one(f):
         nonlocal enriched
         try:
             file_path = f.get("file_path") or ""
             link = linker.build(repo_params.repo_url or "", file_path, ref)
             if link:
-                _post_finding_meta_json(session, base, f["id"], "sourcefile_link", link)
+                if not linker.remote_link_exists(link):
+                    _post_finding_meta_json(session, base, f["id"], "sourcefile_link", link)
+                else:
+                    _delete_finding(session, base, f["id"])
                 return 1
         except Exception as e:
             logger.warning("Failed to enrich finding %s: %s", f.get("id"), e)
         return 0
 
     with ThreadPoolExecutor(max_workers=_workers) as ex:
-        for res in ex.map(_enrich_one, findings):
+        for res in ex.map(_process_one, findings):
             enriched += res
 
         logger.info("Enriched findings: %s/%s", enriched, imported_count)
@@ -566,3 +620,118 @@ def enrich_existing_findings(
 
     logger.info("Bulk enrichment complete. Updated findings: %s", updated_total)
     return updated_total
+
+def delete_findings_by_product_and_path_prefix(
+    product_name: str = "VulnerableSharpApp",
+    path_prefix: str = ".dotnet",
+    dojo_cfg_path: str = "config/defectdojo.yaml",
+    dry_run: bool = False,
+) -> Tuple[int, int]:
+    """
+    Delete findings for a given product where file_path starts with a prefix.
+    Returns (matched_count, deleted_count).
+    """
+    """
+    Delete findings for a given product where file_path starts with a prefix.
+    Returns (matched_count, deleted_count).
+    """
+    logger = logging.getLogger(__name__)
+
+    cfg = load_dojo_config(dojo_cfg_path)
+    token = os.environ.get("DEFECTDOJO_TOKEN") or ""
+    if not token:
+        raise ValueError("Missing DEFECTDOJO_TOKEN")
+
+    session, base_url = _dojo_session(cfg, token)
+    product = _get_product_by_name(session, base_url, product_name)
+    if not product:
+        raise ValueError(f"Product not found: {product_name}")
+
+    to_delete_ids = []
+    for f in _iter_findings_for_product(session, base_url, product_name=product["name"]):
+        fp = (f.get("file_path") or "").lstrip()
+        if path_prefix in fp:
+            fid = f.get("id")
+            if fid:
+                to_delete_ids.append((fid, fp))
+
+    matched = len(to_delete_ids)
+    if logger:
+        logger.info("Matched %d findings for product '%s' with prefix '%s'",
+                    matched, product_name, path_prefix)
+
+    if dry_run or matched == 0:
+        return matched, 0
+
+
+    max_workers = max(1, min(8, (os.cpu_count() or 4)))  # не агрессивно
+
+    def _delete_one(fid_fp, base_url, session, logger):
+        fid, fp = fid_fp
+        try:
+            r = session.delete(f"{base_url}/api/v2/findings/{fid}/")
+            if r.status_code in (200, 202, 204):
+                return 1
+            r.raise_for_status()
+            return 0
+        except Exception as e:
+            logger.warning("Failed to delete finding id=%s file_path=%s: %s", fid, fp, e)
+            return 0
+
+    processed_on_page = 0
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futures = [
+            ex.submit(
+                _delete_one,
+                f["id"],
+                base_url,
+                session,
+                logger
+            )
+            for f in to_delete_ids
+        ]
+        for fut in as_completed(futures):
+            processed_on_page += fut.result()
+            if processed_on_page and processed_on_page % 100 == 0:
+                logger.info("Processed %d findings on this page", processed_on_page)
+
+    if logger:
+        logger.info("Matched: %d, Deleted: %d", matched, processed_on_page)
+    return matched, processed_on_page
+
+
+load_dotenv(dotenv_path=".env")
+if __name__ == "__main__":
+    logger.setLevel("DEBUG")
+    delete_findings_by_product_and_path_prefix(product_name="nx_open", path_prefix= ".conan")
+    # parser = argparse.ArgumentParser(
+    #     description=(
+    #         "Build and analyse a project using configured analyzers, "
+    #         "and optionally upload reports to DefectDojo."
+    #     )
+    # )
+    # parser.add_argument(
+    #     "--dojo_product_name",
+    #     required=True,
+    #     help=(
+    #         "If provided, upload resulting reports to the specified DefectDojo "
+    #         "product after analysis."
+    #     ),
+    # )
+    # parser.add_argument(
+    #     "--results_path",
+    #     required=True,
+    #     help=(
+    #         "Name of product, which will be used for image name. Can be skipped if dojo_product_name is provided"
+    #     ),
+    # )
+    # parser.add_argument(
+    #     "--dojo_config",
+    #     required=False,
+    #     default="config/defectdojo.yaml",
+    #     help="Path to the DefectDojo configuration YAML. Defaults to config/defectdojo.yaml.",
+    # )
+    #
+    # args = parser.parse_args()
+    # upload_results(args.results_path, "config/analyzers.yaml", args.dojo_product_name, args.dojo_config,
+    #                '/tmp/my_project/build-tmp/nx_open')

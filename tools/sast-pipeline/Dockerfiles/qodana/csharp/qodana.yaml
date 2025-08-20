@@ -1,0 +1,14 @@
+version: "1.0"
+profile:
+  name: empty
+include:
+  - name: CA2100
+  - name: CA3001
+  - name: CA5351
+  - name: HardcodedPasswords
+  - name: CA3002        # Review code for XSS vulnerabilities
+  - name: CA3003        # Review code for file path injection (path traversal)
+  - name: CA3004        # Review code for information disclosure vulnerabilities
+  - name: CA3075        # Insecure DTD processing in XML
+  - name: CA5350        # Do not use weak cryptographic algorithms
+  - name: CA5393        # Do not use unsafe DllImportSearchPath value

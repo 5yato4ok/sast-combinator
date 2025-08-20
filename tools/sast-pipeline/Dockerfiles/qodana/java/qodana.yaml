@@ -1,0 +1,7 @@
+version: "1.0"
+profile:
+  name: empty
+include:
+  - name: SqlSourceToSinkFlow   # SQL injection
+  - name: tainting              # taint analysis
+  - name: HardcodedPasswords    # hard-coded secrets

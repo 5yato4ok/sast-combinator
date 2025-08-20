@@ -109,6 +109,13 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--product_name",
+        required=False,
+        help=(
+            "Name of product, which will be used for image name. Can be skipped if dojo_product_name is provided"
+        ),
+    )
+    parser.add_argument(
         "--dojo_config",
         required=False,
         default="config/defectdojo.yaml",
@@ -157,13 +164,13 @@ def main() -> None:
     )
 
     parser.add_argument(
-        "--rebuild_analyzers",
+        "--rebuild_images",
         required=False,
         nargs="?",
         default=False,
         const=True,
         help=(
-            "Force a fresh rebuild of the analyzers images"
+            "Force a fresh rebuild of the analyzers and builder images"
         ),
     )
 
@@ -184,10 +191,6 @@ def main() -> None:
     )
     log = logging.getLogger(__name__) # TODO: check if requires to rewrite
 
-    if args.rebuild_analyzers:
-        for image in ANALYZERS_CONFIG.get_all_images():
-            delete_image_if_exist(image)
-
     # Validate required arguments after config merging
     if not args.script:
         parser.error("--script is required (either via CLI or config file)")
@@ -196,8 +199,16 @@ def main() -> None:
     if not args.languages:
         parser.error("--languages is required (either via CLI or config file)")
 
+    if not args.dojo_product_name and not args.project_name:
+        parser.error("--dojo_product_name or --project_name  required (either via CLI or config file)")
+
     # Build project and run analyses
     log.info("Building builder image and running analyzers…")
+
+    if args.dojo_product_name:
+        project_name = args.dojo_product_name
+    else:
+        project_name =args.project_name
 
     launch_description = configure_project_run_analyses(
         args.script,
@@ -208,7 +219,9 @@ def main() -> None:
         version=args.project_version,
         log_level=level_name,
         min_time_class = args.time_class_level,
-        analyzers=args.analyzers
+        analyzers=args.analyzers,
+        image_name=f"project_{project_name.lower()}_builder",
+        rebuild_images= args.rebuild_images
     )
 
     # Optionally upload results

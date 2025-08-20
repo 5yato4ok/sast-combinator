@@ -5,3 +5,8 @@ tree-sitter-cpp
 tree-sitter-python
 tree-sitter-javascript
 tree-sitter-java
+tree-sitter-c-sharp
+tree_sitter_typescript
+tree_sitter_go
+tree_sitter_kotlin
+tree_sitter_ruby

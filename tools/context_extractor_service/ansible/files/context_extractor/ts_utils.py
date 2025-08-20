@@ -4,13 +4,34 @@ from tree_sitter import Language, Parser, Node
 import tree_sitter_cpp as cpp_lang
 import tree_sitter_python as py_lang
 import tree_sitter_javascript as js_lang
+import tree_sitter_typescript as ts_lang
 import tree_sitter_java as java_lang
+import tree_sitter_c_sharp as csharp_lang
+import tree_sitter_kotlin as kotlin_lang
+import tree_sitter_go as go_lang
+import tree_sitter_ruby as ruby_lang
+
+def _resolve_language(mod, *candidate_funcs: str) -> Language:
+    """
+    Return a tree_sitter.Language by trying a list of possible factory names
+    exported by the grammar module (language(), language_typescript(), etc).
+    """
+    for name in candidate_funcs:
+        fn = getattr(mod, name, None)
+        if callable(fn):
+            return Language(fn())
+    raise AttributeError(f"{mod.__name__} has none of {candidate_funcs}")
 
 # Load compiled languages once
-CPP_LANGUAGE = Language(cpp_lang.language())
-PY_LANGUAGE = Language(py_lang.language())
-JS_LANGUAGE = Language(js_lang.language())
-JAVA_LANGUAGE = Language(java_lang.language())
+CPP_LANGUAGE     = _resolve_language(cpp_lang,     "language", "language_cpp")
+PY_LANGUAGE      = _resolve_language(py_lang,      "language", "language_python")
+JS_LANGUAGE      = _resolve_language(js_lang,      "language", "language_javascript")
+TYPESCRIPT_LANGUAGE = _resolve_language(ts_lang,   "language", "language_typescript")
+JAVA_LANGUAGE    = _resolve_language(java_lang,    "language", "language_java")
+CSHARP_LANGUAGE  = _resolve_language(csharp_lang,  "language", "language_c_sharp")
+KOTLIN_LANGUAGE  = _resolve_language(kotlin_lang,  "language", "language_kotlin")
+GO_LANGUAGE      = _resolve_language(go_lang,      "language", "language_go")
+RUBY_LANGUAGE    = _resolve_language(ruby_lang,    "language", "language_ruby")
 
 SUPPORTED_LANGUAGES = {
     ".py": PY_LANGUAGE,
@@ -24,6 +45,11 @@ SUPPORTED_LANGUAGES = {
     ".mjs": JS_LANGUAGE,
     ".cjs": JS_LANGUAGE,
     ".java": JAVA_LANGUAGE,
+    ".cs" : CSHARP_LANGUAGE,
+    ".ts" : TYPESCRIPT_LANGUAGE,
+    ".go" : GO_LANGUAGE,
+    ".rb" : RUBY_LANGUAGE,
+    ".kt" : KOTLIN_LANGUAGE
 }
 
 def detect_language(filepath: Path) -> tuple[Language, str]:
@@ -35,6 +61,11 @@ def detect_language(filepath: Path) -> tuple[Language, str]:
     if lang is PY_LANGUAGE:   return lang, "python"
     if lang is JS_LANGUAGE:   return lang, "javascript"
     if lang is JAVA_LANGUAGE: return lang, "java"
+    if lang is CSHARP_LANGUAGE: return lang, "csharp"
+    if lang is TYPESCRIPT_LANGUAGE: return lang, "typescript"
+    if lang is GO_LANGUAGE: return lang, "go"
+    if lang is RUBY_LANGUAGE: return lang, "ruby"
+    if lang is KOTLIN_LANGUAGE: return lang, "kotlin"
     return lang, "cpp"
 
 def create_parser(lang: Language) -> Parser:

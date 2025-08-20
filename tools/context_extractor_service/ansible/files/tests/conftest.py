@@ -7,7 +7,8 @@ if str(PKG_ROOT) not in sys.path:
 
 def pytest_sessionstart(session):
     missing = []
-    for mod in ["tree_sitter_cpp", "tree_sitter_python", "tree_sitter_javascript", "tree_sitter_java"]:
+    for mod in ["tree_sitter_cpp", "tree_sitter_python", "tree_sitter_javascript", "tree_sitter_java", "tree_sitter_c_sharp"
+            "tree_sitter_kotlin", "tree_sitter_go", "tree_sitter_ruby"]:
         try:
             __import__(mod)
         except Exception:

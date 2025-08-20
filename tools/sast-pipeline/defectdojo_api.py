@@ -656,9 +656,8 @@ def delete_findings_by_product_and_path_prefix(
                 to_delete_ids.append((fid, fp))
 
     matched = len(to_delete_ids)
-    if logger:
-        logger.info("Matched %d findings for product '%s' with prefix '%s'",
-                    matched, product_name, path_prefix)
+    logger.info("Matched %d findings for product '%s' with prefix '%s'",
+                matched, product_name, path_prefix)
 
     if dry_run or matched == 0:
         return matched, 0
@@ -683,7 +682,7 @@ def delete_findings_by_product_and_path_prefix(
         futures = [
             ex.submit(
                 _delete_one,
-                f["id"],
+                f,
                 base_url,
                 session,
                 logger
@@ -702,36 +701,32 @@ def delete_findings_by_product_and_path_prefix(
 
 load_dotenv(dotenv_path=".env")
 if __name__ == "__main__":
-    logger.setLevel("DEBUG")
-    delete_findings_by_product_and_path_prefix(product_name="nx_open", path_prefix= ".conan")
-    # parser = argparse.ArgumentParser(
-    #     description=(
-    #         "Build and analyse a project using configured analyzers, "
-    #         "and optionally upload reports to DefectDojo."
-    #     )
-    # )
-    # parser.add_argument(
-    #     "--dojo_product_name",
-    #     required=True,
-    #     help=(
-    #         "If provided, upload resulting reports to the specified DefectDojo "
-    #         "product after analysis."
-    #     ),
-    # )
-    # parser.add_argument(
-    #     "--results_path",
-    #     required=True,
-    #     help=(
-    #         "Name of product, which will be used for image name. Can be skipped if dojo_product_name is provided"
-    #     ),
-    # )
-    # parser.add_argument(
-    #     "--dojo_config",
-    #     required=False,
-    #     default="config/defectdojo.yaml",
-    #     help="Path to the DefectDojo configuration YAML. Defaults to config/defectdojo.yaml.",
-    # )
-    #
-    # args = parser.parse_args()
-    # upload_results(args.results_path, "config/analyzers.yaml", args.dojo_product_name, args.dojo_config,
-    #                '/tmp/my_project/build-tmp/nx_open')
+    parser = argparse.ArgumentParser(
+        description=(
+            "Build and analyse a project using configured analyzers, "
+            "and optionally upload reports to DefectDojo."
+        )
+    )
+    parser.add_argument(
+        "--dojo_product_name",
+        required=True,
+        help=(
+            "If provided, upload resulting reports to the specified DefectDojo "
+            "product after analysis."
+        ),
+    )
+    parser.add_argument(
+        "--results_path",
+        required=True,
+        help=(
+            "Name of product, which will be used for image name. Can be skipped if dojo_product_name is provided"
+        ),
+    )
+    parser.add_argument(
+        "--dojo_config",
+        required=False,
+        default="config/defectdojo.yaml",
+        help="Path to the DefectDojo configuration YAML. Defaults to config/defectdojo.yaml.",
+    )
+
+    args = parser.parse_args()

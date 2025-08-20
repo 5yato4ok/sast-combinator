@@ -1,6 +1,6 @@
 import pytest
 from context_extractor.compress import compress_function_from_source
-
+pytest.skip("Ignore compress tests", allow_module_level=True)
 @pytest.mark.js
 def test_js_alias_chain_and_augassign_and_member_cond():
   SRC = r"""

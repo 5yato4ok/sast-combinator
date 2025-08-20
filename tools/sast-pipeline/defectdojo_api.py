@@ -165,6 +165,7 @@ class DojoConfig:
     verify_ssl: bool = False
     minimum_severity: str = "Info"
     name_mode: str = "analyzer-sha"  # analyzer | analyzer-branch | analyzer-branch-sha | analyzer-sha
+    engagement_status: str = "In Progress"
 
     @staticmethod
     def _parse_bool(v: Optional[str], default: bool) -> bool:
@@ -191,7 +192,8 @@ def load_dojo_config(config_path: str) -> DojoConfig:
     if name_mode not in ("analyzer", "analyzer-branch", "analyzer-sha"):
         logger.warning("Unknown name_mode '%s'; falling back to 'analyzer-sha'", name_mode)
         name_mode = "analyzer-sha"
-    return DojoConfig(url=url.rstrip("/"), verify_ssl=verify_ssl, minimum_severity=minimum_severity, name_mode=name_mode)
+    engagement_status = os.environ.get("DEFECTDOJO_DEFAULT_ENGAGEMENT_STATUS") or dd.get("engagement_status", "In Progress")
+    return DojoConfig(url=url.rstrip("/"), verify_ssl=verify_ssl, minimum_severity=minimum_severity, name_mode=name_mode, engagement_status=engagement_status)
 
 # ------------------------------ analyzers + scan_type (cached) -------------
 def resolve_scan_type(analyzer) -> str:
@@ -262,8 +264,10 @@ def _get_or_create_product(session: requests.Session, base: str, product_name: s
     r.raise_for_status()
     return r.json()
 
+
 def _ensure_engagement(session: requests.Session, base: str, product_id: int, name: str,
                        repo_url: Optional[str], branch_tag: Optional[str], commit_hash: Optional[str],
+                       engagement_status: str = "In Progress",
                        engagement_type: str = "CI/CD") -> Dict[str, Any]:
     r = session.get(f"{base}/api/v2/engagements/", params={"product": product_id, "name": name})
     r.raise_for_status()
@@ -293,6 +297,7 @@ def _ensure_engagement(session: requests.Session, base: str, product_id: int, na
         "engagement_type": engagement_type,
         "target_start": today.isoformat(),
         "target_end": tomorrow.isoformat(),
+        "status": engagement_status
     }
 
     if repo_url:
@@ -351,7 +356,7 @@ def _derive_engagement_name(analyzer_name: str, branch: Optional[str], commit: O
 
 def upload_report(
     analyzer_name: str,
-    dojo_cfg: Dict[str, Any] | DojoConfig,
+    dojo_cfg: DojoConfig,
     dojo_token: str,
     product_name: str,
     scan_type: str,
@@ -362,13 +367,7 @@ def upload_report(
     if not os.path.isfile(report_path):
         raise FileNotFoundError(f"Report path does not exist: {report_path}")
 
-    cfg = dojo_cfg if isinstance(dojo_cfg, DojoConfig) else DojoConfig(
-        url=(dojo_cfg.get("defectdojo", {}) or {}).get("url", ""),
-        verify_ssl=bool((dojo_cfg.get("defectdojo", {}) or {}).get("verify_ssl", True)),
-        minimum_severity=(dojo_cfg.get("defectdojo", {}) or {}).get("minimum_severity", "Info"),
-        name_mode=(dojo_cfg.get("defectdojo", {}) or {}).get("name_mode", "analyzer-branch-sha"),
-    )
-    session, base = _dojo_session(cfg, dojo_token)
+    session, base = _dojo_session(dojo_cfg, dojo_token)
 
     # Product
     product = _get_or_create_product(session, base, product_name)
@@ -376,16 +375,17 @@ def upload_report(
 
     # Engagement
     engagement_name = _derive_engagement_name(analyzer_name, repo_params.branch_tag, repo_params.commit_hash,
-                                              cfg.name_mode)
+                                              dojo_cfg.name_mode)
     engagement = _ensure_engagement(session, base, product["id"], engagement_name, repo_params.repo_url,
-                                    repo_params.branch_tag, repo_params.commit_hash, "CI/CD")
+                                    repo_params.branch_tag, repo_params.commit_hash, "CI/CD",
+                                    dojo_cfg.engagement_status)
     logger.info("Using engagement '%s' (id=%s)", engagement_name, engagement["id"])
 
     # Import
     data = {
         "scan_type": scan_type,
         "engagement": str(engagement["id"]),
-        "minimum_severity": cfg.minimum_severity,
+        "minimum_severity": dojo_cfg.minimum_severity,
         "active": "true",
         "verified": "false",
         "close_old_findings": "false",

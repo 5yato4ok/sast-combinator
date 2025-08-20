@@ -17,3 +17,4 @@ defectdojo:
   minimum_severity: "Info"
   auto_create_context: true
   name_mode: "analyzer-sha"
+  engagement_status: "In Progress"

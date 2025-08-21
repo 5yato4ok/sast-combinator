@@ -3,11 +3,11 @@ set -eu
 
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-OUTPUT_FILE="${OUTPUT_DIR}/${3:-horusec_result.sarif}"
+OUTPUT_FILE="${OUTPUT_DIR}/${3:-horusec_result.json}"
 
 mkdir -p "$OUTPUT_DIR"
 echo "[INFO] Horusec: analyzing $INPUT_DIR"
 cd "${INPUT_DIR}"
-horusec start -p . -o sarif -O "$OUTPUT_FILE" -D=true
+horusec start -p . -o json -O "$OUTPUT_FILE" -D=true
 
 echo "[INFO] Results at $OUTPUT_FILE"

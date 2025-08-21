@@ -3,7 +3,7 @@ set -e
 
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-OUTPUT_FILE="${OUTPUT_DIR}/${3:-semgrep_result.sarif}"
+OUTPUT_FILE="${OUTPUT_DIR}/${3:-semgrep_result.json}"
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -13,7 +13,7 @@ semgrep login
 echo "[INFO] Running Semgrep Code analysis..."
 cd "$INPUT_DIR"
 
-if semgrep ci --sarif --sarif-output="$OUTPUT_FILE"; then
+if semgrep ci --json --json-output="$OUTPUT_FILE"; then
     echo "[INFO] Semgrep completed with no critical issues."
 else
     echo "[ERROR] Semgrep found issues or exited with non-zero status."

@@ -32,7 +32,7 @@ analyzers:
     type: simple
     image: sast-snyk
     time_class: medium
-    output_type: "SARIF"
+    output_type: "Snyk Code Scan"
     language: [ "c", "cpp", "go", "elixir", "java", "kotlin", "javascript", "dotnet", "php", "python","ruby", "rust", "scala","swift","objc","typescript" ]
     env:
       - SNYK_TOKEN
@@ -40,9 +40,9 @@ analyzers:
   - name: semgrep
     type: simple
     image: sast-semgrep
-    enabled: false
+    enabled: true
     time_class: slow
-    output_type: "SARIF"
+    output_type: "Semgrep JSON Report"
     language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
     env:
       - SEMGREP_APP_TOKEN
@@ -63,7 +63,7 @@ analyzers:
     image: horusec-analyzer
     time_class: medium
     enabled: true
-    output_type: "SARIF"
+    output_type: "Horusec Scan"
     volume: "'/var/run/docker.sock': '/var/run/docker.sock'" #TODO: add check volume exists
     language: [ "python","terraform", "c", "php", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby" ]
 
@@ -127,7 +127,7 @@ analyzers:
     image: bearer-analyzer
     time_class: medium
     enabled: true
-    output_type: "SARIF"
+    output_type: "Bearer CLI"
     language: [ "python", "javascript", "typescript", "ruby", "php", "java" ]
 
   - name: sonarqube

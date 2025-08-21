@@ -10,6 +10,8 @@ export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 export PATH="$DOTNET_PATH:$PATH"
 export LD_LIBRARY_PATH="${LIB_PATH}:${LD_LIBRARY_PATH-}"
 
+mkdir -p "$OUTPUT_DIR"
+
 LOG_LEVEL="$(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]')"
 
 case "$LOG_LEVEL" in

@@ -190,8 +190,32 @@ analyzers:
     language: [ "javascript", "typescript" ]
 
   - name: netanalyzer
-    type: simple
+    type: builder
     image: netanalyzer
     output_type: "SARIF"
     language: [ "csharp" ]
+    env:
+      - DOTNET_PATH
+      - LIB_PATH
+
+  - name: infer
+    language_specific_containers: true
+    output_type: "SARIF"
+    type: builder
+    env:
+    language: [ "csharp", "cpp"]
+    configuration:
+      - csharp:
+          enabled: false
+          image: infer-csharp
+          dockerfile_path: "/app/Dockerfiles/infer/csharp/"
+          result_file: "infer_csharp.sarif"
+          env:
+            - DOTNET_PATH
+            - LIB_PATH
+      - cpp:
+          enabled: false
+          image: infer-cpp
+          dockerfile_path: "/app/Dockerfiles/infer/cpp/"
+          result_file: "infer_cpp.sarif"
 

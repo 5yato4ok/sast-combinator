@@ -153,7 +153,9 @@ def configure_project_run_analyses(
         else:
             return obj
 
+    trim_path = launch_data["project_path"]
     launch_data = replace_in_dict(launch_data, project_path)
+    launch_data["trim_path"] = trim_path
     launch_data["output_dir"] = output_dir
     launch_data["tmp_analyzer_config_path"] = tmp_analyzer_config_path
 

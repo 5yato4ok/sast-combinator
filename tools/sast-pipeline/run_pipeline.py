@@ -234,7 +234,8 @@ def main() -> None:
             analyzers_cfg_path=launch_description["tmp_analyzer_config_path"],
             product_name=args.dojo_product_name,
             dojo_config_path=args.dojo_config,
-            repo_path=launch_description["project_path"]
+            repo_path=launch_description["project_path"],
+            trim_path=launch_description["trim_path"]
         )
         log.info("DefectDojo upload complete.")
         for result in results:

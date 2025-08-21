@@ -33,6 +33,7 @@ class RepoParams:
     branch_tag: Optional[str]
     commit_hash: str
     scm_type: str  # github|gitlab|bitbucket-cloud|bitbucket-server|gitea|codeberg|azure|generic
+    local_path: str
 
 
 def run_git(repo: Path, args: list[str]) -> str:
@@ -139,7 +140,7 @@ def read_repo_params(repo_dir: str | Path) -> RepoParams:
     if branch.upper() == "HEAD":
         branch = None
 
-    return RepoParams(repo_url=web_url, branch_tag=branch, commit_hash=commit, scm_type=scm)
+    return RepoParams(repo_url=web_url, branch_tag=branch, commit_hash=commit, scm_type=scm, local_path=repo_dir)
 
 
 def main() -> None:

@@ -96,6 +96,14 @@ def _has_sourcefile_link(base: str, finding_id: int, proto_sess: requests.Sessio
         return any(m.get("name") == "sourcefile_link" for m in js)
     return False
 
+def _patch_finding(finding, session: requests.Session, base: str):
+    finding_id = finding["id"]
+    logger.debug(f"Attempt to patch {finding}")
+    r = session.patch(f"{base}/api/v2/findings/{finding_id}/", json=finding)
+    r.raise_for_status()
+    logger.debug(f"Finding {finding_id} successfuly patched")
+    return r.json()
+
 def _delete_finding(session: requests.Session, base: str, finding_id: int):
     logger.warning(f"Deleting {finding_id}")
     r = session.delete(f"{base}/api/v2/findings/{finding_id}/")
@@ -317,7 +325,6 @@ def _get_or_create_product(session: requests.Session, base: str, product_name: s
     r.raise_for_status()
     return r.json()
 
-
 def _ensure_engagement(session: requests.Session, base: str, product_id: int, name: str,
                        repo_url: Optional[str], branch_tag: Optional[str], commit_hash: Optional[str],
                        engagement_status: str = "In Progress",
@@ -406,6 +413,21 @@ def _derive_engagement_name(analyzer_name: str, branch: Optional[str], commit: O
         return "-".join([x for x in [analyzer_name, branch] if x])
     return "-".join([x for x in [analyzer_name, short] if x]) or analyzer_name
 
+def _validate_and_update_finding(finding, trim_path, session, base):
+    file_path = finding.get("file_path", "")
+
+    logger.debug(f"Checking {file_path} if it starts with {trim_path}")
+    # Checking file path is not absolute path
+    if not file_path.startswith(trim_path):
+        return finding
+
+    if not trim_path.endswith("/"):
+        trim_path+= "/"
+
+    logger.debug(f"Finding {finding['id']} contains absolute local path, changing to relative one")
+    finding["file_path"] = file_path.replace(trim_path, "")
+    return _patch_finding(finding, session, base)
+
 
 def upload_report(
     analyzer_name: str,
@@ -414,7 +436,8 @@ def upload_report(
     product_name: str,
     scan_type: str,
     report_path: str,
-    repo_params: RepoParams
+    repo_params: RepoParams,
+    trim_path: str
 ) -> ImportResult:
     """Upload a single report and enrich findings with finding_meta['sourcefile_link'] (returns ImportResult)."""
     if not os.path.isfile(report_path):
@@ -481,10 +504,11 @@ def upload_report(
     _workers = max(1, (os.cpu_count() or 4))
     enriched = 0
 
-    def _process_one(f):
+    def _process_one(f, trim_path):
         nonlocal enriched
         try:
-            file_path = f.get("file_path") or ""
+            f = _validate_and_update_finding(finding=f, trim_path=trim_path, session=session, base=base)
+            file_path = f.get("file_path", "")
             link = linker.build(repo_params.repo_url or "", file_path, ref)
             if link:
                 if linker.remote_link_exists(link):
@@ -497,8 +521,18 @@ def upload_report(
         return 0
 
     with ThreadPoolExecutor(max_workers=_workers) as ex:
-        for res in ex.map(_process_one, findings):
-            enriched += res
+        futures = [
+            ex.submit(
+                _process_one,
+                f,
+                trim_path
+            )
+            for f in findings
+        ]
+        for fut in as_completed(futures):
+            enriched += fut.result()
+            if enriched and enriched % 100 == 0:
+                logger.info("Enriched %d findings on this page", enriched)
 
         logger.info("Enriched findings: %s/%s", enriched, imported_count)
         return ImportResult(
@@ -517,7 +551,8 @@ def upload_results(
     analyzers_cfg_path: Optional[str],
     product_name: str,
     dojo_config_path: str,
-    repo_path: str
+    repo_path: str,
+    trim_path: str
 ) -> List[ImportResult]:
     cfg = load_dojo_config(dojo_config_path)
     token = os.environ.get("DEFECTDOJO_TOKEN") or ""
@@ -547,7 +582,8 @@ def upload_results(
                 product_name=product_name,
                 scan_type=scan_type,
                 report_path=report_path,
-                repo_params=repo_params
+                repo_params=repo_params,
+                trim_path=trim_path
             )
             results.append(res)
         except Exception as exc:
@@ -743,6 +779,21 @@ if __name__ == "__main__":
         help="Path to downloaded repository. Usually locates in /tmp/my_project/build-tmp/{project_name}",
     )
 
+    parser.add_argument(
+        "--trim_path",
+        required=True,
+        help="Path to trim from finding",
+    )
+
+    parser.add_argument(
+        "--log_level",
+        required=False,
+        help="Path to trim from finding",
+    )
+
     args = parser.parse_args()
+    level_name = (args.log_level or "INFO").upper()
+    logger.setLevel(level_name)
+
     upload_results(args.results_path, 'config/analyzers.yaml', args.dojo_product_name, 'config/defectdojo.yaml',
-                   args.repo_path)
+                   args.repo_path, args.trim_path)

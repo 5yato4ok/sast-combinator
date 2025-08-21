@@ -139,8 +139,14 @@ def configure_project_run_analyses(
 
     log.info("Builder and analysis finished. Results saved in %s", output_dir)
 
-    with open(os.path.join(output_dir, "launch_description.json"), 'r', encoding="utf-8") as f:
-        launch_data = json.load(f)
+    path_to_launch_description = os.path.join(output_dir, "launch_description.json")
+    if os.path.exists(path_to_launch_description):
+        with open(path_to_launch_description, 'r', encoding="utf-8") as f:
+            launch_data = json.load(f)
+            launch_data["is_correct"] = True
+    else:
+        launch_data = dict()
+        launch_data["is_correct"] = False
 
     print(project_path)
     def replace_in_dict(obj, target_path):
@@ -153,7 +159,7 @@ def configure_project_run_analyses(
         else:
             return obj
 
-    trim_path = launch_data["project_path"]
+    trim_path = launch_data.get("project_path", None)
     launch_data = replace_in_dict(launch_data, project_path)
     launch_data["trim_path"] = trim_path
     launch_data["output_dir"] = output_dir

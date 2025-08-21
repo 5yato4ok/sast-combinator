@@ -224,9 +224,10 @@ def main() -> None:
         rebuild_images= args.rebuild_images
     )
 
-    if not launch_description:
+    if not launch_description or not launch_description.get("is_correct", False):
         log.info("No analyzers were launched. Exit.")
         return
+    print(launch_description)
     # Optionally upload results
     if args.dojo_product_name:
         log.info(

@@ -148,6 +148,8 @@ def run_selected_analyzers(
 
     if not analyzers:
         log.warning("No analyzers to launch")
+        return None
+
     # Sort by time_class for predictable ordering
     analyzers.sort(key=lambda a: config_helper.ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
     log.info(

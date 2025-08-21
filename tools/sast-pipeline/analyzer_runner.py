@@ -147,8 +147,7 @@ def run_selected_analyzers(
         analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
     else:
         analyzers = [a for a in analyzers if a.get("enabled", True)]
-
-    if not analyzers:
+    if len(analyzers) == 0:
         log.warning("No analyzers to launch")
         return None
     # Sort by time_class for predictable ordering
@@ -161,6 +160,9 @@ def run_selected_analyzers(
     launch_info = dict()
     launch_info["project_path"] = project_path
     launch_info["launched_analyzers"] = analyzers_names
+
+    with open(os.path.join(output_dir, "launch_description.json"), "w", encoding="utf-8") as f:
+        json.dump(launch_info, f, indent=4, ensure_ascii=False)
 
     for analyzer in analyzers:
         name = analyzer.get("name")
@@ -191,6 +193,4 @@ def run_selected_analyzers(
         except Exception as exc:
             log.warning(f"Error occurred during launching of {name} : {exc}.")
 
-    with open(os.path.join(output_dir, "launch_description.json"), "w", encoding="utf-8") as f:
-        json.dump(launch_info, f, indent=4, ensure_ascii=False)
     log.info("All selected analyzers completed.")

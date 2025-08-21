@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import requests
+import time
 import threading
 import argparse
 from dotenv import load_dotenv
@@ -260,7 +261,7 @@ class LinkBuilder:
             return f"{repo_url.rstrip('/')}/?path=/{fp}&version=GC{ref}"
         return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
 
-    def remote_link_exists(self, url: str, timeout: int = 5) -> bool | None:
+    def remote_link_exists(self, url: str, timeout: int = 5, max_retries = 10) -> bool | None:
         """
           True  – GET 200 или 3xx (file exist),
           False – 404 (file not exist),
@@ -268,6 +269,12 @@ class LinkBuilder:
         """
         try:
             r = requests.get(url, allow_redirects=True, timeout=timeout)
+            logger.debug(f"Checking url {url}. Status code {r.status_code}")
+            if r.status_code == 429 and max_retries > 0:
+                retry = int(r.headers.get("Retry-After", "1"))
+                logger.warning(f"Too many requests to github. Sleep for {retry}")
+                time.sleep(retry)
+                return self.remote_link_exists(url, timeout, max_retries - 1)
             if r.status_code == 200:
                 return True
             if 300 <= r.status_code < 400:
@@ -275,6 +282,7 @@ class LinkBuilder:
             if r.status_code == 404:
                 logger.warning(f"Url is not valid repo file: {url}")
                 return False
+            logger.warning(f"Unknown return code {r.status_code}")
             return None
         except requests.RequestException:
             return None
@@ -321,7 +329,11 @@ def _get_or_create_product(session: requests.Session, base: str, product_name: s
     if product:
         return product
 
-    r = session.post(f"{base}/api/v2/products/", json={"name": product_name})
+    data = {"name": product_name,
+            "description": "Created automatically during report import",
+            "prod_type" : 1
+            }
+    r = session.post(f"{base}/api/v2/products/", json=data)
     r.raise_for_status()
     return r.json()
 
@@ -416,7 +428,7 @@ def _derive_engagement_name(analyzer_name: str, branch: Optional[str], commit: O
 def _validate_and_update_finding(finding, trim_path, session, base):
     file_path = finding.get("file_path", "")
 
-    logger.debug(f"Checking {file_path} if it starts with {trim_path}")
+    logger.debug(f"Checking {file_path} for {finding['id']} if it starts with {trim_path}")
     # Checking file path is not absolute path
     if not file_path.startswith(trim_path):
         return finding
@@ -513,9 +525,10 @@ def upload_report(
             if link:
                 if linker.remote_link_exists(link):
                     _post_finding_meta_json(session, base, f["id"], "sourcefile_link", link)
+                    return 1
                 else:
                     _delete_finding(session, base, f["id"])
-                return 1
+                return 0
         except Exception as e:
             logger.warning("Failed to enrich finding %s: %s", f.get("id"), e)
         return 0

@@ -39,7 +39,7 @@ def build_image_if_needed(image_name: str, dockerfile_dir: str) -> None:
     if docker_utils.image_exists(image_name):
         log.debug("Image '%s' already exists; skipping build", image_name)
         return
-    log.info("Building image '%s'…", image_name)
+    log.info("Building image '%s'...", image_name)
     # Propagate LOG_LEVEL into the build stage if set
     build_args: dict[str, str] = {}
     log_level_env = os.environ.get("LOG_LEVEL")
@@ -51,7 +51,8 @@ def build_image_if_needed(image_name: str, dockerfile_dir: str) -> None:
         context_dir=dockerfile_dir,
         dockerfile=None,
         build_args=build_args or None,
-        check=True
+        check=True,
+        default_log_level="DEBUG"
     )
 
 
@@ -149,6 +150,7 @@ def run_selected_analyzers(
 
     if not analyzers:
         log.warning("No analyzers to launch")
+        return None
     # Sort by time_class for predictable ordering
     analyzers.sort(key=lambda a: config_helper.ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
     analyzers_names = [str(a.get("name")) for a in analyzers]

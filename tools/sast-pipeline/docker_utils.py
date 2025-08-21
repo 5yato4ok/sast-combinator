@@ -193,7 +193,8 @@ def build_image(
     context_dir: str,
     dockerfile: Optional[str] = None,
     build_args: Optional[Dict[str, str]] = None,
-    check: bool = True
+    check: bool = True,
+    default_log_level: str = "INFO"
 ) -> None:
     """Build a Docker image with optional build arguments and logging.
 
@@ -222,7 +223,7 @@ def build_image(
     cmd += ["."]
 
     # Function to log each build line
-    def log_build_line(line: str) -> None:
+    def log_build_line(line: str, log_level: str) -> None:
         if not line:
             return
         txt = line.strip()
@@ -230,7 +231,10 @@ def build_image(
         if "error" in lower or "failed" in lower:
             log.error(f"[build {image_name}] {txt}")
         else:
-            log.info(f"[build {image_name}] {txt}")
+            if log_level == "INFO":
+                log.info(f"[build {image_name}] {txt}")
+            else:
+                log.debug(f"[build {image_name}] {txt}")
 
     with subprocess.Popen(
         cmd,
@@ -242,7 +246,7 @@ def build_image(
     ) as proc:
         assert proc.stdout is not None
         for line in proc.stdout:
-            log_build_line(line)
+            log_build_line(line, default_log_level)
         returncode = proc.wait()
         if check and returncode != 0:
             raise subprocess.CalledProcessError(returncode, cmd)

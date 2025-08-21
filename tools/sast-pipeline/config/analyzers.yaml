@@ -185,7 +185,13 @@ analyzers:
   - name: retirejs
     type: simple
     image: retirejs-analyzer
-    time_class: fast
+    time_class: medium
     output_type: "Retire.js Scan"
     language: [ "javascript", "typescript" ]
+
+  - name: netanalyzer
+    type: simple
+    image: netanalyzer
+    output_type: "SARIF"
+    language: [ "csharp" ]
 

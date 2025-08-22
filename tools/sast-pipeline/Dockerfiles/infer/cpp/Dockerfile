@@ -13,11 +13,10 @@ RUN set -eux; \
         ca-certificates curl xz-utils \
     && rm -rf /var/lib/apt/lists/*; \
     curl -fsSL -o /tmp/infer.tar.xz \
-      "https://github.com/facebook/infer/releases/download/${INFER_VERSION}/infer-linux64-${INFER_VERSION}.tar.xz"; \
-
+      "https://github.com/facebook/infer/releases/download/${INFER_VERSION}/infer-linux-x86_64-${INFER_VERSION}.tar.xz"; \
     xz -t /tmp/infer.tar.xz; \
     tar -C /opt -xJf /tmp/infer.tar.xz; \
-    ln -sf "/opt/infer-linux64-${INFER_VERSION}/bin/infer" /usr/local/bin/infer; \
+    ln -sf "/opt/infer-linux-x86_64-${INFER_VERSION}/bin/infer" /usr/local/bin/infer; \
     rm -f /tmp/infer.tar.xz
 
 WORKDIR /app

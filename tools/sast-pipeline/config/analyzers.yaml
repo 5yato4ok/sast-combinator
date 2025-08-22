@@ -14,6 +14,7 @@ analyzers:
     output_type: "SARIF"
 
   - name: devskim
+    commentary: "Too many unusable results"
     type: simple
     image: sast-devskim
     enabled: false
@@ -33,7 +34,7 @@ analyzers:
     image: sast-snyk
     time_class: medium
     output_type: "Snyk Code Scan"
-    language: [ "c", "cpp", "go", "elixir", "java", "kotlin", "javascript", "dotnet", "php", "python","ruby", "rust", "scala","swift","objc","typescript" ]
+    language: [ "c", "cpp", "go", "elixir", "java", "kotlin", "javascript", "csharp", "php", "python","ruby", "rust", "scala","swift","objc","typescript" ]
     env:
       - SNYK_TOKEN
 
@@ -80,6 +81,7 @@ analyzers:
           dockerfile_path: "/app/Dockerfiles/codeql/python/"
           result_file: "codeql_python.sarif"
       - cpp:
+          commentary: "Not working on nx_open"
           enabled: false
           type: builder
           image: codeql-c-cpp
@@ -104,6 +106,7 @@ analyzers:
       - typescript:
           inherits: javascript
       - java:
+          commentary: "Not tested"
           image: codeql-java-kotlin
           dockerfile_path: "/app/Dockerfiles/codeql/java/"
           result_file: "codeql_java.sarif"
@@ -114,10 +117,12 @@ analyzers:
           dockerfile_path: "/app/Dockerfiles/codeql/go/"
           result_file: "codeql_go.sarif"
       - ruby:
+          commentary: "Not tested"
           image: codeql-ruby
           dockerfile_path: "/app/Dockerfiles/codeql/ruby/"
           result_file: "codeql_ruby.sarif"
       - swift:
+          commentary: "Not tested"
           image: codeql-swift
           dockerfile_path: "/app/Dockerfiles/codeql/swift/"
           result_file: "codeql_swift.sarif"
@@ -131,6 +136,7 @@ analyzers:
     language: [ "python", "javascript", "typescript", "ruby", "php", "java" ]
 
   - name: sonarqube
+    commentary: "Just stub, not deployed sonarqube yet."
     type: simple
     image: sonarqube-analyzer
     time_class: medium
@@ -151,16 +157,19 @@ analyzers:
     configuration:
       - csharp:
           enabled: false
+          commentary: "Requires license. Small amount of security checkers"
           image: qodana-csharp
           dockerfile_path: "/app/Dockerfiles/qodana/csharp/"
           result_file: "qodana_csharp.sarif"
           env:
             - QODANA_TOKEN
       - python:
+          commentary: "Community version. Small amount of security checkers"
           image: qodana-python
           dockerfile_path: "/app/Dockerfiles/qodana/python/"
           result_file: "qodana_python.sarif"
       - java:
+          commentary: "Not tested"
           image: qodana-java-kotlin
           dockerfile_path: "/app/Dockerfiles/qodana/java/"
           result_file: "qodana_java_kotlin.sarif"
@@ -189,6 +198,7 @@ analyzers:
     language: [ "javascript", "typescript" ]
 
   - name: netanalyzer
+    commentary: "Integrates directly into build. Can be applied only to dotnet version > 5"
     type: builder
     image: netanalyzer
     output_type: "SARIF"
@@ -198,6 +208,7 @@ analyzers:
       - LIB_PATH
 
   - name: infer
+    commentary: "Couldn't process nx_open"
     enabled: true
     image: infer-cpp
     output_type: "Generic Findings Import"
@@ -205,4 +216,7 @@ analyzers:
     language: ["cpp"]
     dockerfile_path: "/app/Dockerfiles/infer/cpp/"
     result_file: "infer_cpp.json"
+    env:
+      - COMPILE_COMMANDS_PATH
+      - COMPILER_PATH
 

@@ -2,6 +2,7 @@ import yaml
 import os
 import copy
 import logging
+import textwrap
 from docker_utils import get_pipeline_id
 
 log = logging.getLogger(__name__)
@@ -238,3 +239,113 @@ class AnalyzersConfigHelper:
             yaml.dump({"analyzers": filtered}, f, sort_keys=False, allow_unicode=True)
 
         return filename
+
+    def pretty_print(self, max_width: int = 80) -> str:
+        """
+        Produce a Markdown-friendly table with analyzers info and stats.
+
+        Iterates over `self.analyzers` (already flattened list of analyzer variants).
+
+        Markdown table columns:
+          | # | Name | Langs | InBuild | Enabled | Comment |
+            - #: row number
+            - Name: analyzer name (aggregated across variants)
+            - Langs: comma-separated languages
+            - InBuild: "yes" if any variant has type == "builder"
+            - Enabled: yes / no / partial (aggregated)
+            - Comment: joined comments, truncated/wrapped
+
+        Stats:
+          - Total analyzers
+          - Enabled analyzers
+          - Disabled analyzers
+          - InBuild analyzers
+          - Per-language: enabled/total
+        """
+        variants = list(getattr(self, "analyzers", []) or [])
+
+        def _to_list(x):
+            if x is None:
+                return []
+            if isinstance(x, (list, tuple, set)):
+                return [str(i) for i in x]
+            return [str(x)]
+
+        by_name = {}
+        per_lang = {}
+
+        for v in variants:
+            name = str(v.get("name", ""))
+            langs = _to_list(v.get("language")) or ["unknown"]
+            enabled = bool(v.get("enabled", True))
+            is_builder = str(v.get("type", "")).lower() == "builder"
+            comments = [s.strip() for s in _to_list(v.get("commentary")) if str(s).strip()]
+
+            g = by_name.setdefault(name, {
+                "languages": set(),
+                "any_enabled": False,
+                "all_enabled": True,
+                "any_inbuild": False,
+                "comments": set(),
+            })
+            for lang in langs:
+                g["languages"].add(lang)
+            g["any_enabled"] = g["any_enabled"] or enabled
+            g["all_enabled"] = g["all_enabled"] and enabled
+            g["any_inbuild"] = g["any_inbuild"] or is_builder
+            for c in comments:
+                g["comments"].add(c)
+
+            # per-language counters
+            for lang in set(langs):
+                d = per_lang.setdefault(lang, {"total": 0, "enabled": 0})
+                d["total"] += 1
+                if enabled:
+                    d["enabled"] += 1
+
+        def _enabled_str(group):
+            if group["all_enabled"]:
+                return "yes"
+            if not group["any_enabled"]:
+                return "no"
+            return "partial"
+
+        # Build Markdown table rows with numbering
+        headers = ["#", "Name", "Langs", "InBuild", "Enabled", "Comment"]
+        md_lines = []
+        md_lines.append("| " + " | ".join(headers) + " |")
+        md_lines.append("|" + "|".join(["---"] * len(headers)) + "|")
+
+        for idx, name in enumerate(sorted(by_name.keys(), key=lambda s: s.lower()), 1):
+            g = by_name[name]
+            langs = ", ".join(sorted(g["languages"]))
+            inbuild = "yes" if g["any_inbuild"] else "no"
+            enabled_s = _enabled_str(g)
+            comment_joined = "; ".join(sorted(g["comments"])) if g["comments"] else ""
+            comment_wrapped = textwrap.shorten(comment_joined, width=max_width, placeholder="…")
+            row = [str(idx), name, langs, inbuild, enabled_s, comment_wrapped]
+            md_lines.append("| " + " | ".join(row) + " |")
+
+        # Stats
+        total_analyzers = len(by_name)
+        enabled_analyzers = sum(1 for g in by_name.values() if g["any_enabled"])
+        disabled_analyzers = total_analyzers - enabled_analyzers
+        inbuild_analyzers = sum(1 for g in by_name.values() if g["any_inbuild"])
+
+        stats_lines = []
+        stats_lines.append("")
+        stats_lines.append("**Stats:**")
+        stats_lines.append(f"- Total analyzers: {total_analyzers}")
+        stats_lines.append(f"- Enabled: {enabled_analyzers}")
+        stats_lines.append(f"- Disabled: {disabled_analyzers}")
+        stats_lines.append(f"- InBuild analyzers: {inbuild_analyzers}")
+        stats_lines.append("- Per-language:")
+        for lang in sorted(per_lang.keys()):
+            s = per_lang[lang]
+            stats_lines.append(f"  - {lang}: {s['enabled']}/{s['total']} enabled")
+
+        return "\n".join(md_lines + stats_lines)
+
+if __name__ == "__main__":
+    helper = AnalyzersConfigHelper("config/analyzers.yaml")
+    print(helper.pretty_print(80))

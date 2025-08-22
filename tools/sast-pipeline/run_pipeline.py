@@ -199,7 +199,7 @@ def main() -> None:
     if not args.languages:
         parser.error("--languages is required (either via CLI or config file)")
 
-    if not args.dojo_product_name and not args.project_name:
+    if not args.dojo_product_name and not args.product_name:
         parser.error("--dojo_product_name or --project_name  required (either via CLI or config file)")
 
     # Build project and run analyses
@@ -208,7 +208,7 @@ def main() -> None:
     if args.dojo_product_name:
         project_name = args.dojo_product_name
     else:
-        project_name =args.project_name
+        project_name =args.product_name
 
     launch_description = configure_project_run_analyses(
         args.script,

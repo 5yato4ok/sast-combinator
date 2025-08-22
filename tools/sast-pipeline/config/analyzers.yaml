@@ -147,7 +147,6 @@ analyzers:
   - name: qodana
     language_specific_containers: true
     output_type: "SARIF"
-    env:
     language: [ "python", "csharp", "java", "kotlin" ]
     configuration:
       - csharp:
@@ -199,23 +198,11 @@ analyzers:
       - LIB_PATH
 
   - name: infer
-    language_specific_containers: true
-    output_type: "SARIF"
+    enabled: true
+    image: infer-cpp
+    output_type: "Generic Findings Import"
     type: builder
-    env:
-    language: [ "csharp", "cpp"]
-    configuration:
-      - csharp:
-          enabled: false
-          image: infer-csharp
-          dockerfile_path: "/app/Dockerfiles/infer/csharp/"
-          result_file: "infer_csharp.sarif"
-          env:
-            - DOTNET_PATH
-            - LIB_PATH
-      - cpp:
-          enabled: false
-          image: infer-cpp
-          dockerfile_path: "/app/Dockerfiles/infer/cpp/"
-          result_file: "infer_cpp.sarif"
+    language: ["cpp"]
+    dockerfile_path: "/app/Dockerfiles/infer/cpp/"
+    result_file: "infer_cpp.json"
 

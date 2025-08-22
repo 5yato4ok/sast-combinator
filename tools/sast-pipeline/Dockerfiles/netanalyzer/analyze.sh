@@ -23,11 +23,16 @@ case "$lvl" in
   *) DOTNET_V="normal" ;;
 esac
 
-TMP_PROPS="$INPUT_DIR/Directory.Build.props"
-CLEANUP=0
-if [ ! -f "$TMP_PROPS" ]; then
-  echo "[INFO] Creating file ${TMP_PROPS}"
-cat > "$TMP_PROPS" <<'XML'
+cd "$INPUT_DIR"
+SDKV="$(dotnet --version)"
+
+TMP_PROPS="${INPUT_DIR}/Directory.Build.props"
+TMP_TARGETS="${INPUT_DIR}/Directory.Build.targets"
+CLEAN_PROPS=0
+CLEAN_TARGETS=0
+
+if [[ ! -f "$TMP_PROPS" ]]; then
+  cat > "$TMP_PROPS" <<'XML'
 <Project>
   <!-- General analyzer settings -->
   <PropertyGroup>
@@ -36,49 +41,130 @@ cat > "$TMP_PROPS" <<'XML'
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
   </PropertyGroup>
 
-  <!-- Resolve the SDK version actually used by MSBuild (from PATH / global.json) -->
+  <!-- Resolve SDK version: NETCoreSdkVersion -> SdkVersion (from script) -> 0.0.0 -->
   <PropertyGroup>
     <_SdkVer>$(NETCoreSdkVersion)</_SdkVer>
+    <_SdkVer Condition="'$(_SdkVer)' == ''">$(SdkVersion)</_SdkVer>
     <_SdkVer Condition="'$(_SdkVer)' == ''">0.0.0</_SdkVer>
+
+    <!-- Parse major/minor safely -->
+    <_SdkMajor>$([System.Int32]::Parse($(_SdkVer.Split('.')[0])))</_SdkMajor>
+    <_SdkMinor>$([System.Int32]::Parse($(_SdkVer.Split('.')[1])))</_SdkMinor>
   </PropertyGroup>
 
-  <!-- Pick NetAnalyzers package version dynamically based on the SDK version -->
-  <PropertyGroup>
-    <NetAnalyzersVersion>6.*</NetAnalyzersVersion>
-    <NetAnalyzersVersion Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(_SdkVer)','7.0.0'))">7.*</NetAnalyzersVersion>
-    <NetAnalyzersVersion Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(_SdkVer)','8.0.0'))">8.*</NetAnalyzersVersion>
-  </PropertyGroup>
-
-  <!-- If you prefer to rely on the SDK's built-in analyzers only, remove this block -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers"
-                      Version="$(NetAnalyzersVersion)"
-                      PrivateAssets="all" />
-  </ItemGroup>
-
-  <!-- SecurityCodeScan: select the package compatible with the current SDK -->
-  <ItemGroup Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(_SdkVer)','7.0.0'))">
-    <!-- Modern SDKs → VS2022 package (new Roslyn) -->
+  <!-- SDK >= 7 -->
+  <ItemGroup Condition="$(_SdkMajor) &gt;= 7">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.*" PrivateAssets="all" />
     <PackageReference Include="SecurityCodeScan.VS2022" Version="5.*" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup Condition="!$([MSBuild]::VersionGreaterThanOrEquals('$(_SdkVer)','7.0.0'))">
-    <!-- Older SDKs → VS2019 package (old Roslyn) -->
+  <!-- 5 <= SDK < 7 -->
+  <ItemGroup Condition="$(_SdkMajor) &gt;= 5 and $(_SdkMajor) &lt; 7">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.*" PrivateAssets="all" />
     <PackageReference Include="SecurityCodeScan.VS2019" Version="5.*" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- SDK < 5 (e.g., 2.1/3.1) -->
+  <ItemGroup Condition="$(_SdkMajor) &lt; 5">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.2" PrivateAssets="all" />
+    <PackageReference Include="SecurityCodeScan.VS2017" Version="3.5.4" PrivateAssets="all" />
   </ItemGroup>
 </Project>
 XML
-CLEANUP=1
+  CLEAN_PROPS=1
 fi
 
-cd "$INPUT_DIR"
-SDKV="$(dotnet --version)"
-dotnet clean || true
-dotnet restore . -v "$DOTNET_V"
-dotnet build "$INPUT_DIR" -v "$DOTNET_V" \
-  -p:SdkVersion="$SDKV" \
-  -p:RunAnalyzers=true \
-  -p:ErrorLog="${OUTPUT_FILE},BuildOutput.sarif,version=2.1" || true
+if [[ ! -f "$TMP_TARGETS" ]]; then
+  cat > "$TMP_TARGETS" <<'XML'
+<Project>
+  <PropertyGroup>
+    <_SdkVer>$(NETCoreSdkVersion)</_SdkVer>
+    <_SdkVer Condition="'$(_SdkVer)' == ''">$(SdkVersion)</_SdkVer>
+    <_SdkVer Condition="'$(_SdkVer)' == ''">0.0.0</_SdkVer>
+    <_SdkMajor>$([System.Int32]::Parse($(_SdkVer.Split('.')[0])))</_SdkMajor>
+  </PropertyGroup>
 
-[ "$CLEANUP" -eq 1 ] && rm -f "$TMP_PROPS"
-echo "[INFO] NetAnalyzers (Security) SARIF -> $OUTPUT_FILE"
+  <!-- For SDK < 5, remove any NetAnalyzers and Meziantou pinned elsewhere -->
+  <ItemGroup Condition="'$(_SdkMajor)' != '' and $(_SdkMajor) &lt; 5">
+    <PackageReference Remove="Microsoft.CodeAnalysis.NetAnalyzers" />
+    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="" />
+
+    <PackageReference Remove="Meziantou.Analyzer" />
+    <!-- Defensive: neutralize any central/explicit pin to 2.x -->
+    <PackageReference Update="Meziantou.Analyzer" Version="1.*" />
+  </ItemGroup>
+</Project>
+XML
+  CLEAN_TARGETS=1
+fi
+
+# Cleanup on exit if we created temp props/targets
+cleanup() {
+  [[ $CLEAN_PROPS -eq 1 ]] && rm -f "$TMP_PROPS" || true
+  [[ $CLEAN_TARGETS -eq 1 ]] && rm -f "$TMP_TARGETS" || true
+}
+trap cleanup EXIT
+
+# -------- Robust NuGet restore --------
+dotnet nuget locals all --clear || true
+
+TMP_NUGET="$(mktemp -t nuget-XXXXXX.config)"
+{
+  echo '<?xml version="1.0" encoding="utf-8"?>'
+  echo '<configuration>'
+  echo '  <packageSources>'
+  echo '    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />'
+  # Optional mirror: export NUGET_MIRROR_URL="https://your-mirror/v3/index.json"
+  if [[ -n "${NUGET_MIRROR_URL:-}" ]]; then
+    echo "    <add key=\"mirror\" value=\"${NUGET_MIRROR_URL}\" />"
+  fi
+  echo '  </packageSources>'
+  echo '  <config>'
+  echo '    <add key="globalPackagesFolder" value="/tmp/nuget-packages" />'
+  echo '  </config>'
+  echo '  <packageSourceMapping>'
+  echo '    <packageSource key="nuget.org">'
+  echo '      <package pattern="Microsoft.*" />'
+  echo '      <package pattern="System.*" />'
+  echo '      <package pattern="SecurityCodeScan.*" />'
+  echo '      <package pattern="Meziantou.*" />'
+  echo '    </packageSource>'
+  if [[ -n "${NUGET_MIRROR_URL:-}" ]]; then
+    echo '    <packageSource key="mirror">'
+    echo '      <package pattern="*" />'
+    echo '    </packageSource>'
+  fi
+  echo '  </packageSourceMapping>'
+  echo '</configuration>'
+} > "$TMP_NUGET"
+
+
+
+echo "[INFO] Restoring packages (SDK ${SDKV})..."
+cd "$INPUT_DIR"
+dotnet clean
+
+dotnet restore . \
+  --configfile "$TMP_NUGET" \
+  --no-cache --disable-parallel -v detailed \
+  -p:SdkVersion="${SDK_VERSION}"
+
+echo "[INFO] Building with analyzers → SARIF"
+dotnet build . -v "$DOTNET_V" \
+  -p:SdkVersion="${SDK_VERSION}" \
+  -p:RunAnalyzers=true \
+  "-p:ErrorLog=${OUTPUT_FILE};format=Sarif;version=2.1" || true
+
+
+# -------- Post-check --------
+if [[ ! -s "$OUTPUT_FILE" ]]; then
+  echo "[WARN] SARIF file is missing or empty: $OUTPUT_FILE"
+else
+  echo "[INFO] SARIF written to: $OUTPUT_FILE"
+fi
+
+# Optional: validate/normalize SARIF if sarif tool is present
+if command -v sarif >/dev/null 2>&1; then
+  echo "[INFO] Validating SARIF..."
+  sarif validate "$OUTPUT_FILE" || true
+fi

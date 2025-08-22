@@ -42,9 +42,52 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
                 return hit
         return None
 
+    def find_smallest_node_covering_line(n: Node, line: int) -> Optional[Node]:
+        s, e = line_range(n)
+        if not (s + 1 <= line <= e + 1):
+            return None
+        for ch in n.children:
+            hit = find_smallest_node_covering_line(ch, line)
+            if hit:
+                return hit
+        return n
     func_node = find_enclosing_function(tree.root_node)
+
+    search_root = func_node if func_node is not None else tree.root_node
+    node_at_line = find_smallest_node_covering_line(search_root, line_number)
+
+    # If that node is single-line, climb up until multi-line (or root)
+    def climb_to_multiline(node: Optional[Node]) -> Optional[Node]:
+        while node is not None:
+            s, e = line_range(node)
+            if e > s:  # multi-line node found
+                return node
+            node = node.parent
+        return None
+
+    code_on_line: Optional[str] = None
+    lines = source_code.splitlines()
+
+    multiline_node = climb_to_multiline(node_at_line)
+    if multiline_node:
+        # return entire multi-line node text
+        code_on_line = source_bytes[multiline_node.start_byte: multiline_node.end_byte].decode(
+            "utf-8", errors="replace"
+        )
+    elif node_at_line:
+        # fallback: single-line node → return full source line
+        if 1 <= line_number <= len(lines):
+            code_on_line = lines[line_number - 1]
+    else:
+        # fallback: no node at all
+        if 1 <= line_number <= len(lines):
+            code_on_line = lines[line_number - 1]
+
     if not func_node:
-        return {"text": "// Function not found.", "meta": {"language": lang_key, "target_line": line_number}}
+        return {
+            "text": "// Function not found.",
+            "meta": {"language": lang_key, "target_line": line_number, "code_on_line": code_on_line},
+        }
 
     f_start, f_end = line_range(func_node)
     text = source_bytes[func_node.start_byte: func_node.end_byte].decode("utf-8", errors="replace")
@@ -57,6 +100,7 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
             "function_lines": (f_start + 1, f_end + 1),
             "target_line": line_number,
             "relative_line_number": relative_line_number,
+            "code_on_line": code_on_line,
         },
     }
 

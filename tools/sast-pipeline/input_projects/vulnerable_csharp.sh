@@ -4,7 +4,11 @@ set -e
 PROJECT_ROOT="${1:-/workspace}"
 PROJECT_BUILD_DIR="${PROJECT_ROOT}/build-tmp"
 REPO_DIR="${PROJECT_BUILD_DIR}/VulnerableCoreApp"
+ICU_DIR="${REPO_DIR}/icu_libs"
 export PROJECT_PATH=${REPO_DIR}
+export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+export DOTNET_CLI_TELEMETRY_OPTOUT=1
+export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 cd "$PROJECT_BUILD_DIR"
 
@@ -43,18 +47,34 @@ else
   dpkg -x /tmp/libssl1.1.deb ./libssl
   rm /tmp/libssl1.1.deb
 
+  apt update
+  mkdir -p /tmp/download && cd /tmp/download
+
+  apt-get download libicu70 || apt-get download libicu66 || apt-get download libicu72 || apt-get download libicu74
+  mkdir -p "$ICU_DIR"
+  dpkg-deb -x libicu*.deb "$ICU_DIR"
+  rm -f libicu*.deb
+
+  LIBDIR="$(find "$ICU_DIR" -type d -name x86_64-linux-gnu -o -name lib64 | head -n1)"
+  cd "$LIBDIR"
+  for base in icui18n icuuc icudata; do
+    sofile="$(ls lib${base}.so.* 2>/dev/null | head -n1)"
+    [ -n "$sofile" ] && ln -sf "$sofile" "lib${base}.so"
+  done
+
   echo "[INFO] Installing dotnet to local folder..."
   # Add Microsoft package repository
   mkdir -p .dotnet
   curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
   chmod +x dotnet-install.sh
 
-  ./dotnet-install.sh --version 2.1.816 --install-dir "$REPO_DIR/.dotnet"
+  source ./dotnet-install.sh --version 2.1.816 --install-dir "$REPO_DIR/.dotnet"
 
   echo "[INFO] Installing dependencies..."
 
   export PATH="${REPO_DIR}/.dotnet:$PATH"
-  export LD_LIBRARY_PATH="${REPO_DIR}/libssl/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+  export LD_LIBRARY_PATH="${LIBDIR}:${REPO_DIR}/libssl/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-""}"
+  cd "${REPO_DIR}"
   dotnet build
 fi
 

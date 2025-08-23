@@ -19,7 +19,8 @@ import logging
 import os
 from dotenv import load_dotenv
 from pipeline.project_builder import configure_project_run_analyses
-from pipeline.defectdojo_api import upload_results
+#from pipeline.defectdojo_api import upload_results
+from pipeline.defect_dojo.utils import upload_results
 import yaml  # type: ignore
 import pipeline.config_utils as config_utils
 

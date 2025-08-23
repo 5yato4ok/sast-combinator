@@ -16,17 +16,47 @@ logger = logging.getLogger(__name__)
 class LinkBuilder:
     """Build source links for GitHub/GitLab/Bitbucket; verify remote file existence (handles 429)."""
 
+    """Builds repository links without line anchors, based on repo host and ref."""
     @staticmethod
-    def build(repo_url: str, file_path: str, ref: Optional[str]) -> Optional[str]:
-        if not repo_url or not file_path or not ref:
+    def _scm_type(repo_url: str) -> str:
+        from urllib.parse import urlparse
+        host = urlparse(repo_url).netloc.lower()
+        if "github" in host:
+            return "github"
+        if "gitlab" in host:
+            return "gitlab"
+        if "bitbucket.org" in host:
+            return "bitbucket-cloud"
+        if "bitbucket" in host:
+            return "bitbucket-server"
+        if "gitea" in host:
+            return "gitea"
+        if "codeberg" in host:
+            return "codeberg"
+        if "dev.azure.com" in host or "visualstudio.com" in host:
+            return "azure"
+        return "generic"
+
+    def build(self, repo_url: str, file_path: str, ref: Optional[str]) -> Optional[str]:
+        if not repo_url or not file_path:
             return None
-        r = repo_url.rstrip("/")
-        p = file_path.lstrip("/")
-        if "gitlab" in r:
-            return f"{r}/-/blob/{ref}/{p}"
-        if "bitbucket" in r:
-            return f"{r}/src/{ref}/{p}"
-        return f"{r}/blob/{ref}/{p}"  # default GitHub-like
+        scm = self._scm_type(repo_url)
+        ref = ref or "master"
+        file_path = file_path.replace("file://","")
+        fp = file_path.lstrip("/")
+        if scm == "github":
+            return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
+        if scm == "gitlab":
+            return f"{repo_url.rstrip('/')}/-/blob/{ref}/{fp}"
+        if scm == "bitbucket-cloud":
+            return f"{repo_url.rstrip('/')}/src/{ref}/{fp}"
+        if scm == "bitbucket-server":
+            return f"{repo_url.rstrip('/')}/browse/{fp}?at={ref}"
+        if scm in ("gitea", "codeberg"):
+            return f"{repo_url.rstrip('/')}/src/{ref}/{fp}"
+        if scm == "azure":
+            return f"{repo_url.rstrip('/')}/?path=/{fp}&version=GC{ref}"
+        return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
 
     @staticmethod
     def remote_link_exists(url: str, timeout: int = 5, max_retries: int = 3) -> Optional[bool]:
@@ -131,14 +161,25 @@ class SastPipelineDDClient(DefectDojoClient):
 
         def _process_one(f) -> int:
             try:
+                # trim patch if needed
                 f = _validate_and_update_finding(f)
                 file_path = f.get("file_path", "")
                 link = linker.build(repo_params.repo_url or "", file_path, ref)
-                if link and linker.remote_link_exists(link):
+                if not link:
+                    return 0
+
+                exists = linker.remote_link_exists(link)
+                # Only delete when we are sure link is invalid (404)
+                if exists is True:
                     self.post_finding_meta_json(f["id"], "sourcefile_link", link)
                     return 1
-                else:
+                elif exists is False:
+                    logger.warning("Deleting %s", f.get("id"))
                     self.delete_finding(f["id"])
+                    return 0
+                else:
+                    # Unknown / transient condition -> do nothing, don't delete
+                    logger.warning("Skip enrichment for %s due to ambiguous link check: %s", f.get("id"), link)
                     return 0
             except Exception as e:
                 logger.warning("Failed to enrich finding %s: %s", f.get("id"), e)

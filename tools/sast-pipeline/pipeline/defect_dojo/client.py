@@ -47,7 +47,8 @@ def _clone_session(src: requests.Session) -> requests.Session:
     if getattr(src, "auth", None):
         s.auth = src.auth
     # robust adapter
-    retry = urllib3.Retry(total=3, backoff_factor=0.3, status_forcelist=(429, 500, 502, 503, 504))
+    retry = urllib3.Retry(total=3, backoff_factor=0.3, status_forcelist=(429, 500, 502, 503, 504),
+                          allowed_methods=frozenset(["HEAD", "GET", "OPTIONS"]), respect_retry_after_header=True)
     adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=retry)
     s.mount("http://", adapter)
     s.mount("https://", adapter)
@@ -64,7 +65,8 @@ class DefectDojoClient:
         self.session.headers.update({"Authorization": f"Token {token}"})
         self.session.verify = cfg.verify_ssl
         # Attach robust adapters to the main session too
-        retry = urllib3.Retry(total=3, backoff_factor=0.3, status_forcelist=(429, 500, 502, 503, 504))
+        retry = urllib3.Retry(total=3, backoff_factor=0.3, status_forcelist=(429, 500, 502, 503, 504),
+                              allowed_methods=frozenset(["HEAD", "GET", "OPTIONS"]), respect_retry_after_header=True,)
         adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=retry)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
@@ -183,13 +185,13 @@ class DefectDojoClient:
     def patch_finding(self, finding: Dict[str, Any]) -> Dict[str, Any]:
         fid = finding["id"]
         logger.debug(f"Attempt to patch {finding}")
-        r = self.session.patch(f"{self.base}/api/v2/findings/{fid}/", json=finding)
+        r = _clone_session(self.session).patch(f"{self.base}/api/v2/findings/{fid}/", json=finding)
         r.raise_for_status()
         return r.json()
 
     def delete_finding(self, finding_id: int) -> None:
         logger.warning(f"Deleting {finding_id}")
-        r = self.session.delete(f"{self.base}/api/v2/findings/{finding_id}/")
+        r = _clone_session(self.session).delete(f"{self.base}/api/v2/findings/{finding_id}/")
         if r.status_code in (200, 202, 204):
             return
         r.raise_for_status()

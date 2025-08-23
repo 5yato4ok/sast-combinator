@@ -143,14 +143,11 @@ def delete_findings_by_product_and_path_prefix(
     # Not aggressive (mirror original)
     max_workers = max(1, min(8, (os.cpu_count() or 4)))
 
-    def _delete_one(fid_fp, base_url, session, logger):
+    def _delete_one(fid_fp):
         fid, fp = fid_fp
         try:
-            r = session.delete(f"{base_url}/api/v2/findings/{fid}/")
-            if r.status_code in (200, 202, 204):
-                return 1
-            r.raise_for_status()
-            return 0
+            client.delete_finding(fid)
+            return 1
         except Exception as e:
             logger.warning("Failed to delete finding id=%s file_path=%s: %s", fid, fp, e)
             return 0
@@ -158,7 +155,7 @@ def delete_findings_by_product_and_path_prefix(
     processed = 0
     from concurrent.futures import ThreadPoolExecutor, as_completed
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
-        futures = [ex.submit(_delete_one, item, client.base, client.session, logger) for item in items]
+        futures = [ex.submit(_delete_one, item) for item in items]
         for fut in as_completed(futures):
             processed += fut.result()
 

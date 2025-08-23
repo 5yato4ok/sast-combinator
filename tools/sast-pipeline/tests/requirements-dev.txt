@@ -1,0 +1,5 @@
+pytest>=8.2
+responses>=0.25
+pytest-httpserver>=1.0.8
+schemathesis>=3.26.3
+hypothesis>=6.112

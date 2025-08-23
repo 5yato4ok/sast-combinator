@@ -3,7 +3,7 @@ import os
 import copy
 import logging
 import textwrap
-from docker_utils import get_pipeline_id
+from .docker_utils import get_pipeline_id
 
 log = logging.getLogger(__name__)
 

@@ -4,11 +4,10 @@
 from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from repo_info import read_repo_params, RepoParams
+from .repo_info import read_repo_params, RepoParams
 from requests.adapters import HTTPAdapter
 from typing import Any, Dict, Optional, List, Tuple
 from datetime import date, timedelta
-import json
 import logging
 import os
 import requests
@@ -18,7 +17,7 @@ import argparse
 from dotenv import load_dotenv
 from urllib3.util.retry import Retry
 import urllib3
-import config_utils
+from .config_utils import AnalyzersConfigHelper
 
 try:
     import yaml  # type: ignore
@@ -575,9 +574,9 @@ def upload_results(
         raise NotADirectoryError(f"Reports directory does not exist: {output_dir}")
 
     results: List[ImportResult] = []
-    cfg_helper = config_utils.AnalyzersConfigHelper(analyzers_cfg_path)
+    cfg_helper = AnalyzersConfigHelper(analyzers_cfg_path)
     # Repo info
-    repo_params = read_repo_params(repo_path or os.environ.get("GIT_REPO_PATH", "."))
+    repo_params = read_repo_params(repo_path or os.environ.get("GIT_REPO_PATH", ".."))
     for analyzer in cfg_helper.get_analyzers():
         analyzer_name = analyzer.get("name")
         report_path = os.path.join(output_dir, cfg_helper.get_analyzer_result_file_name(analyzer))

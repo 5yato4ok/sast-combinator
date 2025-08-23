@@ -15,14 +15,12 @@ before container launch.  If they are missing, an exception is raised.
 
 from __future__ import annotations
 
-import subprocess
 import yaml  # type: ignore
 import os
 import logging
 import json
-from pathlib import Path
-import docker_utils
-import config_utils
+from . import docker_utils
+from . import config_utils
 
 
 log = logging.getLogger(__name__)
@@ -173,12 +171,12 @@ def run_selected_analyzers(
             log.warning(f"Attempt to launch analyzer {name} on non compile project. Skipping...")
             continue
 
-        dockerfile_path = str(analyzer.get("dockerfile_path", f"/app/Dockerfiles/{name}"))
+        dockerfile_dir = str(analyzer.get("dockerfile_path", f"/app/Dockerfiles/{name}"))
 
         if exclude_slow and time_class == "slow":
             log.info("Skipping slow analyzer '%s'", name)
             continue
-        build_image_if_needed(str(image), dockerfile_path)
+        build_image_if_needed(str(image), dockerfile_dir)
         input_path = analyzer.get("input", project_path)
         output_file_name = config_helper.get_analyzer_result_file_name(analyzer)
 

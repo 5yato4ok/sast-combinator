@@ -11,14 +11,12 @@ handlers without changing this module.
 
 from __future__ import annotations
 
-import subprocess
 import os
 import shutil
 import logging
 from pathlib import Path
-import docker_utils
+from . import docker_utils
 import json
-import config_utils
 from datetime import datetime
 
 
@@ -30,15 +28,16 @@ def configure_project_run_analyses(
         output_dir: str,
         languages,
         analyzer_config,
+        dockerfile_path: str,
+        context_dir: str,
         image_name: str = "project-builder",
-        dockerfile_path: str = "Dockerfiles/builder/Dockerfile",
         project_path: str = "/tmp/my_project",
         force_rebuild: bool = False,
         rebuild_images: bool = False,
         version: str | None = None,
         log_level: str | None = None,
         min_time_class: str = "",
-        analyzers=None
+        analyzers=None,
 ):
     """Build the builder image and run all configured analyzers.
 
@@ -54,7 +53,7 @@ def configure_project_run_analyses(
 
     if analyzers is None:
         analyzers = []
-    context_dir = os.path.abspath(".")  # assume this file is run from the root project
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = f"{output_dir}/{timestamp}"
     os.makedirs(output_dir, exist_ok=True)
@@ -118,7 +117,7 @@ def configure_project_run_analyses(
         os.path.abspath(project_path): "/workspace",
         os.path.abspath(output_dir): "/shared/output",
         "/var/run/docker.sock": "/var/run/docker.sock",
-        tmp_analyzer_config_path : "/app/config/analyzers.yaml"
+        tmp_analyzer_config_path : "/app/analyzers.yaml"
     }
 
     log.info(f"Running builder container {builder_container_name}")

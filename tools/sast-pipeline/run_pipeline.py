@@ -18,17 +18,18 @@ import argparse
 import logging
 import os
 from dotenv import load_dotenv
-from project_builder import configure_project_run_analyses
-from defectdojo_api import upload_results
+from pipeline.project_builder import configure_project_run_analyses
+from pipeline.defectdojo_api import upload_results
 import yaml  # type: ignore
-import config_utils
-from docker_utils import delete_image_if_exist
+import pipeline.config_utils as config_utils
 
 log = logging.getLogger(__name__)
 
-load_dotenv(dotenv_path=".env")
+load_dotenv(dotenv_path="pipeline/.env")
 ANALYZERS_CONFIG = config_utils.AnalyzersConfigHelper(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "analyzers.yaml"))
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "pipeline" , "config", "analyzers.yaml"))
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def cleanup(analyzer_config_path):
     log.info(f"Trying to delete file {analyzer_config_path}")
@@ -118,7 +119,7 @@ def main() -> None:
     parser.add_argument(
         "--dojo_config",
         required=False,
-        default="config/defectdojo.yaml",
+        default=os.path.join(CURRENT_DIR, "pipeline", "config", "defectdojo.yaml"),
         help="Path to the DefectDojo configuration YAML. Defaults to config/defectdojo.yaml.",
     )
     parser.add_argument(
@@ -221,7 +222,9 @@ def main() -> None:
         min_time_class = args.time_class_level,
         analyzers=args.analyzers,
         image_name=f"project_{project_name.lower()}_builder",
-        rebuild_images= args.rebuild_images
+        rebuild_images=args.rebuild_images,
+        dockerfile_path=os.path.join(CURRENT_DIR, "Dockerfiles", "builder", "Dockerfile"),
+        context_dir=CURRENT_DIR
     )
 
     if not launch_description or not launch_description.get("is_correct", False):

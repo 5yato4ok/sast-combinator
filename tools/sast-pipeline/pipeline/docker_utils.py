@@ -228,7 +228,7 @@ def build_image(
             return
         txt = line.strip()
         lower = txt.lower()
-        if "error" in lower or "failed" in lower:
+        if " error " in lower or " failed " in lower:
             log.error(f"[build {image_name}] {txt}")
         else:
             if log_level == "INFO":

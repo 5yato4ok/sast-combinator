@@ -1,4 +1,4 @@
-from analyzer_runner import run_selected_analyzers
+from pipeline.analyzer_runner import run_selected_analyzers
 from dotenv import load_dotenv
 import logging
 
@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 import os
 
-load_dotenv(dotenv_path="/app/.env")
+load_dotenv(dotenv_path="/app/pipeline/.env")
 log = logging.getLogger(__name__)
 
 logging.basicConfig(
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     log.info("Starting analyzer runner...")
 
     run_selected_analyzers(
-        config_path="/app/config/analyzers.yaml",
+        config_path="/app/analyzers.yaml",         # Path to generated config for launch
         exclude_slow=False,
         project_path=project_path,
         output_dir="/shared/output",

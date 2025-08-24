@@ -139,12 +139,44 @@ def run_selected_analyzers(
     config_helper = config_utils.AnalyzersConfigHelper(config_path)
 
     analyzers = config_helper.get_analyzers()
-    log.debug(f" Analyzers: {analyzers}")
     # Filter analyzers by requested names or enabled flag
     if analyzers_to_run:
         analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
     else:
         analyzers = [a for a in analyzers if a.get("enabled", True)]
+
+    non_compile = env_flag("NON_COMPILE_PROJECT", True)
+
+    write = 0
+    for a in analyzers:
+        name = a.get("name")
+        time_class = a.get("time_class", "medium")
+        typ = a.get("type", "default")
+
+        if not a.get("enabled", True):
+            log.debug("Disabled analyzer %s. Skipping...", name)
+            continue
+
+        if analyzers_to_run and name not in analyzers_to_run:
+            log.debug("Analyzer %s not in analyzers_to_run. Skipping...", name)
+            continue
+
+        if typ == "builder" and non_compile:
+            log.warning("Attempt to launch analyzer %s on non compile project. Skipping...", name)
+            continue
+
+        if exclude_slow and time_class == "slow":
+            log.info("Skipping slow analyzer '%s'", name)
+            continue
+
+        analyzers[write] = a
+
+        write += 1
+
+    del analyzers[write:]
+
+    log.debug(f"Analyzers to launch: {analyzers}")
+
     if len(analyzers) == 0:
         log.warning("No analyzers to launch")
         return None
@@ -165,17 +197,7 @@ def run_selected_analyzers(
     for analyzer in analyzers:
         name = analyzer.get("name")
         image = analyzer.get("image")
-        time_class = analyzer.get("time_class", "medium")
-        type = analyzer.get("type", "default")
-        if type == "builder" and env_flag("NON_COMPILE_PROJECT", True):
-            log.warning(f"Attempt to launch analyzer {name} on non compile project. Skipping...")
-            continue
-
         dockerfile_dir = str(analyzer.get("dockerfile_path", f"/app/Dockerfiles/{name}"))
-
-        if exclude_slow and time_class == "slow":
-            log.info("Skipping slow analyzer '%s'", name)
-            continue
         build_image_if_needed(str(image), dockerfile_dir)
         input_path = analyzer.get("input", project_path)
         output_file_name = config_helper.get_analyzer_result_file_name(analyzer)

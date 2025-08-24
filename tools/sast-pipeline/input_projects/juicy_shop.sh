@@ -42,3 +42,5 @@ else
   echo "[INFO] Installing dependencies..."
   npm install
 fi
+
+export NON_COMPILE_PROJECT=0

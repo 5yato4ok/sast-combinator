@@ -5,4 +5,5 @@
 *.ipr
 *.env
 **/inventories/**/group_vars/vault.yml
+**/.hypothesis
 

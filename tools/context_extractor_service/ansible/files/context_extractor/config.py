@@ -151,6 +151,44 @@ LANG_NODESETS = {
         "closing_is_brace": True,
         "line_comment_prefix": "//",
     },
+    # PHP language support
+    "php": {
+        # Node types considered as functions: global functions, class methods, anonymous functions and arrows
+        "function": {
+            "function_definition", "method_declaration",
+            "anonymous_function_creation_expression", "arrow_function"
+        },
+        # Blocks for PHP include compound statements and function-like bodies
+        "block": {
+            "compound_statement", "function_definition",
+            "method_declaration", "anonymous_function_creation_expression"
+        },
+        # Key statements drive backward expansion during compression.
+        # Include assignments, generic expression statements, calls, control flow and loops.
+        "key": {
+            "assignment_expression", "expression_statement", "function_call_expression",
+            "if_statement", "return_statement",
+            "for_statement", "while_statement", "foreach_statement"
+        },
+        # Identifier nodes. PHP exposes variable names via 'variable_name' and generic 'name'.
+        "ident": {"name", "variable_name"},
+        # Member-like expressions such as property/method accesses and static calls
+        "member_like": {"member_access_expression", "scoped_call_expression"},
+        # Assignment expression node
+        "assign": {"assignment_expression"},
+        # PHP doesn't have standalone variable declarations; leave empty
+        "declaration": set(),
+        # Call expressions: function, method and static calls
+        "call": {"function_call_expression", "method_call_expression", "scoped_call_expression"},
+        # Loop statements recognised when collecting write identifiers
+        "loop": {"for_statement", "while_statement", "foreach_statement"},
+        # Control statements to promote into output when relevant
+        "control": {"if_statement", "for_statement", "while_statement", "foreach_statement"},
+        # PHP functions use braces for their bodies
+        "closing_is_brace": True,
+        # Use C-style line comments as default for compress error messages
+        "line_comment_prefix": "//",
+    },
 }
 
 # Per-language comment styles (for full and inline comments)

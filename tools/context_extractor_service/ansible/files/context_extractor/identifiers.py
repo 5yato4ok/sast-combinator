@@ -93,6 +93,10 @@ def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) 
                     writes |= collect_idents_in_node(ch, source_bytes, nodeset)
                 if lang_key == "cpp" and t in {"declaration", "init_declarator", "identifier"}:
                     writes |= collect_idents_in_node(ch, source_bytes, nodeset)
+                if lang_key == "php" and t in {"variable_name", "name"}:
+                # In PHP, the loop variable in foreach/for statements should be treated as a write.
+                    writes |= collect_idents_in_node(ch, source_bytes, nodeset)
+
             all_ids = collect_idents_in_node(n, source_bytes, nodeset)
             reads |= (all_ids - writes)
 

@@ -25,6 +25,7 @@ CASES = [
     ("main.go", "package main\nfunc foo() int { return 1 }\n", 2),
     ("script.rb", "def foo\n  1\nend\n", 1),
     ("main.kt", "fun foo(): Int { return 1 }\n", 1),
+    ("app.php", "<?php function foo() { return 1; }\n", 1),
 ]
 
 def test_extract_across_languages():

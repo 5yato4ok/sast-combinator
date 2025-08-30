@@ -10,3 +10,4 @@ tree_sitter_typescript
 tree_sitter_go
 tree_sitter_kotlin
 tree_sitter_ruby
+tree_sitter_php

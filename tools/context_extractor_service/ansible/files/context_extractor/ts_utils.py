@@ -10,6 +10,7 @@ import tree_sitter_c_sharp as csharp_lang
 import tree_sitter_kotlin as kotlin_lang
 import tree_sitter_go as go_lang
 import tree_sitter_ruby as ruby_lang
+import tree_sitter_php as php_lang
 
 def _resolve_language(mod, *candidate_funcs: str) -> Language:
     """
@@ -32,6 +33,7 @@ CSHARP_LANGUAGE  = _resolve_language(csharp_lang,  "language", "language_c_sharp
 KOTLIN_LANGUAGE  = _resolve_language(kotlin_lang,  "language", "language_kotlin")
 GO_LANGUAGE      = _resolve_language(go_lang,      "language", "language_go")
 RUBY_LANGUAGE    = _resolve_language(ruby_lang,    "language", "language_ruby")
+PHP_LANGUAGE     = _resolve_language(php_lang,     "language", "language_php")
 
 SUPPORTED_LANGUAGES = {
     ".py": PY_LANGUAGE,
@@ -49,7 +51,8 @@ SUPPORTED_LANGUAGES = {
     ".ts" : TYPESCRIPT_LANGUAGE,
     ".go" : GO_LANGUAGE,
     ".rb" : RUBY_LANGUAGE,
-    ".kt" : KOTLIN_LANGUAGE
+    ".kt" : KOTLIN_LANGUAGE,
+    ".php": PHP_LANGUAGE,
 }
 
 def detect_language(filepath: Path) -> tuple[Language, str]:
@@ -66,6 +69,7 @@ def detect_language(filepath: Path) -> tuple[Language, str]:
     if lang is GO_LANGUAGE: return lang, "go"
     if lang is RUBY_LANGUAGE: return lang, "ruby"
     if lang is KOTLIN_LANGUAGE: return lang, "kotlin"
+    if lang is PHP_LANGUAGE:    return lang, "php"
     return lang, "cpp"
 
 def create_parser(lang: Language) -> Parser:

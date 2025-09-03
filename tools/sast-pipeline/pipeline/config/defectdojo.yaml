@@ -5,7 +5,7 @@
 #              will be disabled. Default is true.
 
 defectdojo:
-  url: "https://157.90.113.55:8443"
+  url: "http://127.0.0.1:8000"
   verify_ssl: false
 #  Minimum severity level to be imported
 #

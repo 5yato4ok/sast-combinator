@@ -3,6 +3,7 @@ import os
 import copy
 import logging
 import textwrap
+from pathlib import Path
 from .docker_utils import get_pipeline_id
 
 log = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class AnalyzersConfigHelper:
     analyzers: list[dict[str, object]] = None
     languages = None
 
-    def __init__(self, config_path, ):
+    def __init__(self, config_path=os.path.join(Path(__file__).resolve().parent, "config", "analyzers.yaml")):
         if not os.path.exists(config_path):
             raise Exception(f"Config by path {config_path} not exist")
 

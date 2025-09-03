@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_ROOT="${1:-/workspace}"
-PROJECT_BUILD_DIR="${PROJECT_ROOT}/build-tmp"
+PROJECT_BUILD_DIR="${PROJECT_ROOT}"
 TEST_SUITE_DIR="${PROJECT_BUILD_DIR}/cooddy-test-suite"
 export PROJECT_PATH=${TEST_SUITE_DIR}
 

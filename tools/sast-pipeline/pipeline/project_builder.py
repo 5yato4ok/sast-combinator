@@ -73,9 +73,13 @@ def configure_project_run_analyses(
     target_dir = context_path / "tmp"
     target_dir.mkdir(parents=True, exist_ok=True)
 
+    if not os.path.exists(project_path):
+        os.makedirs(project_path)
+
     # Copy the script into the build context
     target_path = target_dir / input_path.name
     shutil.copy2(input_path, target_path)
+
     relative_config_path = target_path.relative_to(context_path)
 
     # Build the builder image with the project config script as a build arg

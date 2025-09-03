@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--repo_path",
         required=True,
-        help="Path to downloaded repository. Usually locates in /tmp/my_project/build-tmp/{project_name}",
+        help="Path to downloaded repository. Usually locates in /tmp/my_project/{project_name}",
     )
 
     parser.add_argument(

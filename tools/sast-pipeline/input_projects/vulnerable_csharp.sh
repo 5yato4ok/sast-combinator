@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_ROOT="${1:-/workspace}"
-PROJECT_BUILD_DIR="${PROJECT_ROOT}/build-tmp"
+PROJECT_BUILD_DIR="${PROJECT_ROOT}"
 REPO_DIR="${PROJECT_BUILD_DIR}/VulnerableCoreApp"
 ICU_DIR="${REPO_DIR}/icu_libs"
 export PROJECT_PATH=${REPO_DIR}

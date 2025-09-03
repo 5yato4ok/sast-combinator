@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="${1:-/workspace}"
-PROJECT_BUILD_DIR="${PROJECT_ROOT}/build-tmp"
+PROJECT_BUILD_DIR="${PROJECT_ROOT}"
 NX_OPEN_DIR="${PROJECT_BUILD_DIR}/nx_open"
 
 REPO_URL="${REPO_URL:-https://github.com/networkoptix/nx_open.git}"

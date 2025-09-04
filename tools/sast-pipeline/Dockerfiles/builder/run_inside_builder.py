@@ -44,9 +44,9 @@ if __name__ == "__main__":
 
     run_selected_analyzers(
         config_path="/app/analyzers.yaml",         # Path to generated config for launch
-        exclude_slow=False,
         project_path=project_path,
         output_dir="/shared/output",
         builder_container = builder_container,
-        log_level = os.environ.get("LOG_LEVEL", None)
+        log_level = os.environ.get("LOG_LEVEL", None),
+        max_time_class="slow" # Config was filtered, that's why here it doesn't matter which class we are setting, setting the biggest one
     )

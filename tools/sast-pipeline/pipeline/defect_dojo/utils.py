@@ -60,7 +60,7 @@ def upload_results(
     trim_path: str
 ) -> List[ImportResult]:
     cfg = load_dojo_config(dojo_config_path)
-    token = os.environ.get("DEFECTDOJO_TOKEN") or "e82ce328be8bbba2ebc701ca30c40a5ca850136c"
+    token = os.environ.get("DEFECTDOJO_TOKEN") or 'c3d8a99cb7cf35b0dac30bd7458bcd15d155fb86'
     if not token:
         raise ValueError("Missing DEFECTDOJO_TOKEN environment variable.")
     if not os.path.isdir(output_dir):

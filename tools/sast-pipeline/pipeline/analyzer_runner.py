@@ -117,19 +117,17 @@ def env_flag(name: str, default: bool = True) -> bool:
 def run_selected_analyzers(
     config_path: str,
     analyzers_to_run: list[str] | None = None,
-    exclude_slow: bool = False,
     project_path: str = "./my_project",
     output_dir: str = "/tmp/sast_output",
     builder_container: str = "builder-env",
-    log_level: str | None = None
+    log_level: str | None = None,
+    max_time_class: str | None = None,
 ) -> None:
     """Load analyzer definitions and run the selected ones.
 
     :param config_path: Path to the analyzers YAML file.
     :param analyzers_to_run: Optional list of analyzer names to run. If
                              omitted, all enabled analyzers are run.
-    :param exclude_slow: If true, analyzers marked as ``time_class: slow``
-                         are skipped.
     :param project_path: Path to the project source on the host.
     :param output_dir: Directory on the host where analyzer results will be written.
     :param builder_container: Name of the builder container. Its volumes
@@ -137,43 +135,8 @@ def run_selected_analyzers(
     """
     os.makedirs(output_dir, exist_ok=True)
     config_helper = config_utils.AnalyzersConfigHelper(config_path)
-
-    analyzers = config_helper.get_analyzers()
-    # Filter analyzers by requested names or enabled flag
-    if analyzers_to_run:
-        analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
-    else:
-        analyzers = [a for a in analyzers if a.get("enabled", True)]
-
-    non_compile = env_flag("NON_COMPILE_PROJECT", True)
-
-    write = 0
-    for a in analyzers:
-        name = a.get("name")
-        time_class = a.get("time_class", "medium")
-        typ = a.get("type", "default")
-
-        if not a.get("enabled", True):
-            log.debug("Disabled analyzer %s. Skipping...", name)
-            continue
-
-        if analyzers_to_run and name not in analyzers_to_run:
-            log.debug("Analyzer %s not in analyzers_to_run. Skipping...", name)
-            continue
-
-        if typ == "builder" and non_compile:
-            log.warning("Attempt to launch analyzer %s on non compile project. Skipping...", name)
-            continue
-
-        if exclude_slow and time_class == "slow":
-            log.info("Skipping slow analyzer '%s'", name)
-            continue
-
-        analyzers[write] = a
-
-        write += 1
-
-    del analyzers[write:]
+    analyzers = config_helper.get_filtered_analyzers(analyzers_to_run, max_time_class=max_time_class,
+                                                     non_compile_project=env_flag("NON_COMPILE_PROJECT", True))
 
     log.debug(f"Analyzers to launch: {analyzers}")
 

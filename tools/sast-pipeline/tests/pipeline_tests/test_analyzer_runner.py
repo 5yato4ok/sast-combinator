@@ -229,7 +229,7 @@ def test_run_selected_analyzers_exclude_slow(monkeypatch, tmp_path):
     res = ar.run_selected_analyzers(
         config_path=str(cfg_path),
         analyzers_to_run=None,
-        exclude_slow=True,
+        max_time_class="medium",
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),
         builder_container="builder",
@@ -286,7 +286,6 @@ def test_run_selected_analyzers_specific_list(monkeypatch, tmp_path):
     ar.run_selected_analyzers(
         config_path=str(cfg_path),
         analyzers_to_run=["b"],
-        exclude_slow=False,
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),
         builder_container="builder",
@@ -338,7 +337,6 @@ def test_run_selected_analyzers_skip_builder_on_non_compile_project(monkeypatch,
     ar.run_selected_analyzers(
         config_path=str(cfg_path),
         analyzers_to_run=None,
-        exclude_slow=False,
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),
         builder_container="builder",
@@ -382,7 +380,7 @@ def test_run_selected_analyzers_no_analyzers(monkeypatch, tmp_path):
     res = ar.run_selected_analyzers(
         config_path=str(cfg_path),
         analyzers_to_run=None,
-        exclude_slow=True,
+        max_time_class="medium",
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),
         builder_container="builder",
@@ -431,7 +429,6 @@ def test_run_selected_analyzers_log_level_injected(monkeypatch, tmp_path):
     ar.run_selected_analyzers(
         config_path=str(cfg_path),
         analyzers_to_run=None,
-        exclude_slow=False,
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),
         builder_container="builder",

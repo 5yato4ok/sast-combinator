@@ -84,6 +84,55 @@ class AnalyzersConfigHelper:
         return self.languages
 
     @staticmethod
+    def get_names(analyzers):
+        names = []
+        for analyzer in analyzers:
+            names.append(analyzer.get("name"))
+        return names
+
+    def get_filtered_analyzers(self, analyzers_to_run, max_time_class, non_compile_project, target_languages=None, show_only_parent=False):
+        analyzers = self.config.get("analyzers", []) if show_only_parent else self.get_analyzers()
+        # Filter analyzers by requested names or enabled flag
+        if analyzers_to_run:
+            analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
+        else:
+            analyzers = [a for a in analyzers if a.get("enabled", True)]
+        write = 0
+        max_time_class = self.ANALYZER_ORDER.get(max_time_class, "slow")
+        for a in analyzers:
+            name = a.get("name")
+            analyzer_time_class = str(a.get("time_class", "medium"))
+            type = a.get("type", "default")
+            analyzers_languages = a.get("language", [])
+
+            if not a.get("enabled", True):
+                log.debug("Disabled analyzer %s. Skipping...", name)
+                continue
+
+            if analyzers_to_run and name not in analyzers_to_run:
+                log.debug("Analyzer %s not in analyzers_to_run. Skipping...", name)
+                continue
+
+            if type == "builder" and non_compile_project:
+                log.warning("Attempt to launch analyzer %s on non compile project. Skipping...", name)
+                continue
+
+            if self.ANALYZER_ORDER.get(analyzer_time_class) > max_time_class:
+                log.info("Skipping slow analyzer '%s'", name)
+                continue
+
+            if target_languages and not any(l in analyzers_languages for l in target_languages):
+                log.info("Skipping not applicable by language analyzer '%s'", name)
+                continue
+
+            analyzers[write] = a
+
+            write += 1
+
+        del analyzers[write:]
+        return analyzers
+
+    @staticmethod
     def get_level(time_class: str) -> int:
         return AnalyzersConfigHelper.ANALYZER_ORDER.get(time_class, 100)
 

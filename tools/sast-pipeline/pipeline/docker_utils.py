@@ -21,18 +21,11 @@ from typing import Dict, Optional, Iterable
 log = logging.getLogger(__name__)
 
 def get_pipeline_id() -> str:
-    pipeline_id = os.environ.get("PIPELINE_ID", None)
-    if pipeline_id is None:
-        pipeline_id = uuid.uuid4().hex[:8]
-        os.environ["PIPELINE_ID"] = pipeline_id
-    return pipeline_id
+    return uuid.uuid4().hex[:8]
 
-def construct_container_name(image: str):
-    pipeline_id = get_pipeline_id()
-
+def construct_container_name(image: str, pipeline_id: str) -> str:
     # Construct container name with pipeline ID if available
-    uid = uuid.uuid4().hex[:8]
-    return f"sast_{pipeline_id}_{image}_{uid}", pipeline_id
+    return f"sast_{image}_{pipeline_id}"
 
 def image_exists(image_name: str) -> bool:
     """Check whether a Docker image is present locally.
@@ -136,6 +129,7 @@ def delete_image_if_exist(image_name):
 def run_container(
     *,
     image: str,
+    pipeline_id: str,
     name: Optional[str] = None,
     volumes_from: Optional[str] = None,
     volumes: Optional[Dict[str, str]] = None,
@@ -164,10 +158,9 @@ def run_container(
     # If a name was not provided, generate a unique one using a UUID.  This
     # helps us reference the container when sending kill commands.
     container_name = name
-    # Determine a pipeline ID from the environment (if set) to tag all containers
-    pipeline_id = os.environ.get("PIPELINE_ID",None)
+
     if container_name is None:
-        container_name, pipeline_id = construct_container_name(image)
+        container_name = construct_container_name(image, pipeline_id)
     elif pipeline_id and pipeline_id not in name:
         raise Exception("Incorrect container name, lack of PIPELINE_ID")
 

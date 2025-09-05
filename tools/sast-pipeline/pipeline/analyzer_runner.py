@@ -60,6 +60,7 @@ def run_docker(
     args: list[str],
     project_path: str,
     output_dir: str,
+    pipeline_id: str,
     env_vars: list[str] | None = None,
 ) -> None:
     """Run a single analyzer container.
@@ -89,6 +90,7 @@ def run_docker(
             volumes_from=builder_container,
             env=env or None,
             args=args,
+            pipeline_id=pipeline_id
         )
     else:
         volumes = {
@@ -100,6 +102,7 @@ def run_docker(
             volumes=volumes,
             env=env or None,
             args=args,
+            pipeline_id=pipeline_id
         )
 
 def env_flag(name: str, default: bool = True) -> bool:
@@ -116,6 +119,7 @@ def env_flag(name: str, default: bool = True) -> bool:
 
 def run_selected_analyzers(
     config_path: str,
+    pipeline_id: str,
     analyzers_to_run: list[str] | None = None,
     project_path: str = "./my_project",
     output_dir: str = "/tmp/sast_output",
@@ -170,7 +174,7 @@ def run_selected_analyzers(
         if log_level:
             env_vars += ["LOG_LEVEL"]
         try:
-            run_docker(str(image), builder_container, args, project_path, output_dir, env_vars)
+            run_docker(str(image), builder_container, args, project_path, output_dir, pipeline_id, env_vars)
         except KeyboardInterrupt:
             raise
         except Exception as exc:

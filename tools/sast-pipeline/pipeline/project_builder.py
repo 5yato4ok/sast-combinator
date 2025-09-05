@@ -30,6 +30,7 @@ def configure_project_run_analyses(
         analyzer_config,
         dockerfile_path: str,
         context_dir: str,
+        pipeline_id: str,
         image_name: str = "project-builder",
         project_path: str = "/tmp/my_project",
         force_rebuild: bool = False,
@@ -101,7 +102,7 @@ def configure_project_run_analyses(
     except Exception as e:
         log.warning("Failed to delete copied file: %s", e)
 
-    builder_container_name, pipeline_id = docker_utils.construct_container_name(image_name)
+    builder_container_name = docker_utils.construct_container_name(image_name, pipeline_id)
 
     # Build environment variables dictionary for the builder container
     env_dict: dict[str, str] = {
@@ -114,8 +115,9 @@ def configure_project_run_analyses(
     if version is not None:
         env_dict["PROJECT_VERSION"] = str(version)
 
-    tmp_analyzer_config_path = analyzer_config.prepare_pipeline_analyzer_config(languages, min_time_class, analyzers)
     env_dict["PIPELINE_ID"] = pipeline_id
+
+    tmp_analyzer_config_path = analyzer_config.prepare_pipeline_analyzer_config(languages=languages, max_time_class=min_time_class, target_analyzers=analyzers, pipeline_id=pipeline_id)
     # Construct volume mapping for the builder container
     volumes = {
         os.path.abspath(project_path): "/workspace",
@@ -131,6 +133,7 @@ def configure_project_run_analyses(
             name=builder_container_name,
             volumes=volumes,
             env=env_dict,
+            pipeline_id=pipeline_id
         )
     except KeyboardInterrupt:
         # Ensure that all containers associated with this pipeline are terminated

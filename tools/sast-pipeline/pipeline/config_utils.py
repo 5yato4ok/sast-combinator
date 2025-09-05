@@ -249,7 +249,7 @@ class AnalyzersConfigHelper:
                 seen.add(lang)
         return filtered
 
-    def prepare_pipeline_analyzer_config(self, languages, max_time_class="slow", target_analyzers=None) -> str:
+    def prepare_pipeline_analyzer_config(self, languages, pipeline_id, max_time_class="slow", target_analyzers=None) -> str:
         """
         Filters analyzers by:
           - supported languages (intersection with `languages`),
@@ -284,7 +284,7 @@ class AnalyzersConfigHelper:
                 )
             filtered.append(item)
 
-        filename = os.path.join(f"/tmp/sast_pipeline_{get_pipeline_id()}_analyzers_config.yml")
+        filename = os.path.join(f"/tmp/sast_pipeline_{pipeline_id}_analyzers_config.yml")
         with open(filename, "w", encoding="utf-8") as f:
             yaml.dump({"analyzers": filtered}, f, sort_keys=False, allow_unicode=True)
 

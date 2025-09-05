@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 from pipeline.project_builder import configure_project_run_analyses
 #from pipeline.defectdojo_api import upload_results
 from pipeline.defect_dojo.utils import upload_results
+from pipeline.docker_utils import get_pipeline_id
 import yaml  # type: ignore
 import pipeline.config_utils as config_utils
 
@@ -212,9 +213,11 @@ def main() -> None:
     else:
         project_name =args.product_name
 
+    pipeline_id= get_pipeline_id()
     launch_description = configure_project_run_analyses(
         args.script,
         args.output_dir,
+        pipeline_id=pipeline_id,
         languages=args.languages,
         analyzer_config=ANALYZERS_CONFIG,
         force_rebuild=args.project_force_rebuild,

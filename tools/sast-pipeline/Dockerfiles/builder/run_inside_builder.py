@@ -40,6 +40,8 @@ if __name__ == "__main__":
             "Environmental variable PROJECT_PATH is not set. Terminating."
         )
 
+    pipeline_id = os.environ.get("PIPELINE_ID")
+
     log.info("Starting analyzer runner...")
 
     run_selected_analyzers(
@@ -48,5 +50,6 @@ if __name__ == "__main__":
         output_dir="/shared/output",
         builder_container = builder_container,
         log_level = os.environ.get("LOG_LEVEL", None),
+        pipeline_id=pipeline_id,
         max_time_class="slow" # Config was filtered, that's why here it doesn't matter which class we are setting, setting the biggest one
     )

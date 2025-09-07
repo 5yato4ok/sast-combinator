@@ -181,7 +181,7 @@ def select_aist_projects_for_product(conn, product_id: int) -> list[dict]:
 def ensure_aist_project(conn, *, product_id: int,
                         supported_languages: list[str],
                         script_path_abs: str,
-                        output_dir: str = "/tmp/aist-output",
+                        output_dir: str = "/tmp/aist/output",
                         compilable: bool = False) -> int:
     """
     UPDATE-if-exists semantics by product_id:
@@ -316,7 +316,7 @@ def process(conn, json_path: str, product_type_name: str, sla_name: str) -> None
             product_id=product_id,
             supported_languages=languages,
             script_path_abs=rel_script_path,
-            output_dir=item.get("output_dir", "/tmp/aist-output"),
+            output_dir=item.get("output_dir", "/tmp/aist/output"),
             compilable=compilable,
         )
         print(f"[AISTProject] product_id={product_id} -> id={proj_id}")

@@ -234,6 +234,7 @@ def build_image(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        errors="replace",
         cwd=context_dir,
         bufsize=1,
     ) as proc:

@@ -119,6 +119,12 @@ def configure_project_run_analyses(
 
     tmp_analyzer_config_path = analyzer_config.prepare_pipeline_analyzer_config(languages=languages, max_time_class=min_time_class, target_analyzers=analyzers, pipeline_id=pipeline_id)
     # Construct volume mapping for the builder container
+    log.debug(f"Path to tmp_analyzer: {tmp_analyzer_config_path}")
+    if os.path.exists("tmp_analyzer_config_path"):
+        log.debug("TMP analyzer path exist")
+    else:
+        log.debug("Tmp analyzer path doesn't exist")
+
     volumes = {
         os.path.abspath(project_path): "/workspace",
         os.path.abspath(output_dir): "/shared/output",

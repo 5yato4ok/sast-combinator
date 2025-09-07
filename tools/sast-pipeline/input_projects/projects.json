@@ -1,0 +1,55 @@
+{
+  "projects": [
+    {
+      "name": "nx_open",
+      "compilable": true,
+      "languages": [
+        "html",
+        "cpp",
+        "python",
+        "javascript"
+      ],
+      "script_path": "input_projects/nx_open_project_config.sh",
+      "project_version": [
+        "b9dc06bef68593ffdc79b1f8b9eafe84761cc72f",
+        "master"
+      ],
+      "description": "Collection of C++ components that power the commercial Nx Video Management System (VMS). Includes the source code for the cross-platform Desktop Client and shared libraries. The project heavily depends on the Qt 6.9.* framework and uses modern C++23+ features. The Desktop Client can connect to either Nx Cloud (hosted on AWS) or directly to a VMS Media Server to retrieve information about cameras, users, events, and more."
+    },
+    {
+      "name": "dvwa",
+      "compilable": false,
+      "script_path": "input_projects/dvwa.sh",
+      "languages": ["php", "javascript", "typescript", "css", "python"],
+      "description": "Damn Vulnerable Web Application (DVWA) is a PHP/MariaDB web application that is damn vulnerable. Its main goal is to be an aid for security professionals to test their skills and tools in a legal environment, help web developers better understand the processes of securing web applications and to aid both students & teachers to learn about web application security in a controlled class room environment."
+    },
+    {
+      "name": "juicy_shop",
+      "compilable": true,
+      "script_path": "input_projects/juicy_shop.sh",
+      "languages": ["typescript", "javascript", "dockerfile"],
+      "description": "OWASP Juice Shop is probably the most modern and sophisticated insecure web application! It can be used in security trainings, awareness demos, CTFs and as a guinea pig for security tools! Juice Shop encompasses vulnerabilities from the entire OWASP Top Ten along with many other security flaws found in real-world applications!"
+    },
+    {
+      "name": "test_suite",
+      "compilable": false,
+      "script_path": "input_projects/test_suite_project_config.sh",
+      "languages" : ["java", "cpp", "c"],
+      "description": "Test suite of different test-cases for cwe vulnerabilities"
+    },
+    {
+      "name": "vulnerable_csharp",
+      "compilable": true,
+      "script_path": "input_projects/vulnerable_csharp.sh",
+      "languages": ["csharp", "javascript", "css"],
+      "description": "The main idea behind this project is to show most common vulnerabilities that can be found in Web applications developed in ASP.NET Core framework."
+    },
+    {
+      "name": "vulpy",
+      "compilable": false,
+      "script_path": "input_projects/vulpy_project_config.sh",
+      "languages" : ["python","css","html"],
+      "description": "Vulnerabilities\nSome of the vulnerabilities present on the \"BAD\" version:\n\nCross-Site Scripting (XSS)\nSQL Injection\nCross Site Request Forgery (CSRF)\nSession Impersonation\nInsecure Deserialization\nAuthentication Bruteforce\nAuthentication Bypass"
+    }
+  ]
+}

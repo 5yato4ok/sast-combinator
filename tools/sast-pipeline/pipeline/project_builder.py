@@ -161,7 +161,7 @@ def configure_project_run_analyses(
         launch_data = dict()
         launch_data["is_correct"] = False
 
-    print(project_path)
+    log.debug(f"Project path: {project_path}. Path to launch description: {path_to_launch_description}")
     def replace_in_dict(obj, target_path):
         if isinstance(obj, dict):
             return {k: replace_in_dict(v, target_path) for k, v in obj.items()}

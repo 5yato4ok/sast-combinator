@@ -168,7 +168,7 @@ def select_aist_projects_for_product(conn, product_id: int) -> list[dict]:
         cur.execute(
             """
             SELECT id, created, updated, product_id, supported_languages,
-                   script_path, output_dir, compilable
+                   script_path, compilable
               FROM aist_aistproject
              WHERE product_id = %s
              ORDER BY updated DESC NULLS LAST, id DESC
@@ -217,7 +217,7 @@ def ensure_aist_project(conn, *, product_id: int,
               (created, updated, product_id, supported_languages,
                script_path, compilable)
             VALUES
-              (%s, %s, %s, %s,
+              (%s, %s, %s,
                %s, %s, %s)
             RETURNING id
             """,

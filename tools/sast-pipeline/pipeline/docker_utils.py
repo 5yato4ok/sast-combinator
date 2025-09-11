@@ -267,7 +267,7 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
                 "ps",
                 "-a",
                 "--filter",
-                f"name=sast_{pipeline_id}",
+                f"name={pipeline_id}",
                 "--format",
                 "{{.Names}}",
             ],
@@ -280,9 +280,12 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
             return
         for name in names:
             try:
-                run_logged_cmd(["docker", "rm", "-f", name])
-                log.info("Removed pipeline container %s", name)
+                run_logged_cmd(["docker", "stop", name])
+                log.info("Stopped pipeline container %s", name)
+                #run_logged_cmd(["docker", "rm", "-f", name])
+                #log.info("Removed pipeline container %s", name)
             except Exception as exc:
-                log.warning("Failed to remove container %s: %s", name, exc)
+                log.warning("Failed to stop and remove container %s: %s", name, exc)
+                continue
     except Exception as exc:
         log.warning("Failed to clean up pipeline containers for %s: %s", pipeline_id, exc)

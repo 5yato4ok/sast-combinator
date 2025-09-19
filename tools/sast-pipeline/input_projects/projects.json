@@ -50,6 +50,13 @@
       "script_path": "input_projects/vulpy_project_config.sh",
       "languages" : ["python","css","html"],
       "description": "Vulnerabilities\nSome of the vulnerabilities present on the \"BAD\" version:\n\nCross-Site Scripting (XSS)\nSQL Injection\nCross Site Request Forgery (CSRF)\nSession Impersonation\nInsecure Deserialization\nAuthentication Bruteforce\nAuthentication Bypass"
+    },
+    {
+      "name": "aspgoat",
+      "compilable": true,
+      "script_path": "input_projects/aspgoat.sh",
+      "languages" : ["javascript","csharp"],
+      "description": "AspGoat is an intentionally vulnerable ASP.NET Core application. Vulnerabilities: Cross-Site Scripting (XSS)\nCross-Site Request Forgery (CSRF)\nSQL Injection (SQLi)\nXML External Entity (XXE)\nLocal File Inclusion (LFI)\nRemote Code Execution (RCE)\nUnrestricted File Upload\nInformation Disclosure\nBroken Authentication\nServer-Side Request Forgery (SSRF)\nInsecure Direct Object Reference (IDOR)\nInsecure Deserialization\nCommand Injection\nPrototype Pollution\nCache Poisoning\nServer Side Template Injection (SSTI)"
     }
   ]
 }

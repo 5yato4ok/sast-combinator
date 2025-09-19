@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Base tools
 RUN apt-get update && apt-get install -y \
-    curl ca-certificates unzip bash findutils gnupg wget apt-transport-https software-properties-common \
+    curl ca-certificates coreutils unzip bash findutils gnupg wget apt-transport-https software-properties-common \
  && rm -rf /var/lib/apt/lists/*
 
 # ReSharper Command Line Tools (official ZIP)
@@ -14,9 +14,8 @@ RUN curl -fSL "https://data.services.jetbrains.com/products/download?code=RSCLT&
  && rm /tmp/rsc.zip
 
 
-WORKDIR /workspace
-COPY analyze.sh /workspace/analyze.sh
+COPY analyze.sh /analyze.sh
 
-RUN chmod +x /workspace/analyze.sh
+RUN chmod +x /analyze.sh
 
-ENTRYPOINT ["/workspace/analyze.sh"]
+ENTRYPOINT ["/analyze.sh"]

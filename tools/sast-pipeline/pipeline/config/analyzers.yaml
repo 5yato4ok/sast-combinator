@@ -68,12 +68,12 @@ analyzers:
     volume: "'/var/run/docker.sock': '/var/run/docker.sock'" #TODO: add check volume exists
     language: [ "python","terraform", "c", "php", "csharp", "javascript", "typescript", "go", "java", "kotlin", "ruby" ]
 
-  - name: reshareper
+  - name: resharper
     type: simple
     image: resharper-analyzer
     time_class: medium
     language: [ "csharp", "vb", "aspnet", "javascript", "typescript", "html" ]
-    output_type: : "SARIF"
+    output_type: "SARIF"
     env:
      - DOTNET_PATH
      - LIB_PATH

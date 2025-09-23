@@ -4,7 +4,8 @@ set -eu
 # Positional args: INPUT_DIR OUTPUT_DIR OUTPUT_FILE
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-OUTPUT_FILE="${3:-resharper.sarif.json}"
+TMP_OUTPUT="full_resharper_result.sarif"
+OUTPUT_FILE="${3:-resharper.sarif}"
 
 INSPECT="/opt/resharper/inspectcode.sh"
 
@@ -107,7 +108,7 @@ dotnet restore "$SLNDIR" --configfile "$NC_PATH"
 echo "[INFO] Running ReSharper InspectCode"
 echo "[INFO] Project file: $TARGET"
 echo "[INFO] Verbosity: $VERBOSITY"
-echo "[INFO] Output: $OUTPUT_DIR/$OUTPUT_FILE"
+echo "[INFO] Output: $OUTPUT_DIR/$TMP_OUTPUT"
 
 echo "[INFO] Inspections to launch"
 "$INSPECT" --dumpIssuesTypes \
@@ -118,11 +119,15 @@ echo "[INFO] Inspections to launch"
 "$INSPECT" "$TARGET" \
   --format=Sarif \
   --properties="RunAnalyzers=true" \
-  --output="$OUTPUT_DIR/$OUTPUT_FILE" \
+  --output="$OUTPUT_DIR/$TMP_OUTPUT" \
   --verbosity="$VERBOSITY"
 
-if [ -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
-  echo "[INFO] SARIF saved to $OUTPUT_DIR/$OUTPUT_FILE"
+if [ -f "$OUTPUT_DIR/$TMP_OUTPUT" ]; then
+  echo "[INFO] SARIF saved to $OUTPUT_DIR/$TMP_OUTPUT"
+  python3 /filter_sarif.py --dotsettings /profile.DotSettings \
+      --input "$OUTPUT_DIR/$TMP_OUTPUT" \
+      --output "$OUTPUT_DIR/$OUTPUT_FILE" \
+      --prune-rules
 else
   echo "[WARN] SARIF was not created"
 fi

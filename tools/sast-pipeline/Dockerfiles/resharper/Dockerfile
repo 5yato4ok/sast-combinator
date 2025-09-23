@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Base tools
 RUN apt-get update && apt-get install -y \
-    curl ca-certificates coreutils unzip bash findutils gnupg wget apt-transport-https software-properties-common \
+    curl python3 ca-certificates coreutils unzip bash findutils gnupg wget apt-transport-https software-properties-common \
  && rm -rf /var/lib/apt/lists/*
 
 # ReSharper Command Line Tools (official ZIP)
@@ -15,6 +15,8 @@ RUN curl -fSL "https://data.services.jetbrains.com/products/download?code=RSCLT&
 
 
 COPY analyze.sh /analyze.sh
+COPY profile.DotSettings /profile.DotSettings
+COPY filter_sarif.py /filter_sarif.py
 
 RUN chmod +x /analyze.sh
 

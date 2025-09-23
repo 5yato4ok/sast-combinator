@@ -207,16 +207,6 @@ analyzers:
     output_type: "Retire.js Scan"
     language: [ "javascript", "typescript" ]
 
-  - name: netanalyzer
-    commentary: "Integrates directly into build. Can be applied only to dotnet version > 5"
-    type: builder
-    image: netanalyzer
-    output_type: "SARIF"
-    language: [ "csharp" ]
-    env:
-      - DOTNET_PATH
-      - LIB_PATH
-
   - name: infer
     commentary: "Couldn't process nx_open"
     enabled: true

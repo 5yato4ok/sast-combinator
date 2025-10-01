@@ -52,7 +52,8 @@ analyzers:
     type: builder
     image: sast-builder-codechecker
     time_class: slow
-    enabled: true
+    enabled: false
+    commentary: "Small amount of security checkers. Too long. Mostly codesmells"
     output_type: "Codechecker Report native"
     language: [ "c", "cpp" ]
     env:

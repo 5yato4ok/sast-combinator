@@ -7,13 +7,10 @@ OUTPUT_FILE="${OUTPUT_DIR}/${3:-semgrep_result.json}"
 
 mkdir -p "$OUTPUT_DIR"
 
-echo "[INFO] Login to Semgrep..."
-semgrep login
-
 echo "[INFO] Running Semgrep Code analysis..."
 cd "$INPUT_DIR"
 
-if semgrep ci --json --json-output="$OUTPUT_FILE"; then
+if semgrep scan --json --json-output="$OUTPUT_FILE"; then
     echo "[INFO] Semgrep completed with no critical issues."
 else
     echo "[ERROR] Semgrep found issues or exited with non-zero status."

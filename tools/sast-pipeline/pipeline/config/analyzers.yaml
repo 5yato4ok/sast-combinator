@@ -45,8 +45,6 @@ analyzers:
     time_class: slow
     output_type: "Semgrep JSON Report"
     language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
-    env:
-      - SEMGREP_APP_TOKEN
 
   - name: codechecker
     type: builder

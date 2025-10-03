@@ -50,6 +50,13 @@
       "script_path": "input_projects/vulpy_project_config.sh",
       "languages" : ["python","css","html"],
       "description": "Vulnerabilities\nSome of the vulnerabilities present on the \"BAD\" version:\n\nCross-Site Scripting (XSS)\nSQL Injection\nCross Site Request Forgery (CSRF)\nSession Impersonation\nInsecure Deserialization\nAuthentication Bruteforce\nAuthentication Bypass"
+      "profile": {
+        "analyzers": {
+          "exclude": [
+            "snyk"
+          ]
+        }
+      }
     },
     {
       "name": "aspgoat",

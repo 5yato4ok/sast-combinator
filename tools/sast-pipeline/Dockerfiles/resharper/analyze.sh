@@ -92,6 +92,9 @@ EOF
   echo '    <PackageReference Include="SonarAnalyzer.CSharp" Version="9.*" PrivateAssets="all" />'
   echo '    <PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.7" PrivateAssets="all" />'
   echo '    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.*" PrivateAssets="all" />'
+  echo '    <PackageReference Include="Roslynator.Analyzers" Version="4.*" PrivateAssets="all" />'
+  echo '    <PackageReference Include="IDisposableAnalyzers" Version="4.*" PrivateAssets="all" />'
+  echo '    <PackageReference Include="AsyncFixer" Version="1.*" PrivateAssets="all" />'
   echo '  </ItemGroup>'
   echo '</Project>'
 } > "$DBP_PATH"

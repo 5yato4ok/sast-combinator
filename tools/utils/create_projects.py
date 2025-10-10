@@ -208,7 +208,7 @@ def ensure_aist_project(conn, *, product_id: int,
                        profile = %s
                  WHERE id = %s
                 """,
-                (Json(supported_languages), script_path_abs, bool(compilable), now, profile, target["id"]),
+                (Json(supported_languages), script_path_abs, bool(compilable), now, Json(profile), target["id"]),
             )
             return int(target["id"])
 
@@ -223,7 +223,7 @@ def ensure_aist_project(conn, *, product_id: int,
                %s, %s, %s, %s)
             RETURNING id
             """,
-            (now, now, product_id, Json(supported_languages), script_path_abs, bool(compilable), profile),
+            (now, now, product_id, Json(supported_languages), script_path_abs, bool(compilable), Json(profile)),
         )
         return int(cur.fetchone()[0])
 

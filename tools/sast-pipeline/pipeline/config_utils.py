@@ -61,6 +61,14 @@ class AnalyzersConfigHelper:
             result.add(analyzer.get("image"))
         return result
 
+    @staticmethod
+    def convert_languages(languages):
+        result = set()
+        for language in languages:
+            language.lower().replace("#", "sharp").replace("c++", "cpp")
+            result.add(language)
+        return list(result)
+
     def get_supported_languages(self):
         if not self.analyzers:
             raise Exception("Analyzers list is empty")

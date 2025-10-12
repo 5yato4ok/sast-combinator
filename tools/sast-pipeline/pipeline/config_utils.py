@@ -65,8 +65,8 @@ class AnalyzersConfigHelper:
     def convert_languages(languages):
         result = set()
         for language in languages:
-            language.lower().replace("#", "sharp").replace("c++", "cpp")
-            result.add(language)
+            lang = language.lower().replace("#", "sharp").replace("c++", "cpp")
+            result.add(lang)
         return list(result)
 
     def get_supported_languages(self):

@@ -25,7 +25,7 @@ def get_pipeline_id() -> str:
 
 def construct_container_name(image: str, pipeline_id: str) -> str:
     # Construct container name with pipeline ID if available
-    return f"sast_{image}_{pipeline_id}"
+    return f"sast_{image.replace('/','_')}_{pipeline_id}"
 
 def image_exists(image_name: str) -> bool:
     """Check whether a Docker image is present locally.

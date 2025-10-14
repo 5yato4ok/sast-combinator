@@ -39,6 +39,7 @@ def configure_project_run_analyses(
         log_level: str | None = None,
         min_time_class: str = "",
         analyzers=None,
+        additional_env=None,
 ):
     """Build the builder image and run all configured analyzers.
 
@@ -108,7 +109,7 @@ def configure_project_run_analyses(
     env_dict: dict[str, str] = {
         "FORCE_REBUILD": "1" if force_rebuild else "0",
         "BUILDER_CONTAINER": builder_container_name,
-    }
+    } | (additional_env or {})
     # Propagate logging level and version if provided
     if log_level:
         env_dict["LOG_LEVEL"] = log_level

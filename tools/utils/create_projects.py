@@ -4,15 +4,14 @@
 """
 Create/Update DefectDojo Product + AISTProject(+Versions) directly in PostgreSQL.
 
-- Reads projects from JSON (default: <root>/projects.json).
-- Resolves script_path as ABS(--root) + JSON["script_path"].
-- Product upserted by unique name with important fields set explicitly.
-- AISTProject updated if exists for product_id (one per product). If multiple
-  legacy rows exist, updates the most recently updated and prints a warning.
-- AISTProjectVersion upserted by (project_id, version).
-- No Django imports; uses psycopg2 transactions.
+Расширения:
+- Поддержка GIT_HASH и FILE_HASH версий из JSON.
+- Для FILE_HASH: sha256(version) = sha256(архива), копирование архива в MEDIA_ROOT и
+  проставление source_archive / source_archive_sha256.
 
-Requirements:
+Примеры JSON см. в описании выше.
+
+Зависимости:
   pip install psycopg2-binary
 """
 
@@ -20,23 +19,31 @@ import argparse
 import json
 import os
 import sys
+import shutil
+import hashlib
 from datetime import datetime
 
 import psycopg2
 from psycopg2.extras import Json, RealDictCursor
 
 
-# ---------- SLA & Product Type helpers ----------
+# ---------- Константы / валидация ----------
+
+GIT_HASH = "GIT_HASH"
+FILE_HASH = "FILE_HASH"
+
+def _now_utc():
+    return datetime.utcnow()
+
+
+# ---------- SLA & Product Type helpers (без изменений логики) ----------
 
 def ensure_sla_config(conn, name="Default") -> int:
-    """Ensure an SLA_Configuration exists; return its id."""
     with conn.cursor() as cur:
         cur.execute("SELECT id FROM dojo_sla_configuration WHERE name=%s", (name,))
         row = cur.fetchone()
         if row:
             return row[0]
-
-        # Reasonable defaults aligned with typical DefectDojo expectations
         cur.execute(
             """
             INSERT INTO dojo_sla_configuration
@@ -57,17 +64,16 @@ def ensure_sla_config(conn, name="Default") -> int:
             """,
             (
                 name, None,
-                7, True,      # critical
-                30, True,     # high
-                90, True,     # medium
-                180, True     # low
+                7, True,
+                30, True,
+                90, True,
+                180, True
             ),
         )
         return cur.fetchone()[0]
 
 
 def ensure_product_type(conn, name="AIST", description=None) -> int:
-    """Ensure a Product_Type row exists; return its id."""
     with conn.cursor() as cur:
         cur.execute("SELECT id FROM dojo_product_type WHERE name=%s", (name,))
         row = cur.fetchone()
@@ -84,7 +90,6 @@ def ensure_product_type(conn, name="AIST", description=None) -> int:
                 (description, row[0]),
             )
             return row[0]
-
         cur.execute(
             """
             INSERT INTO dojo_product_type
@@ -107,11 +112,6 @@ def get_product_id_by_name(conn, name: str) -> int | None:
 
 
 def ensure_product(conn, *, name: str, description: str, prod_type_id: int, sla_config_id: int) -> int:
-    """
-    Upsert Product by unique name.
-    Explicitly sets boolean fields that are NOT NULL in DB schemas to avoid NULL violations.
-    Also sets tid=0 and timestamps for explicitness.
-    """
     with conn.cursor() as cur:
         pid = get_product_id_by_name(conn, name)
         if pid:
@@ -135,8 +135,6 @@ def ensure_product(conn, *, name: str, description: str, prod_type_id: int, sla_
                 (description, prod_type_id, sla_config_id, pid),
             )
             return pid
-
-        # Insert new product
         cur.execute(
             """
             INSERT INTO dojo_product
@@ -163,7 +161,6 @@ def ensure_product(conn, *, name: str, description: str, prod_type_id: int, sla_
 # ---------- AISTProject helpers (UPDATE-if-exists by product_id) ----------
 
 def select_aist_projects_for_product(conn, product_id: int) -> list[dict]:
-    """Return list of AISTProject rows for this product (could be >1 in legacy DBs)."""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             """
@@ -183,21 +180,13 @@ def ensure_aist_project(conn, *, product_id: int,
                         script_path_abs: str,
                         profile: dict[str, str],
                         compilable: bool = False) -> int:
-    """
-    UPDATE-if-exists semantics by product_id:
-      - If one or more AISTProject rows exist for this product, update the most recently updated one.
-      - If none exist, insert a new row.
-    Always sets 'updated'. On insert sets both 'created' and 'updated'.
-    """
-    now = datetime.utcnow()
+    now = _now_utc()
     rows = select_aist_projects_for_product(conn, product_id)
-
     with conn.cursor() as cur:
         if rows:
             target = rows[0]
             if len(rows) > 1:
                 print(f"[WARN] Product {product_id} has {len(rows)} AISTProject rows; updating the most recent id={target['id']}.")
-
             cur.execute(
                 """
                 UPDATE aist_aistproject
@@ -211,8 +200,6 @@ def ensure_aist_project(conn, *, product_id: int,
                 (Json(supported_languages), script_path_abs, bool(compilable), now, Json(profile), target["id"]),
             )
             return int(target["id"])
-
-        # No existing project -> insert one
         cur.execute(
             """
             INSERT INTO aist_aistproject
@@ -228,40 +215,138 @@ def ensure_aist_project(conn, *, product_id: int,
         return int(cur.fetchone()[0])
 
 
-# ---------- AISTProjectVersion helper ----------
+# ---------- Вспомогательные функции для версий ----------
 
-def ensure_aist_project_version(conn, *, project_id: int, version: str,
-                                description: str = "", metadata: dict | None = None) -> int:
-    """Upsert version by (project_id, version)."""
-    metadata = metadata or {}
-    now = datetime.utcnow()
+def _sha256_of_file(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def _store_archive(archive_path: str, media_root: str, project_id: int) -> str:
+    """
+    Копирует архив в MEDIA_ROOT по правилу, аналогичному FileField(upload_to):
+      aist_versions/<project_id>/YYYY/MM/DD/<filename>
+    Возвращает относительный путь (для записи в DB поле source_archive).
+    """
+    if not os.path.isfile(archive_path):
+        raise FileNotFoundError(f"archive not found: {archive_path}")
+    dt = datetime.utcnow()
+    rel_dir = os.path.join("aist_versions", str(project_id), f"{dt:%Y}", f"{dt:%m}", f"{dt:%d}")
+    abs_dir = os.path.join(media_root, rel_dir)
+    os.makedirs(abs_dir, exist_ok=True)
+    filename = os.path.basename(archive_path)
+    dest_abs = os.path.join(abs_dir, filename)
+
+    # если файл уже есть — перезапишем (deterministic)
+    shutil.copy2(archive_path, dest_abs)
+    rel_path = os.path.join(rel_dir, filename).replace("\\", "/")
+    return rel_path
+
+
+def _normalize_versions(item: dict) -> list[dict]:
+    """
+    Приводит поле версий к списку объектов единого вида:
+    {
+      "version_type": "GIT_HASH" | "FILE_HASH",
+      "version": "<string>",             # только для GIT_HASH
+      "archive_path": "<path>",          # только для FILE_HASH
+      "description": "<str>",            # optional
+      "metadata": { ... }                # optional
+    }
+    """
+    raw = item.get("versions")
+    if raw is None:
+        raw = item.get("project_version")
+
+    if raw is None:
+        return []
+
+    # 1) одиночная строка
+    if isinstance(raw, (str, int)):
+        return [{"version_type": GIT_HASH, "version": str(raw)}]
+
+    # 2) список строк
+    if isinstance(raw, list) and all(isinstance(v, (str, int)) for v in raw):
+        return [{"version_type": GIT_HASH, "version": str(v)} for v in raw]
+
+    # 3) список объектов (расширенный формат)
+    if isinstance(raw, list) and all(isinstance(v, dict) for v in raw):
+        norm = []
+        for v in raw:
+            vt = (v.get("version_type") or GIT_HASH).strip().upper()
+            if vt not in (GIT_HASH, FILE_HASH):
+                raise ValueError(f"Unsupported version_type: {vt}")
+            obj = {
+                "version_type": vt,
+                "description": v.get("description") or "",
+                "metadata": v.get("metadata") or {},
+            }
+            if vt == GIT_HASH:
+                ver = (v.get("version") or "").strip()
+                if not ver:
+                    raise ValueError("GIT_HASH version requires 'version' field.")
+                obj["version"] = ver
+            else:
+                ap = (v.get("archive_path") or "").strip()
+                if not ap:
+                    raise ValueError("FILE_HASH version requires 'archive_path' field.")
+                obj["archive_path"] = ap
+            norm.append(obj)
+        return norm
+
+    raise ValueError("Invalid 'versions'/'project_version' format.")
+
+
+# ---------- AISTProjectVersion upsert ----------
+
+def upsert_aist_project_version(conn, *, project_id: int,
+                                version_type: str,
+                                version: str,
+                                description: str,
+                                metadata: dict,
+                                source_archive_rel: str | None,
+                                source_archive_sha256: str | None) -> int:
+    """
+    Апсерт версии. Для FILE_HASH 'version' должен быть sha256 архива.
+    """
+    now = _now_utc()
     with conn.cursor() as cur:
-        # Try update first
+        # update
         cur.execute(
             """
             UPDATE aist_aistprojectversion
                SET description = %s,
                    metadata = %s,
-                   updated = %s
+                   updated = %s,
+                   version_type = %s,
+                   source_archive = %s,
+                   source_archive_sha256 = %s
              WHERE project_id = %s AND version = %s
          RETURNING id
             """,
-            (description or "", Json(metadata), now, project_id, version),
+            (description or "", Json(metadata or {}), now,
+             version_type, source_archive_rel, source_archive_sha256,
+             project_id, version),
         )
         row = cur.fetchone()
         if row:
             return int(row[0])
 
-        # Insert new
+        # insert
         cur.execute(
             """
             INSERT INTO aist_aistprojectversion
-              (project_id, version, description, metadata, created, updated)
+              (project_id, version, description, metadata, created, updated,
+               version_type, source_archive, source_archive_sha256)
             VALUES
-              (%s, %s, %s, %s, %s, %s)
+              (%s, %s, %s, %s, %s, %s,
+               %s, %s, %s)
             RETURNING id
             """,
-            (project_id, version, description or "", Json(metadata), now, now),
+            (project_id, version, description or "", Json(metadata or {}), now, now,
+             version_type, source_archive_rel, source_archive_sha256),
         )
         return int(cur.fetchone()[0])
 
@@ -278,7 +363,7 @@ def load_projects(json_path: str) -> list[dict]:
     raise ValueError("Invalid JSON format: expected {'projects': [...]} or a list [...]")
 
 
-def process(conn, json_path: str, product_type_name: str, sla_name: str) -> None:
+def process(conn, json_path: str, product_type_name: str, sla_name: str, media_root: str | None) -> None:
     projects = load_projects(json_path)
     sla_id = ensure_sla_config(conn, name=sla_name)
     pt_id = ensure_product_type(conn, name=product_type_name, description=None)
@@ -310,7 +395,7 @@ def process(conn, json_path: str, product_type_name: str, sla_name: str) -> None
         )
         print(f"[Product] name='{name}' -> id={product_id}")
 
-        # 2) AISTProject (UPDATE-if-exists by product_id!)
+        # 2) AISTProject (UPDATE-if-exists by product_id)
         proj_id = ensure_aist_project(
             conn,
             product_id=product_id,
@@ -322,31 +407,49 @@ def process(conn, json_path: str, product_type_name: str, sla_name: str) -> None
         print(f"[AISTProject] product_id={product_id} -> id={proj_id}")
 
         # 3) Versions
-        versions = item.get("project_version") or []
-        if isinstance(versions, (str, int)):
-            versions = [str(versions)]
-        else:
-            versions = [str(v) for v in versions]
-
-        for ver in versions:
-            ver_id = ensure_aist_project_version(
-                conn,
-                project_id=proj_id,
-                version=ver,
-                description=description,
-                metadata={},
-            )
-            print(f"  [AISTProjectVersion] {ver} -> id={ver_id}")
+        versions = _normalize_versions(item)
+        for entry in versions:
+            vt = entry["version_type"]
+            if vt == GIT_HASH:
+                ver = entry["version"]
+                ver_id = upsert_aist_project_version(
+                    conn,
+                    project_id=proj_id,
+                    version_type=GIT_HASH,
+                    version=ver,
+                    description=entry.get("description") or description,
+                    metadata=entry.get("metadata") or {},
+                    source_archive_rel=None,
+                    source_archive_sha256=None,
+                )
+                print(f"  [AISTProjectVersion] GIT_HASH {ver} -> id={ver_id}")
+            else:
+                # FILE_HASH
+                if not media_root:
+                    raise ValueError("FILE_HASH requires --media-root to copy archive into.")
+                src = entry["archive_path"]
+                sha = _sha256_of_file(src)
+                rel_path = _store_archive(src, media_root, proj_id)
+                ver_id = upsert_aist_project_version(
+                    conn,
+                    project_id=proj_id,
+                    version_type=FILE_HASH,
+                    version=sha,  # имя версии = sha256 архива
+                    description=entry.get("description") or description,
+                    metadata=entry.get("metadata") or {},
+                    source_archive_rel=rel_path,
+                    source_archive_sha256=sha,
+                )
+                print(f"  [AISTProjectVersion] FILE_HASH {sha} <- {src} -> {rel_path} -> id={ver_id}")
 
 
 # ---------- CLI ----------
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Upsert DefectDojo Product + AISTProject(+Versions) directly in PostgreSQL (no Django)."
+        description="Upsert DefectDojo Product + AISTProject(+Versions) directly in PostgreSQL (supports GIT_HASH/FILE_HASH)."
     )
-    parser.add_argument("--json", default=None,
-                        help="Path to projects.json (default: <root>/projects.json).")
+    parser.add_argument("--json", required=True, help="Path to projects.json")
 
     # DB args (respect PG* envs as defaults)
     parser.add_argument("--db-host", default=os.getenv("PGHOST", "127.0.0.1"))
@@ -359,11 +462,14 @@ def main():
     parser.add_argument("--product-type-name", default="AIST")
     parser.add_argument("--sla-name", default="Default")
 
+    # где хранить загруженные архивы FILE_HASH
+    parser.add_argument("--media-root", default=os.getenv("MEDIA_ROOT", None),
+                        help="Absolute path to MEDIA_ROOT for storing version archives (required for FILE_HASH).")
+
     args = parser.parse_args()
 
-    json_path = args.json
-    if not os.path.exists(json_path):
-        print(f"projects.json not found: {json_path}", file=sys.stderr)
+    if not os.path.exists(args.json):
+        print(f"projects.json not found: {args.json}", file=sys.stderr)
         sys.exit(2)
 
     conn = None
@@ -376,7 +482,7 @@ def main():
             password=args.db_pass,
         )
         conn.autocommit = False
-        process(conn, json_path, args.product_type_name, args.sla_name)
+        process(conn, args.json, args.product_type_name, args.sla_name, args.media_root)
         conn.commit()
         print("Done.")
     except Exception as e:

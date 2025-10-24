@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import subprocess
 import logging
 from pathlib import Path
 from . import docker_utils
@@ -35,7 +36,7 @@ def configure_project_run_analyses(
         project_path: str = "/tmp/my_project",
         force_rebuild: bool = False,
         rebuild_images: bool = False,
-        version: str | None = None,
+        version: dict | None = None,
         log_level: str | None = None,
         min_time_class: str = "",
         analyzers=None,
@@ -49,7 +50,7 @@ def configure_project_run_analyses(
     :param dockerfile_path: Path to the builder Dockerfile.
     :param project_path: Directory in the container where the project will be mounted.
     :param force_rebuild: If True, force a rebuild of the project.
-    :param version: Optional commit or branch name to checkout.
+    :param version: Optional dictionary with version information.
     :return: Path to the output directory with a timestamp appended.
     """
 
@@ -76,7 +77,7 @@ def configure_project_run_analyses(
     target_dir.mkdir(parents=True, exist_ok=True)
 
     if not os.path.exists(project_path):
-        os.makedirs(project_path)
+        Path(project_path).mkdir(parents=True, exist_ok=True)
 
     # Copy the script into the build context
     target_path = target_dir / input_path.name
@@ -113,8 +114,25 @@ def configure_project_run_analyses(
     # Propagate logging level and version if provided
     if log_level:
         env_dict["LOG_LEVEL"] = log_level
-    if version is not None:
-        env_dict["PROJECT_VERSION"] = str(version)
+
+    if version:
+        log.info("Building builder version: %s", version)
+        if version.get("type") == "GITH_HASH":
+            log.info("Project version GIT_HASH")
+            env_dict["PROJECT_VERSION"] = version.get("version")
+        elif version.get("type") == "FILE_HASH":
+            # copy sources to project_path
+            extracted_sources = version.get("extracted_root")
+            if not os.path.exists(extracted_sources):
+                raise ValueError(f"Path to extracted sources not exists {extracted_sources}")
+
+            if os.path.exists(project_path):
+                log.info("Removing existing project directory: %s", project_path)
+                shutil.rmtree(project_path)
+            log.info(f"Copying folder {extracted_sources} to {project_path}")
+            subprocess.run(["cp", "-r", extracted_sources, project_path], check=True)
+        else:
+            raise ValueError(f"Unknown version of type {version['type']}")
 
     env_dict["PIPELINE_ID"] = pipeline_id
 

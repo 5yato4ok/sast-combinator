@@ -64,6 +64,23 @@
       "script_path": "input_projects/aspgoat.sh",
       "languages" : ["javascript","csharp"],
       "description": "AspGoat is an intentionally vulnerable ASP.NET Core application. Vulnerabilities: Cross-Site Scripting (XSS)\nCross-Site Request Forgery (CSRF)\nSQL Injection (SQLi)\nXML External Entity (XXE)\nLocal File Inclusion (LFI)\nRemote Code Execution (RCE)\nUnrestricted File Upload\nInformation Disclosure\nBroken Authentication\nServer-Side Request Forgery (SSRF)\nInsecure Direct Object Reference (IDOR)\nInsecure Deserialization\nCommand Injection\nPrototype Pollution\nCache Poisoning\nServer Side Template Injection (SSTI)"
+    },
+    {
+      "name": "cob",
+      "compilable": false,
+      "script_path": "input_projects/cob.sh",
+      "languages": [
+        "python",
+        "docker"
+      ],
+      "profile": {
+        "analyzers": {
+          "exclude": [
+            "snyk"
+          ]
+        }
+      },
+      "description": "Python project, based on django with usage of celery"
     }
   ]
 }

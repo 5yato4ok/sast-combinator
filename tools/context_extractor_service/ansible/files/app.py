@@ -5,7 +5,7 @@ from context_extractor import extract_function, extract_function_from_source
 
 app = Flask(__name__)
 
-API_TOKEN = os.environ.get("API_TOKEN", "secret-token")  # по умолчанию
+API_TOKEN = os.environ.get("API_TOKEN", "secret-token")
 
 def require_auth(f):
     def decorated(*args, **kwargs):

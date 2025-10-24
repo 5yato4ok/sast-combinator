@@ -1,7 +1,10 @@
 from __future__ import annotations
+import os
 from pathlib import Path
 from urllib.parse import urlparse, unquote
 import requests
+
+AIST_TOKEN = os.environ.get("AIST_TOKEN", "secret-token")
 
 def load_source_from_url(
     url: str,
@@ -14,7 +17,13 @@ def load_source_from_url(
         path = Path(unquote(parsed.path))
         return path.read_text(encoding="utf-8", errors="replace")
     if parsed.scheme in {"http", "https"}:
-        with requests.get(url, stream=True, timeout=timeout) as r:
+        headers = {}
+        if "/aist/" in url:
+            headers = {
+                "content-type": "application/json",
+                "Authorization": f"Token {AIST_TOKEN}",
+            }
+        with requests.get(url, headers=headers, stream=True, timeout=timeout) as r:
             r.raise_for_status()
             buf = bytearray()
             for chunk in r.iter_content(chunk_size=65536):

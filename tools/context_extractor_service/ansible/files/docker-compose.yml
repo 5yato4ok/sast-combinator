@@ -7,4 +7,5 @@ services:
       - "8080:8080"
     environment:
       - API_TOKEN=${API_TOKEN}
+      - AIST_TOKEN=${AIST_TOKEN}
     restart: unless-stopped

@@ -23,7 +23,8 @@ def load_source_from_url(
                 "content-type": "application/json",
                 "Authorization": f"Token {AIST_TOKEN}",
             }
-        with requests.get(url, headers=headers, stream=True, timeout=timeout) as r:
+        # TODO: return verify=True
+        with requests.get(url, headers=headers, stream=True, timeout=timeout, verify=False) as r:
             r.raise_for_status()
             buf = bytearray()
             for chunk in r.iter_content(chunk_size=65536):

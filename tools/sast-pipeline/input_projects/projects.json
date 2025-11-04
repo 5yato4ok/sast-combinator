@@ -81,6 +81,38 @@
         }
       },
       "description": "Python project, based on django with usage of celery"
+    },
+    {
+      "name": "document-analysis-service",
+      "compilable": true,
+      "script_path": "input_projects/document-analyses-service.sh",
+      "languages": ["csharp"],
+      "description": "CSharp project",
+      "profile": {
+        "paths": {
+          "exclude": [
+            ".dotnet",
+            ".nuget_packages",
+            "native_libs"
+          ]
+        }
+      }
+    },
+    {
+      "name": "file-management-service-develop",
+      "compilable": true,
+      "script_path": "input_projects/file-management-service-develop.sh",
+      "languages": ["csharp"],
+      "description": "CSharp project",
+      "profile": {
+        "paths": {
+          "exclude": [
+            ".dotnet",
+            ".nuget_packages",
+            "native_libs"
+          ]
+        }
+      }
     }
   ]
 }

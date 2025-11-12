@@ -134,7 +134,7 @@ def read_repo_params(repo_dir: str | Path) -> RepoParams:
     commit = run_git(repo, ["rev-parse", "HEAD"])
     web_url, scm = normalize_origin_to_web_url(origin)
 
-    logger.info(f"Found git info. branch {branch}. commit {commit}. web url {web_url}. scm {scm}")
+    logger.info(f"Found git info. branch {branch}. commit {commit}. scm {scm}")
 
     # In detached HEAD state, branch can be 'HEAD'; treat as None
     if branch.upper() == "HEAD":

@@ -73,15 +73,17 @@ def _log_container_line(line: str, stream: str = "stdout", log_addition:str = ""
         log.info(log_addition + text)
 
 def run_logged_cmd(cmd, log_addition=""):
+    import codecs
+
     with subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True,
-        bufsize=0,   # без доп. буферизации в Python
+        text=False,
+        bufsize=0,
     ) as proc:
         assert proc.stdout and proc.stderr
-        # Сделать пайпы неблокирующими
+
         os.set_blocking(proc.stdout.fileno(), False)
         os.set_blocking(proc.stderr.fileno(), False)
 
@@ -89,29 +91,31 @@ def run_logged_cmd(cmd, log_addition=""):
         sel.register(proc.stdout, selectors.EVENT_READ, data=("stdout", proc.stdout))
         sel.register(proc.stderr, selectors.EVENT_READ, data=("stderr", proc.stderr))
 
+        decoders = {
+            "stdout": codecs.getincrementaldecoder("utf-8")("replace"),
+            "stderr": codecs.getincrementaldecoder("utf-8")("replace"),
+        }
+
         try:
             while True:
-                events = sel.select(timeout=0.1)  # small timeout
+                events = sel.select(timeout=0.1)
                 for key, _ in events:
                     stream_name, fileobj = key.data
                     chunk = fileobj.read()
-                    if chunk:  # if several chunks without \n
-                        for line in chunk.splitlines():
+                    if chunk:
+                        text = decoders[stream_name].decode(chunk)
+                        for line in text.splitlines():
                             _log_container_line(line, stream=stream_name, log_addition=log_addition)
                     else:
-                        # EOF
                         sel.unregister(fileobj)
 
-                # exit when process is exit and threads is finished
                 if proc.poll() is not None and not sel.get_map():
                     break
 
             returncode = proc.wait()
             if returncode != 0:
                 raise subprocess.CalledProcessError(returncode, cmd)
-            return None
         finally:
-            # close related resources
             for key in list(sel.get_map().values()):
                 try:
                     sel.unregister(key.fileobj)

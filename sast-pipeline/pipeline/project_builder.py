@@ -115,9 +115,9 @@ def configure_project_run_analyses(
     if log_level:
         env_dict["LOG_LEVEL"] = log_level
 
-    if version and type in version:
+    if version and 'type' in version:
         log.info("Building builder version: %s", version)
-        if version.get("type") == "GITH_HASH":
+        if version.get("type") == "GIT_HASH":
             log.info("Project version GIT_HASH")
             env_dict["PROJECT_VERSION"] = version.get("version")
         elif version.get("type") == "FILE_HASH":

@@ -20,35 +20,69 @@
       "name": "dvwa",
       "compilable": false,
       "script_path": "input_projects/dvwa.sh",
-      "languages": ["php", "javascript", "typescript", "css", "python"],
+      "project_version": [
+        "master"
+      ],
+      "languages": [
+        "php",
+        "javascript",
+        "typescript",
+        "css",
+        "python"
+      ],
       "description": "Damn Vulnerable Web Application (DVWA) is a PHP/MariaDB web application that is damn vulnerable. Its main goal is to be an aid for security professionals to test their skills and tools in a legal environment, help web developers better understand the processes of securing web applications and to aid both students & teachers to learn about web application security in a controlled class room environment."
     },
     {
       "name": "juicy_shop",
       "compilable": true,
+      "project_version": [
+        "master"
+      ],
       "script_path": "input_projects/juicy_shop.sh",
-      "languages": ["typescript", "javascript", "dockerfile"],
+      "languages": [
+        "typescript",
+        "javascript",
+        "dockerfile"
+      ],
       "description": "OWASP Juice Shop is probably the most modern and sophisticated insecure web application! It can be used in security trainings, awareness demos, CTFs and as a guinea pig for security tools! Juice Shop encompasses vulnerabilities from the entire OWASP Top Ten along with many other security flaws found in real-world applications!"
     },
     {
       "name": "test_suite",
       "compilable": false,
+      "project_version": [
+        "master"
+      ],
       "script_path": "input_projects/test_suite_project_config.sh",
-      "languages" : ["java", "cpp", "c"],
+      "languages": [
+        "java",
+        "cpp",
+        "c"
+      ],
       "description": "Test suite of different test-cases for cwe vulnerabilities"
     },
     {
       "name": "vulnerable_csharp",
       "compilable": true,
       "script_path": "input_projects/vulnerable_csharp.sh",
-      "languages": ["csharp", "javascript", "css"],
+      "languages": [
+        "csharp",
+        "javascript",
+        "css"
+      ],
       "description": "The main idea behind this project is to show most common vulnerabilities that can be found in Web applications developed in ASP.NET Core framework."
     },
     {
       "name": "vulpy",
       "compilable": false,
+      "project_version": [
+        "master"
+      ],
       "script_path": "input_projects/vulpy_project_config.sh",
-      "languages" : ["python","css","html"],
+      "languages": [
+        "python",
+        "css",
+        "html"
+      ],
       "description": "Vulnerabilities\nSome of the vulnerabilities present on the \"BAD\" version:\n\nCross-Site Scripting (XSS)\nSQL Injection\nCross Site Request Forgery (CSRF)\nSession Impersonation\nInsecure Deserialization\nAuthentication Bruteforce\nAuthentication Bypass",
       "profile": {
         "analyzers": {
@@ -61,8 +95,14 @@
     {
       "name": "aspgoat",
       "compilable": true,
+      "project_version": [
+        "master"
+      ],
       "script_path": "input_projects/aspgoat.sh",
-      "languages" : ["javascript","csharp"],
+      "languages": [
+        "javascript",
+        "csharp"
+      ],
       "description": "AspGoat is an intentionally vulnerable ASP.NET Core application. Vulnerabilities: Cross-Site Scripting (XSS)\nCross-Site Request Forgery (CSRF)\nSQL Injection (SQLi)\nXML External Entity (XXE)\nLocal File Inclusion (LFI)\nRemote Code Execution (RCE)\nUnrestricted File Upload\nInformation Disclosure\nBroken Authentication\nServer-Side Request Forgery (SSRF)\nInsecure Direct Object Reference (IDOR)\nInsecure Deserialization\nCommand Injection\nPrototype Pollution\nCache Poisoning\nServer Side Template Injection (SSTI)"
     },
     {
@@ -86,7 +126,9 @@
       "name": "document-analysis-service",
       "compilable": true,
       "script_path": "input_projects/document-analyses-service.sh",
-      "languages": ["csharp"],
+      "languages": [
+        "csharp"
+      ],
       "description": "CSharp project",
       "profile": {
         "paths": {
@@ -102,7 +144,9 @@
       "name": "file-management-service-develop",
       "compilable": true,
       "script_path": "input_projects/file-management-service-develop.sh",
-      "languages": ["csharp"],
+      "languages": [
+        "csharp"
+      ],
       "description": "CSharp project",
       "profile": {
         "paths": {

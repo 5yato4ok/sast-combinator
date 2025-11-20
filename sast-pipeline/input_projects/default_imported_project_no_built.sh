@@ -62,12 +62,48 @@ if [ "$CURRENT_COMMIT" != "$TARGET_COMMIT" ]; then
 else
   echo "[INFO] Already on desired ref ($TARGET_DESC @ $CURRENT_COMMIT)."
 fi
-#if [ "$REBUILD" = "1" ]; then
-#
-#  echo "[INFO] Installing Python dependencies..."
-#  pip3 install -r requirements.txt
-#else
-#  echo "[INFO] No rebuild needed. Skipping build."
-#fi
+
+if [ -f "requirements.txt" ]; then
+  echo "Installing python dependencies"
+  pip3 install -r requirements.txt
+fi
+
+if [ -f "package.json" ] || [ -f "yarn.lock" ] || [ -f "pnpm-lock.yaml" ] || [ -f "package-lock.json" ]; then
+  NEED_NODE=1
+fi
+
+if [ "$NEED_NODE" -eq 1 ]; then
+  echo "[NODE] Installing Node.js"
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y nodejs
+fi
+
+if [ -f "package.json" ]; then
+  echo "Installing nodejs dependencies"
+  npm install
+fi
+
+if [ -f "pyproject.toml" ]; then
+  echo "Installing poetry project dependencies"
+  pip3 install poetry
+  poetry install
+fi
+
+if [ -f "yarn.lock" ]; then
+  echo "[NODE] Installing yarn and dependencies"
+  npm install -g yarn
+  yarn install
+fi
+
+if [ -f "pnpm-lock.yaml" ]; then
+  echo "[NODE] Installing pnpm and dependencies"
+  npm install -g pnpm
+  pnpm install
+fi
+
+if [ -f "requirements-system.txt" ]; then
+  echo "Installing system dependencies"
+  xargs -a requirements-system.txt apt-get install -y
+fi
 
 export PROJECT_PATH=${DEV_DIR}

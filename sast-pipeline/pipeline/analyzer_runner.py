@@ -157,6 +157,7 @@ def run_selected_analyzers(
     launch_info = dict()
     launch_info["project_path"] = project_path
     launch_info["launched_analyzers"] = analyzers_names
+    launch_info["git"] = docker_utils.collect_git_metadata(project_path)
 
     with open(os.path.join(output_dir, "launch_description.json"), "w", encoding="utf-8") as f:
         json.dump(launch_info, f, indent=4, ensure_ascii=False)

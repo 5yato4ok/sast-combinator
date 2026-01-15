@@ -249,6 +249,54 @@ def build_image(
         if check and returncode != 0:
             raise subprocess.CalledProcessError(returncode, cmd)
 
+def _run_git(project_path: str, args: list[str]) -> str | None:
+    try:
+        cp = subprocess.run(
+            ["git", "-C", project_path] + args,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if cp.returncode != 0:
+            return None
+        out = (cp.stdout or "").strip()
+        return out or None
+    except Exception:
+        return None
+
+
+def collect_git_metadata(project_path: str) -> dict:
+    """
+    Collect exact git metadata from the checked out repository inside builder.
+    Works only if `project_path/.git` exists.
+    """
+    meta: dict = {"is_git": False}
+
+    # quick check
+    if not project_path:
+        return meta
+    if not os.path.isdir(os.path.join(project_path, ".git")):
+        return meta
+
+    meta["is_git"] = True
+
+    head = _run_git(project_path, ["rev-parse", "HEAD"])
+    if head:
+        meta["resolved_commit"] = head
+
+    # branch can be empty if detached
+    branch = _run_git(project_path, ["symbolic-ref", "-q", "--short", "HEAD"])
+    if branch:
+        meta["resolved_branch"] = branch
+    else:
+        meta["resolved_branch"] = ""
+
+    describe = _run_git(project_path, ["describe", "--tags", "--always", "--dirty"])
+    if describe:
+        meta["describe"] = describe
+
+    return meta
+
 def cleanup_pipeline_containers(pipeline_id: str) -> None:
     """Remove all Docker containers associated with the given pipeline ID.
 

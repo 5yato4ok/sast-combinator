@@ -3,7 +3,7 @@ set -e
 
 INPUT_DIR="${1:-/workspace}"
 OUTPUT_DIR="${2:-/shared/output}"
-REPORT_DIR="${OUTPUT_DIR}/codechecker-reports"
+REPORT_DIR="${OUTPUT_DIR}/infer-reports"
 OUTPUT_FILE="${OUTPUT_DIR}/${3:-infer_result.json}"
 
 # Determine quiet options for apt-get based on LOG_LEVEL

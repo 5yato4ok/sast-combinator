@@ -3,7 +3,7 @@ set -e
 
 PROJECT_ROOT="${1:-/workspace}"
 PROJECT_BUILD_DIR="${PROJECT_ROOT}"
-DEV_DIR="${PROJECT_BUILD_DIR}"
+DEV_DIR="${PROJECT_BUILD_DIR}/${PROJECT_NAME}"
 PROJECT_VERSION="${PROJECT_VERSION:-}"
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
 FORCE_REBUILD=${FORCE_REBUILD:-0}
@@ -21,8 +21,7 @@ fi
 
 if [ ! -d "$DEV_DIR/.git" ]; then
   echo "[INFO] Cloning fresh copy of project..."
-  cd "$DEV_DIR"
-  git clone "$REPO_URL"
+  git clone "$REPO_URL" "$DEV_DIR"
   REBUILD=1
 else
   echo "[INFO] Project exists."

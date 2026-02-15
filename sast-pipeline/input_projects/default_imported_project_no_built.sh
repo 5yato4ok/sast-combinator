@@ -11,6 +11,77 @@ FORCE_REBUILD=${FORCE_REBUILD:-0}
 export PROJECT_PATH=${DEV_DIR}
 mkdir -p "$PROJECT_BUILD_DIR"
 
+install_with_log() {
+  local name="$1"
+  shift
+
+  echo "[NODE] Try: $name"
+  "$@"
+  local rc=$?
+
+  if [ "$rc" -ne 0 ]; then
+    echo "[NODE][WARN] $name failed with code=$rc"
+  else
+    echo "[NODE] $name succeeded"
+  fi
+
+  return "$rc"
+}
+
+install_node_deps() {
+  set +e
+
+  if [ -f "pnpm-lock.yaml" ]; then
+    install_with_log "corepack enable" corepack enable
+    install_with_log "corepack prepare pnpm --activate" corepack prepare pnpm --activate
+    install_with_log "pnpm install --frozen-lockfile" pnpm install --frozen-lockfile && {
+      set -e
+      return 0
+    }
+    install_with_log "pnpm install" pnpm install && {
+      set -e
+      return 0
+    }
+    install_with_log "npm install (fallback)" npm install && {
+      set -e
+      return 0
+    }
+  elif [ -f "yarn.lock" ]; then
+    install_with_log "corepack enable" corepack enable
+    install_with_log "corepack prepare yarn --activate" corepack prepare yarn --activate
+    install_with_log "yarn install --frozen-lockfile" yarn install --frozen-lockfile && {
+      set -e
+      return 0
+    }
+    install_with_log "yarn install" yarn install && {
+      set -e
+      return 0
+    }
+    install_with_log "npm install (fallback)" npm install && {
+      set -e
+      return 0
+    }
+  elif [ -f "package-lock.json" ]; then
+    install_with_log "npm ci" npm ci && {
+      set -e
+      return 0
+    }
+    install_with_log "npm install (fallback)" npm install && {
+      set -e
+      return 0
+    }
+  elif [ -f "package.json" ]; then
+    install_with_log "npm install" npm install && {
+      set -e
+      return 0
+    }
+  fi
+
+  set -e
+  echo "[NODE][ERROR] All dependency installation methods failed"
+  return 1
+}
+
 
 cd "$PROJECT_BUILD_DIR"
 
@@ -68,6 +139,7 @@ if [ -f "requirements.txt" ]; then
   pip3 install -r requirements.txt
 fi
 
+NEED_NODE=0
 if [ -f "package.json" ] || [ -f "yarn.lock" ] || [ -f "pnpm-lock.yaml" ] || [ -f "package-lock.json" ]; then
   NEED_NODE=1
 fi
@@ -78,27 +150,15 @@ if [ "$NEED_NODE" -eq 1 ]; then
   apt-get install -y nodejs
 fi
 
-if [ -f "package.json" ]; then
-  echo "Installing nodejs dependencies"
-  npm install
+if [ "$NEED_NODE" -eq 1 ]; then
+  echo "[NODE] Installing dependencies"
+  install_node_deps
 fi
 
 if [ -f "pyproject.toml" ]; then
   echo "Installing poetry project dependencies"
   pip3 install poetry
   poetry install
-fi
-
-if [ -f "yarn.lock" ]; then
-  echo "[NODE] Installing yarn and dependencies"
-  npm install -g yarn
-  yarn install
-fi
-
-if [ -f "pnpm-lock.yaml" ]; then
-  echo "[NODE] Installing pnpm and dependencies"
-  npm install -g pnpm
-  pnpm install
 fi
 
 if [ -f "requirements-system.txt" ]; then

@@ -115,11 +115,11 @@ def configure_project_run_analyses(
     if log_level:
         env_dict["LOG_LEVEL"] = log_level
 
-    if version and 'type' in version:
+    if version and "type" in version:
         log.info("Building builder version: %s", version)
-        if version.get("type") == "GIT_HASH":
-            log.info("Project version GIT_HASH")
-            env_dict["PROJECT_VERSION"] = version.get("version")
+        if version.get("type") in {"GIT_HASH", "GIT_BRANCH"}:
+            log.info("Project version %s", version.get("type"))
+            env_dict["PROJECT_VERSION"] = (version.get("version") or "master").strip()
         elif version.get("type") == "FILE_HASH":
             # copy sources to project_path
             extracted_sources = version.get("extracted_root")

@@ -1,4 +1,5 @@
-"""Tests for the ``pipeline.project_builder`` module.
+"""
+Tests for the ``pipeline.project_builder`` module.
 
 These tests exercise the high‑level flow for building a project
 environment image and launching the builder container.  External side
@@ -14,17 +15,17 @@ fixture which adds the project root to ``sys.path``.
 
 import json
 import os
-from pathlib import Path
 from collections import Counter
-import types
+from pathlib import Path
 
-import pytest
-import pipeline.project_builder as pb
 import pipeline.docker_utils as du
+import pipeline.project_builder as pb
+import pytest
 
 
 def make_dummy_analyzer_config(images=None, tmp_cfg_path="/tmp/fake_cfg.yaml"):
-    """Create a simple dummy object to stand in for
+    """
+    Create a simple dummy object to stand in for
     ``AnalyzersConfigHelper`` in project_builder tests.
 
     :param images: Optional iterable of image names returned by
@@ -41,7 +42,7 @@ def make_dummy_analyzer_config(images=None, tmp_cfg_path="/tmp/fake_cfg.yaml"):
         def get_all_images(self):
             return set(self.imgs)
 
-        def prepare_pipeline_analyzer_config(self, languages, max_time_class, target_analyzers):
+        def prepare_pipeline_analyzer_config(self, languages, max_time_class, target_analyzers, pipeline_id=None):
             # ignore parameters and return a constant path
             return self.cfg_path
 
@@ -49,7 +50,8 @@ def make_dummy_analyzer_config(images=None, tmp_cfg_path="/tmp/fake_cfg.yaml"):
 
 
 def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
-    """A normal run should build the builder image, invoke the builder
+    """
+    A normal run should build the builder image, invoke the builder
     container and return metadata including the path to the launch
     description.
 
@@ -101,17 +103,15 @@ def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
     monkeypatch.setattr(du, "build_image", fake_build_image)
 
     # Deterministic container name and pipeline id
-    monkeypatch.setenv("PIPELINE_ID", "pid")
-    def fake_construct_container_name(image):
-        name = f"sast_pid_{image}_uuid"
-        construct_calls.append((image, name))
-        return name, "pid"
+    def fake_construct_container_name(image, pipeline_id):
+        name = f"sast_{image}_{pipeline_id}"
+        construct_calls.append((image, pipeline_id, name))
+        return name
     monkeypatch.setattr(du, "construct_container_name", fake_construct_container_name)
 
     # Patch run_container to record environment and volume mappings
-    def fake_run_container(*, image, name=None, volumes=None, volumes_from=None, env=None, args=None):
+    def fake_run_container(*, image, pipeline_id, name=None, volumes=None, volumes_from=None, env=None, args=None):
         # Simulate the analyzer writing the launch description file
-        out_path = volumes[os.path.abspath("/tmp/my_project")] if volumes else None
         # Create launch_description.json inside the output_dir
         # The test harness uses timestamp 20200101_123456 -> output dir ends with that
         for host_path, container_path in volumes.items():
@@ -125,6 +125,7 @@ def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
             "volumes": volumes,
             "volumes_from": volumes_from,
             "env": env,
+            "pipeline_id": pipeline_id,
         })
     monkeypatch.setattr(du, "run_container", fake_run_container)
 
@@ -140,9 +141,10 @@ def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
         project_path="/tmp/my_project",
         force_rebuild=False,
         rebuild_images=False,
-        version="1.2.3",
+        version={"type": "GIT_HASH", "version": "1.2.3"},
         log_level="WARNING",
         min_time_class="slow",
+        pipeline_id="pid",
     )
 
     # Verify that the builder image was built once with the expected build arg
@@ -158,8 +160,9 @@ def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
     assert len(run_calls) == 1
     run_info = run_calls[0]
     # The container name should start with the fixed pipeline prefix and image name
-    assert run_info["name"].startswith("sast_pid_builder-img")
-    # Environment variables should include FORCE_REBUILD=0, BUILDER_CONTAINER, LOG_LEVEL, PROJECT_VERSION, PIPELINE_ID
+    assert run_info["name"] == "sast_builder-img_pid"
+    assert run_info["pipeline_id"] == "pid"
+        # Environment variables should include FORCE_REBUILD=0, BUILDER_CONTAINER, LOG_LEVEL, PROJECT_VERSION, PIPELINE_ID
     env = run_info["env"]
     assert env["FORCE_REBUILD"] == "0"
     assert "BUILDER_CONTAINER" in env
@@ -178,8 +181,10 @@ def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
 
 
 def test_configure_project_run_analyses_missing_script(monkeypatch, tmp_path):
-    """If the provided script path does not exist, a FileNotFoundError should
-    be raised before any Docker commands are issued."""
+    """
+    If the provided script path does not exist, a FileNotFoundError should
+    be raised before any Docker commands are issued.
+    """
     # Create dummy config helper
     analyzer_cfg = make_dummy_analyzer_config()
     # Patch docker helpers to assert they are not called
@@ -194,12 +199,15 @@ def test_configure_project_run_analyses_missing_script(monkeypatch, tmp_path):
             analyzer_config=analyzer_cfg,
             dockerfile_path="Dockerfile",
             context_dir=str(tmp_path),
+            pipeline_id="pid",
         )
 
 
 def test_configure_project_run_analyses_force_rebuild(monkeypatch, tmp_path):
-    """When force_rebuild is True, the FORCE_REBUILD env var should be set
-    to "1"."""
+    """
+    When force_rebuild is True, the FORCE_REBUILD env var should be set
+    to "1".
+    """
     analyzer_cfg = make_dummy_analyzer_config()
     # Create script file
     script = tmp_path / "cfg.py"
@@ -207,12 +215,12 @@ def test_configure_project_run_analyses_force_rebuild(monkeypatch, tmp_path):
     # Create context directory
     ctx = tmp_path / "ctx"
     ctx.mkdir()
-    monkeypatch.setenv("PIPELINE_ID", "pid")
     # Patch Docker helper methods
     monkeypatch.setattr(du, "build_image", lambda **kwargs: None)
-    monkeypatch.setattr(du, "construct_container_name", lambda img: (f"sast_pid_{img}_uuid", "pid"))
+    monkeypatch.setattr(du, "construct_container_name", lambda img, pipeline_id: f"sast_{img}_{pipeline_id}")
     captured_env = {}
-    def fake_run_container(*, image, name=None, volumes=None, volumes_from=None, env=None, args=None):
+
+    def fake_run_container(*, image, pipeline_id, name=None, volumes=None, volumes_from=None, env=None, args=None):
         captured_env.update(env)
     monkeypatch.setattr(du, "run_container", fake_run_container)
     pb.configure_project_run_analyses(
@@ -223,13 +231,16 @@ def test_configure_project_run_analyses_force_rebuild(monkeypatch, tmp_path):
         dockerfile_path="Dockerfile",
         context_dir=str(ctx),
         force_rebuild=True,
+        pipeline_id="pid",
     )
     assert captured_env.get("FORCE_REBUILD") == "1"
 
 
 def test_configure_project_run_analyses_rebuild_images(monkeypatch, tmp_path):
-    """When ``rebuild_images`` is True the builder image and all analyzer
-    images should be removed before building."""
+    """
+    When ``rebuild_images`` is True the builder image and all analyzer
+    images should be removed before building.
+    """
     # Dummy config returns images to delete
     analyzer_cfg = make_dummy_analyzer_config(images=["i1", "i2"])
     # Create script and context
@@ -242,7 +253,7 @@ def test_configure_project_run_analyses_rebuild_images(monkeypatch, tmp_path):
     monkeypatch.setattr(du, "delete_image_if_exist", lambda img: deleted.append(img))
     # Stub other docker utils
     monkeypatch.setattr(du, "build_image", lambda **kwargs: None)
-    monkeypatch.setattr(du, "construct_container_name", lambda img: (f"sast_id_{img}_uuid", "id"))
+    monkeypatch.setattr(du, "construct_container_name", lambda img, pipeline_id: f"sast_{img}_{pipeline_id}")
     monkeypatch.setattr(du, "run_container", lambda **kwargs: None)
     pb.configure_project_run_analyses(
         script_path=str(script),
@@ -253,30 +264,34 @@ def test_configure_project_run_analyses_rebuild_images(monkeypatch, tmp_path):
         context_dir=str(ctx),
         image_name="builder",
         rebuild_images=True,
+        pipeline_id="id",
     )
     # The builder image is deleted after analyzer images
     assert Counter(deleted) == Counter(["i1", "i2", "builder"])
 
 
 def test_configure_project_run_analyses_cleanup_on_interrupt(monkeypatch, tmp_path):
-    """If ``run_container`` raises a KeyboardInterrupt the builder
+    """
+    If ``run_container`` raises a KeyboardInterrupt the builder
     function should invoke cleanup_pipeline_containers and re‑raise
-    the exception."""
+    the exception.
+    """
     analyzer_cfg = make_dummy_analyzer_config()
     script = tmp_path / "cfg.py"
     script.write_text("1")
     ctx = tmp_path / "ctx"
     ctx.mkdir()
     # Setup deterministic names
-    monkeypatch.setenv("PIPELINE_ID", "pid")
-    monkeypatch.setattr(du, "construct_container_name", lambda img: (f"sast_pid_{img}_uuid", "pid"))
+    monkeypatch.setattr(du, "construct_container_name", lambda img, pipeline_id: f"sast_{img}_{pipeline_id}")
     monkeypatch.setattr(du, "build_image", lambda **kwargs: None)
     # Flag to assert cleanup called
     cleanup_called = []
+
     def fake_cleanup(pid):
         cleanup_called.append(pid)
     monkeypatch.setattr(du, "cleanup_pipeline_containers", fake_cleanup)
     # run_container should raise KeyboardInterrupt
+
     def fake_run_container(*args, **kwargs):
         raise KeyboardInterrupt
     monkeypatch.setattr(du, "run_container", fake_run_container)
@@ -289,6 +304,38 @@ def test_configure_project_run_analyses_cleanup_on_interrupt(monkeypatch, tmp_pa
             dockerfile_path="Dockerfile",
             context_dir=str(ctx),
             image_name="build",
+            pipeline_id="pid",
         )
     # Cleanup should have been invoked with the pipeline id
     assert cleanup_called == ["pid"]
+
+
+def test_configure_project_run_analyses_accepts_git_branch_version(monkeypatch, tmp_path):
+    analyzer_cfg = make_dummy_analyzer_config()
+    script = tmp_path / "cfg.py"
+    script.write_text("print('x')")
+    ctx = tmp_path / "ctx"
+    ctx.mkdir()
+
+    monkeypatch.setattr(du, "build_image", lambda **kwargs: None)
+    monkeypatch.setattr(du, "construct_container_name", lambda img, pipeline_id: f"sast_{pipeline_id}_{img}_uuid")
+
+    captured_env = {}
+
+    def fake_run_container(*, image, name=None, volumes=None, env=None, pipeline_id=None):
+        captured_env.update(env or {})
+
+    monkeypatch.setattr(du, "run_container", fake_run_container)
+
+    pb.configure_project_run_analyses(
+        script_path=str(script),
+        output_dir=str(tmp_path / "out"),
+        languages=["py"],
+        analyzer_config=analyzer_cfg,
+        dockerfile_path="Dockerfile",
+        context_dir=str(ctx),
+        version={"type": "GIT_BRANCH", "version": "master"},
+        pipeline_id="pid-branch",
+    )
+
+    assert captured_env["PROJECT_VERSION"] == "master"

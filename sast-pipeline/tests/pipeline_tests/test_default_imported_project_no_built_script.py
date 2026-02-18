@@ -42,3 +42,41 @@ def test_node_install_handles_failures_without_immediate_exit():
     assert 'echo "[NODE][ERROR] All dependency installation methods failed"' in content
     assert 'if [ "$NEED_NODE" -eq 1 ]; then' in content
     assert "install_node_deps" in content
+
+
+def test_node_install_skips_package_lock_without_package_json():
+    content = read_script()
+
+    assert 'elif [ -f "package-lock.json" ] && [ -f "package.json" ]; then' in content
+    assert 'elif [ -f "package-lock.json" ]; then' in content
+    assert 'package-lock.json found without package.json' in content
+    assert 'install_with_log "npm ci" npm ci' in content
+
+
+def test_node_install_prefers_npm_ci_when_package_lock_and_package_json_exist():
+    content = read_script()
+
+    assert 'elif [ -f "package-lock.json" ] && [ -f "package.json" ]; then' in content
+    assert 'install_with_log "npm ci" npm ci' in content
+    assert 'install_with_log "npm install (fallback)" npm install' in content
+
+
+def test_node_install_handles_no_valid_node_manifests_without_failure():
+    content = read_script()
+
+    assert 'if [ -f "package.json" ] || [ -f "yarn.lock" ] || [ -f "pnpm-lock.yaml" ] || [ -f "package-lock.json" ]; then' in content
+    assert 'if [ "$NEED_NODE" -eq 1 ]; then' in content
+
+
+def test_node_install_does_not_use_recursive_manifest_search():
+    content = read_script()
+
+    assert 'find "$DEV_DIR" -type f' not in content
+
+
+def test_node_install_failure_does_not_hard_fail_script():
+    content = read_script()
+
+    assert 'if [ "$node_install_rc" -ne 0 ]; then' in content
+    assert "continuing without Node deps" in content
+    assert 'exit 1' not in content.split('if [ "$node_install_rc" -ne 0 ]; then', 1)[1].split("fi", 1)[0]

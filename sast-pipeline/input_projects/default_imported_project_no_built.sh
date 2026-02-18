@@ -29,6 +29,10 @@ install_with_log() {
 }
 
 install_node_deps() {
+  local dir="$1"
+
+  echo "[NODE] Installing dependencies in: $dir"
+  cd "$dir"
   set +e
 
   if [ -f "pnpm-lock.yaml" ]; then
@@ -61,7 +65,7 @@ install_node_deps() {
       set -e
       return 0
     }
-  elif [ -f "package-lock.json" ]; then
+  elif [ -f "package-lock.json" ] && [ -f "package.json" ]; then
     install_with_log "npm ci" npm ci && {
       set -e
       return 0
@@ -70,6 +74,10 @@ install_node_deps() {
       set -e
       return 0
     }
+  elif [ -f "package-lock.json" ]; then
+    set -e
+    echo "[NODE][WARN] package-lock.json found without package.json in: $dir. Skipping."
+    return 0
   elif [ -f "package.json" ]; then
     install_with_log "npm install" npm install && {
       set -e
@@ -151,8 +159,14 @@ if [ "$NEED_NODE" -eq 1 ]; then
 fi
 
 if [ "$NEED_NODE" -eq 1 ]; then
-  echo "[NODE] Installing dependencies"
-  install_node_deps
+  set +e
+  install_node_deps "$DEV_DIR"
+  node_install_rc=$?
+  set -e
+
+  if [ "$node_install_rc" -ne 0 ]; then
+    echo "[NODE][ERROR] Dependencies installation failed for all valid Node projects; continuing without Node deps"
+  fi
 fi
 
 if [ -f "pyproject.toml" ]; then

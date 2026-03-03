@@ -111,16 +111,37 @@ cd "$DEV_DIR"
 
 git fetch --prune --tags origin
 
+resolve_commit() {
+  git rev-parse -q --verify "${1}^{commit}" 2>/dev/null
+}
+
+is_origin_commit() {
+  git for-each-ref --format='%(refname)' --contains "$1" refs/remotes/origin | grep -q .
+}
+
+resolve_origin_hash_commit() {
+  local commit
+  commit=$(resolve_commit "$1") || return 1
+  is_origin_commit "$commit" || return 1
+  echo "$commit"
+}
+
+resolve_target_commit() {
+  local version="$1"
+
+  resolve_commit "origin/${version}" \
+  || resolve_commit "refs/tags/${version}" \
+  || resolve_origin_hash_commit "${version}" \
+  || {
+    echo "[ERROR] Can't resolve PROJECT_VERSION='$version' (no commit/tag/branch found on origin)." >&2
+    return 1
+  }
+}
+
 if [ -n "$PROJECT_VERSION" ]; then
-  # PROJECT_VERSION can be commit, tag, branch
-  if git rev-parse -q --verify "${PROJECT_VERSION}^{commit}" >/dev/null; then
-    TARGET_COMMIT=$(git rev-parse "${PROJECT_VERSION}^{commit}")
-  elif git rev-parse -q --verify "origin/${PROJECT_VERSION}^{commit}" >/dev/null; then
-    TARGET_COMMIT=$(git rev-parse "origin/${PROJECT_VERSION}^{commit}")
-  else
-    echo "[ERROR] Can't resolve PROJECT_VERSION='$PROJECT_VERSION' (no commit/tag/branch found)." >&2
+  TARGET_COMMIT=$(resolve_target_commit "$PROJECT_VERSION") || {
     exit 1
-  fi
+  }
   TARGET_DESC="$PROJECT_VERSION"
 else
   TARGET_COMMIT=$(git rev-parse "origin/${DEFAULT_BRANCH}")

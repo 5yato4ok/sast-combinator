@@ -168,6 +168,7 @@ def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
     assert "BUILDER_CONTAINER" in env
     assert env["LOG_LEVEL"] == "WARNING"
     assert env["PROJECT_VERSION"] == "1.2.3"
+    assert env["PROJECT_VERSION_TYPE"] == "GIT_HASH"
     assert env["PIPELINE_ID"] == "pid"
     # The volumes mapping should include the project path, output directory and config file
     vols = run_info["volumes"]
@@ -339,3 +340,4 @@ def test_configure_project_run_analyses_accepts_git_branch_version(monkeypatch, 
     )
 
     assert captured_env["PROJECT_VERSION"] == "master"
+    assert captured_env["PROJECT_VERSION_TYPE"] == "GIT_BRANCH"

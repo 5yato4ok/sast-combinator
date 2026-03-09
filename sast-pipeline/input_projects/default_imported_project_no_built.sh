@@ -152,6 +152,12 @@ CURRENT_COMMIT=$(git rev-parse HEAD)
 
 if [ "$CURRENT_COMMIT" != "$TARGET_COMMIT" ]; then
   echo "[INFO] Switching to desired ref: $TARGET_DESC"
+  # Ensure clean working tree before any checkout to avoid "Please commit or stash" errors.
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "[WARNING] Working tree is dirty before checkout. Discarding local changes (git reset --hard + clean -fd)."
+    git reset --hard HEAD
+    git clean -fd
+  fi
   # For default branch leave it, for some version - detached HEAD
   if [ -z "$PROJECT_VERSION" ]; then
     git switch -C "$DEFAULT_BRANCH" "origin/${DEFAULT_BRANCH}"

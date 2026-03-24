@@ -11,3 +11,18 @@ tree_sitter_go
 tree_sitter_kotlin
 tree_sitter_ruby
 tree_sitter_php
+
+# Config language grammars (YAML, Dockerfile, HCL/Terraform, TOML, JSON, Bash)
+tree-sitter-yaml
+tree-sitter-dockerfile
+tree-sitter-hcl
+tree-sitter-toml
+tree-sitter-json
+tree-sitter-bash
+
+# MCP server
+mcp>=1.26.0
+httpx
+
+# Testing
+pytest

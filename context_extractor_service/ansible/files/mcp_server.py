@@ -11,6 +11,8 @@ import hmac
 import logging
 import os
 import re
+import time
+from functools import wraps
 from pathlib import Path
 
 import httpx
@@ -68,6 +70,11 @@ AIST_API_URL = os.environ.get("AIST_API_URL", "http://nginx:8080")
 AIST_API_TOKEN = os.environ.get("AIST_API_TOKEN", "")
 MCP_AUTH_TOKEN = os.environ.get("MCP_AUTH_TOKEN", "")
 
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
 logger = logging.getLogger("mcp_server")
 
 _http = httpx.Client(
@@ -75,6 +82,27 @@ _http = httpx.Client(
     headers={"Authorization": f"Token {AIST_API_TOKEN}"},
     timeout=10,
 )
+
+
+# ── Tool call logger ─────────────────────────────────────────────
+
+def _log_tool(fn):
+    """Decorator: log tool name, key args, duration, and any exceptions."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        name = fn.__name__
+        pipeline_id = kwargs.get("pipeline_id") or (args[0] if args else "?")
+        extra = kwargs.get("file_path") or kwargs.get("function_name") or kwargs.get("symbol_name") or ""
+        label = f"{name}(pipeline={pipeline_id}" + (f", {extra}" if extra else "") + ")"
+        t0 = time.monotonic()
+        try:
+            result = fn(*args, **kwargs)
+            logger.info("%s → ok (%.2fs)", label, time.monotonic() - t0)
+            return result
+        except Exception as exc:
+            logger.error("%s → error (%.2fs): %s", label, time.monotonic() - t0, exc)
+            raise
+    return wrapper
 
 
 # ── Auth middleware ──────────────────────────────────────────────
@@ -92,12 +120,18 @@ class BearerTokenAuthMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next):
+        client = request.client.host if request.client else "unknown"
+        logger.info("%s %s from %s", request.method, request.url.path, client)
+
         if not MCP_AUTH_TOKEN:
             # No token configured — skip auth (development mode)
-            return await call_next(request)
+            response = await call_next(request)
+            logger.info("%s %s → %s", request.method, request.url.path, response.status_code)
+            return response
 
         auth_header = request.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
+            logger.warning("Missing Authorization header from %s", client)
             return JSONResponse(
                 {"error": "Missing Authorization header"},
                 status_code=401,
@@ -105,26 +139,33 @@ class BearerTokenAuthMiddleware(BaseHTTPMiddleware):
 
         provided = auth_header[7:]  # strip "Bearer "
         if not hmac.compare_digest(provided, MCP_AUTH_TOKEN):
-            logger.warning("MCP auth failed from %s", request.client.host if request.client else "unknown")
+            logger.warning("MCP auth failed from %s", client)
             return JSONResponse(
                 {"error": "Invalid token"},
                 status_code=403,
             )
 
-        return await call_next(request)
+        response = await call_next(request)
+        logger.debug("%s %s → %s", request.method, request.url.path, response.status_code)
+        return response
 
 
 def _resolve_source_dir(pipeline_id: str) -> Path:
     """Resolve pipeline_id to source directory via AIST API."""
+    logger.info("Resolving source dir for pipeline %s", pipeline_id)
     resp = _http.get(f"/api/v2/aist/pipelines/{pipeline_id}/source-info/")
     if resp.status_code == 409:
         data = resp.json()
-        raise ValueError(data.get("detail", "Sources not available"))
+        detail = data.get("detail", "Sources not available")
+        logger.warning("Pipeline %s sources not available: %s", pipeline_id, detail)
+        raise ValueError(detail)
     resp.raise_for_status()
     source_dir = Path(resp.json()["project_path"])
     if not source_dir.is_dir():
         msg = f"Source directory not found: {source_dir}"
+        logger.error(msg)
         raise FileNotFoundError(msg)
+    logger.info("Pipeline %s → %s", pipeline_id, source_dir)
     return source_dir
 
 
@@ -167,6 +208,7 @@ mcp = FastMCP(
 
 
 @mcp.tool()
+@_log_tool
 def extract_function(pipeline_id: str, file_path: str, line_number: int) -> dict:
     """
     Extract the full function/method containing the given line number.
@@ -186,6 +228,7 @@ def extract_function(pipeline_id: str, file_path: str, line_number: int) -> dict
 
 
 @mcp.tool()
+@_log_tool
 def find_identifiers(pipeline_id: str, file_path: str, line_number: int) -> dict:
     """
     Analyze which variables are read and written on the given line.
@@ -215,6 +258,7 @@ def find_identifiers(pipeline_id: str, file_path: str, line_number: int) -> dict
 
 
 @mcp.tool()
+@_log_tool
 def dump_ast(pipeline_id: str, file_path: str, line_number: int) -> str:
     """
     Show the AST structure of the function containing the given line.
@@ -233,6 +277,7 @@ def dump_ast(pipeline_id: str, file_path: str, line_number: int) -> str:
 
 
 @mcp.tool()
+@_log_tool
 def list_supported_languages() -> list[str]:
     """List all programming languages supported by smart code analysis tools."""
     return sorted(LANG_NODESETS.keys())
@@ -242,6 +287,7 @@ def list_supported_languages() -> list[str]:
 
 
 @mcp.tool()
+@_log_tool
 def find_callers(pipeline_id: str, file_path: str, function_name: str) -> list[dict]:
     """
     Search the entire project for call sites of a given function.
@@ -265,6 +311,7 @@ def find_callers(pipeline_id: str, file_path: str, function_name: str) -> list[d
 
 
 @mcp.tool()
+@_log_tool
 def trace_identifier_backward(
     pipeline_id: str, file_path: str, line_number: int, identifier: str,
 ) -> list[dict]:
@@ -290,6 +337,7 @@ def trace_identifier_backward(
 
 
 @mcp.tool()
+@_log_tool
 def find_definition(pipeline_id: str, symbol_name: str) -> list[dict]:
     """
     Search the project for definitions of a symbol (function, class, variable, type).
@@ -313,6 +361,7 @@ def find_definition(pipeline_id: str, symbol_name: str) -> list[dict]:
 
 
 @mcp.tool()
+@_log_tool
 def find_imports(pipeline_id: str, file_path: str) -> list[str]:
     """
     Collect all import/require/using/include statements from a file.
@@ -335,6 +384,7 @@ def find_imports(pipeline_id: str, file_path: str) -> list[str]:
 
 
 @mcp.tool()
+@_log_tool
 def find_decorators(pipeline_id: str, file_path: str, line_number: int) -> list[str]:
     """
     Find decorators and annotations on the function containing the given line.
@@ -359,6 +409,7 @@ def find_decorators(pipeline_id: str, file_path: str, line_number: int) -> list[
 
 
 @mcp.tool()
+@_log_tool
 def classify_file(pipeline_id: str, file_path: str) -> dict:
     """
     Classify a file as test, migration, generated, vendored, config, or production.
@@ -384,6 +435,7 @@ def classify_file(pipeline_id: str, file_path: str) -> dict:
 
 
 @mcp.tool()
+@_log_tool
 def get_file_structure(pipeline_id: str, file_path: str) -> dict:
     """
     Parse the top-level structure of a file: classes, functions, methods, imports.
@@ -404,6 +456,7 @@ def get_file_structure(pipeline_id: str, file_path: str) -> dict:
 
 
 @mcp.tool()
+@_log_tool
 def find_route_to_function(pipeline_id: str, function_name: str) -> list[dict]:
     """
     Search for URL/route mappings that reference a given function or view.
@@ -428,6 +481,7 @@ def find_route_to_function(pipeline_id: str, function_name: str) -> list[dict]:
 
 
 @mcp.tool()
+@_log_tool
 def extract_config_block(pipeline_id: str, file_path: str, line_number: int) -> dict:
     """
     Extract the logical config block containing the given line.
@@ -454,6 +508,7 @@ def extract_config_block(pipeline_id: str, file_path: str, line_number: int) -> 
 
 
 @mcp.tool()
+@_log_tool
 def classify_environment(pipeline_id: str, file_path: str) -> dict:
     """
     Determine the target environment (dev/staging/prod/test) of a config file.
@@ -475,6 +530,7 @@ def classify_environment(pipeline_id: str, file_path: str) -> dict:
 
 
 @mcp.tool()
+@_log_tool
 def find_config_overrides(
     pipeline_id: str, file_path: str, key_or_variable: str,
 ) -> list[dict]:
@@ -498,6 +554,7 @@ def find_config_overrides(
 
 
 @mcp.tool()
+@_log_tool
 def extract_env_variables(pipeline_id: str, file_path: str) -> list[dict]:
     """
     Extract all environment variable definitions from a config file.
@@ -520,6 +577,7 @@ def extract_env_variables(pipeline_id: str, file_path: str) -> list[dict]:
 
 
 @mcp.tool()
+@_log_tool
 def find_related_configs(pipeline_id: str, file_path: str) -> list[dict]:
     """
     Find configuration files related to the given file.
@@ -550,6 +608,7 @@ _MAX_SEARCH_RESULTS = 50
 
 
 @mcp.tool()
+@_log_tool
 def read_file(pipeline_id: str, file_path: str) -> str:
     """
     Read the full contents of a file from the project source tree.
@@ -572,6 +631,7 @@ def read_file(pipeline_id: str, file_path: str) -> str:
 
 
 @mcp.tool()
+@_log_tool
 def search_files(pipeline_id: str, pattern: str, path: str = "") -> list[dict]:
     """
     Search for a text pattern (regex) across all source and config files.
@@ -619,6 +679,7 @@ def search_files(pipeline_id: str, pattern: str, path: str = "") -> list[dict]:
 
 
 @mcp.tool()
+@_log_tool
 def list_directory(pipeline_id: str, path: str = "") -> list[dict]:
     """
     List files and directories in a project path.

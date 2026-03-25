@@ -8,6 +8,24 @@ from .ts_utils import detect_language, create_parser, line_range
 from .config import LANG_NODESETS
 from .io import load_source_from_url
 
+# Node types that represent structural containers — climb_to_multiline should
+# never return these as "the code on the target line".
+_STRUCTURAL_CONTAINERS = frozenset({
+    # Module/program roots
+    "program", "module", "translation_unit", "source_file",
+    # Parameter lists
+    "formal_parameters", "parameters", "parameter_list",
+    # Class/struct bodies and declarations
+    "field_declaration_list", "class_body", "enum_body",
+    "struct_specifier", "class_specifier",
+    # Destructuring patterns
+    "object_pattern", "array_pattern",
+    # Preprocessor conditionals
+    "preproc_if", "preproc_ifdef", "preproc_else", "preproc_elif",
+    # JSX elements
+    "jsx_element", "jsx_opening_element", "jsx_self_closing_element",
+})
+
 def extract_function_from_source(source_code: str, filename: str, line_number: int, max_lines) -> Dict[str, Any]:
     from . import compress_function_from_source
     if line_number <= 0:
@@ -64,7 +82,7 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
 
     def climb_to_multiline(node: Optional[Node]) -> Optional[Node]:
         while node is not None:
-            if node.type in block_types:
+            if node.type in block_types or node.type in _STRUCTURAL_CONTAINERS:
                 return None
             s, e = line_range(node)
             if e > s:  # multi-line node found
@@ -91,6 +109,7 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
         # fallback: no node at all
         if 1 <= line_number <= len(lines):
             code_on_line = lines[line_number - 1]
+
 
     if not func_node:
         return {

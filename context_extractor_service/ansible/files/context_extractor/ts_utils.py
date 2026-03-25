@@ -41,6 +41,7 @@ CPP_LANGUAGE = _resolve_language(cpp_lang, "language", "language_cpp")
 PY_LANGUAGE = _resolve_language(py_lang, "language", "language_python")
 JS_LANGUAGE = _resolve_language(js_lang, "language", "language_javascript")
 TYPESCRIPT_LANGUAGE = _resolve_language(ts_lang, "language", "language_typescript")
+TSX_LANGUAGE = _resolve_language(ts_lang, "language_tsx")
 JAVA_LANGUAGE = _resolve_language(java_lang, "language", "language_java")
 CSHARP_LANGUAGE = _resolve_language(csharp_lang, "language", "language_c_sharp")
 KOTLIN_LANGUAGE = _resolve_language(kotlin_lang, "language", "language_kotlin")
@@ -71,6 +72,7 @@ _LANG_KEY_MAP: dict[Language, str] = {
     JAVA_LANGUAGE: "java",
     CSHARP_LANGUAGE: "csharp",
     TYPESCRIPT_LANGUAGE: "typescript",
+    TSX_LANGUAGE: "typescript",
     GO_LANGUAGE: "go",
     RUBY_LANGUAGE: "ruby",
     KOTLIN_LANGUAGE: "kotlin",
@@ -99,7 +101,7 @@ SUPPORTED_LANGUAGES = {
     ".java": JAVA_LANGUAGE,
     ".cs": CSHARP_LANGUAGE,
     ".ts": TYPESCRIPT_LANGUAGE,
-    ".tsx": TYPESCRIPT_LANGUAGE,
+    ".tsx": TSX_LANGUAGE,
     ".jsx": JS_LANGUAGE,
     ".go": GO_LANGUAGE,
     ".rb": RUBY_LANGUAGE,

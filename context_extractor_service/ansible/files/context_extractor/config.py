@@ -75,6 +75,7 @@ LANG_NODESETS = {
             "assignment", "augmented_assignment",
             "expression_statement", "call",
             "if_statement", "return_statement", "for_statement",
+            "with_statement",
         },
         "ident": {"identifier"},
         "member_like": {"attribute"},

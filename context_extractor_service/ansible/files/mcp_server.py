@@ -196,15 +196,22 @@ def _find_node_at_line(node, line_number: int):
 
 
 def _climb_to_statement(node, nodeset):
-    """Walk up from *node* to the nearest key-statement ancestor.
+    """Walk up from *node* to the nearest key-statement or structural ancestor.
 
     Stops at block/function boundaries to avoid escaping scope.
     """
     key_types = nodeset.get("key", set())
     block_types = nodeset.get("block", set()) | nodeset.get("function", set())
+    # Extra statement types that carry useful identifier context
+    extra_types = {
+        "with_statement", "function_definition", "function_declaration",
+        "method_declaration", "field_declaration", "export_statement",
+        "expression_statement", "with_clause",
+        "formal_parameters",
+    }
     current = node
     while current is not None:
-        if current.type in key_types:
+        if current.type in key_types or current.type in extra_types:
             return current
         if current.type in block_types:
             return node

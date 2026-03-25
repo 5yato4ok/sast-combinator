@@ -1,0 +1,51 @@
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+import mcp_server
+
+
+def _stub_read_source(source: str, file_name: str):
+    def _reader(_pipeline_id: str, _file_path: str):
+        return source, Path(file_name)
+
+    return _reader
+
+
+def test_find_identifiers_should_not_treat_window_as_write_on_javascript_location_redirect(monkeypatch):
+    source = """\
+function bindCustomizationSwitch() {
+  $('#id_customization_view').change(function(event) {
+    var queryParams = new URLSearchParams(window.location.search);
+    queryParams.set('customization', this.value);
+    window.location.href = window.location.pathname + '?' + queryParams.toString();
+  });
+}
+"""
+    monkeypatch.setattr(mcp_server, "_read_source", _stub_read_source(source, "menuChange.js"))
+
+    result = mcp_server.find_identifiers("pipe", "menuChange.js", 5)
+
+    assert "window" not in result["writes"]
+    assert "pathname" in result["reads"]
+    assert "queryParams" in result["reads"]
+    assert "toString" in result["reads"]
+
+
+def test_find_identifiers_should_capture_single_line_jsx_callback_reads(monkeypatch):
+    source = """\
+function MapPage() {
+  return (
+    <IconButton onClick={() => dispatch(clearSiteError())} size="small" />
+  );
+}
+"""
+    monkeypatch.setattr(mcp_server, "_read_source", _stub_read_source(source, "page.tsx"))
+
+    result = mcp_server.find_identifiers("pipe", "page.tsx", 3)
+
+    assert "dispatch" in result["reads"]
+    assert "clearSiteError" in result["reads"]

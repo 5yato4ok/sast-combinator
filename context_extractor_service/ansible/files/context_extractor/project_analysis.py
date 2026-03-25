@@ -103,7 +103,23 @@ def _find_enclosing_function_name(
         if not (s + 1 <= line_number <= e + 1):
             return None
         if node.type in func_types:
-            # Try to find the name child
+            # Arrow functions used as callbacks don't have a meaningful name
+            if node.type == "arrow_function":
+                return None
+            # Try named field first (most reliable)
+            name_node = node.child_by_field_name("name")
+            if name_node:
+                return node_text(name_node, root.text)
+            # C++: name is inside function_declarator
+            declarator = node.child_by_field_name("declarator")
+            if declarator:
+                inner = declarator.child_by_field_name("declarator")
+                if inner and inner.type == "identifier":
+                    return node_text(inner, root.text)
+                for ch in declarator.children:
+                    if ch.type == "identifier":
+                        return node_text(ch, root.text)
+            # Fallback: direct identifier child
             for ch in node.children:
                 if ch.type in {"identifier", "name", "simple_identifier",
                                "property_identifier"}:
@@ -131,7 +147,7 @@ def find_callers(
     when a tree-sitter grammar is available.
     """
     pattern = re.compile(
-        r"(?<![A-Za-z0-9_.])"
+        r"(?<![A-Za-z0-9_])"
         + re.escape(function_name)
         + r"\s*\(",
     )
@@ -151,6 +167,30 @@ def find_callers(
                 if re.match(
                     r"(?:export\s+)?(?:default\s+)?(?:async\s+)?"
                     r"(?:def|func|function|fn)\s+",
+                    stripped,
+                ):
+                    continue
+                # Skip C++ scoped definitions (Class::method)
+                if re.search(
+                    r"\w+(?:::\w+)*::" + re.escape(function_name) + r"\s*\(",
+                    stripped,
+                ):
+                    continue
+                # Skip C++ forward declarations: type + name(params);
+                # Must have a return type before the function name (not preceded by . or ->)
+                if re.search(
+                    r"(?:^|[\s;{])"
+                    r"(?:virtual\s+|static\s+|inline\s+)*"
+                    r"\w[\w\s*&<>,]*\s+"
+                    + re.escape(function_name) + r"\s*\([^)]*\)\s*"
+                    r"(?:const\s*)?(?:override\s*)?(?:=\s*0\s*)?;",
+                    stripped,
+                ):
+                    continue
+                # Skip class method definitions (TS/JS)
+                if re.match(
+                    r"(?:async\s+)?" + re.escape(function_name) + r"\s*\([^)]*\)\s*"
+                    r"(?::\s*\w[^{]*)?{",
                     stripped,
                 ):
                     continue
@@ -297,6 +337,36 @@ def classify_file(file_path: str) -> dict[str, Any]:
         return {"type": "config", "confidence": 0.9,
                 "reason": "filename is a known configuration file"}
 
+    # CI/pipeline filenames
+    ci_names = {"jenkinsfile", "vagrantfile", "rakefile",
+                ".travis.yml", "appveyor.yml"}
+    if name in ci_names:
+        return {"type": "config", "confidence": 0.9,
+                "reason": "filename is a CI/build pipeline file"}
+
+    # docker-compose variants (override, dev, prod, etc.)
+    if name.startswith("docker-compose"):
+        return {"type": "config", "confidence": 0.9,
+                "reason": "docker-compose variant file"}
+
+    # CI/build directories
+    ci_build_dirs = {".circleci", ".gitlab", "build_scripts",
+                     "deploy_scripts"}
+    if any(p.lower() in ci_build_dirs for p in parts):
+        return {"type": "config", "confidence": 0.85,
+                "reason": "path is in a CI/build directory"}
+
+    # GitHub Actions workflows specifically (not all .github/ content)
+    if ".github/workflows" in path_lower or ".github\\workflows" in path_lower:
+        return {"type": "config", "confidence": 0.9,
+                "reason": "GitHub Actions workflow file"}
+
+    # Tooling/deploy script directories
+    tooling_prefixes = ("etc/scripts", "tools/scripts", "deploy/scripts")
+    if any(path_lower.startswith(p) for p in tooling_prefixes):
+        return {"type": "config", "confidence": 0.85,
+                "reason": "path is in a tooling/deploy scripts directory"}
+
     # Minified assets (*.min.js, *.min.css, etc.)
     if ".min." in name:
         return {"type": "generated", "confidence": 0.85,
@@ -349,25 +419,29 @@ def _decorators_from_ast(
     if not func_node:
         return []
 
-    decorators: list[str] = [
-        node_text(ch, src_bytes).strip()
-        for ch in func_node.children
-        if ch.type in decorator_types
-    ]
+    decorators: list[str] = []
+    seen: set[int] = set()  # Track by node id to avoid duplicates
+
+    def _add(ch):
+        if ch.id not in seen:
+            seen.add(ch.id)
+            decorators.append(node_text(ch, src_bytes).strip())
+
+    for ch in func_node.children:
+        if ch.type in decorator_types:
+            _add(ch)
     # Also check previous siblings (Python puts decorators before the function node)
     if func_node.parent:
         for ch in func_node.parent.children:
             if ch == func_node:
                 break
             if ch.type in decorator_types:
-                decorators.append(node_text(ch, src_bytes).strip())
+                _add(ch)
     # Check decorated_definition wrapper (Python tree-sitter)
     if func_node.parent and func_node.parent.type == "decorated_definition":
-        decorators.extend(
-            node_text(ch, src_bytes).strip()
-            for ch in func_node.parent.children
-            if ch.type in decorator_types
-        )
+        for ch in func_node.parent.children:
+            if ch.type in decorator_types:
+                _add(ch)
     return decorators
 
 
@@ -758,6 +832,11 @@ def find_route_to_function(
         except OSError:
             continue
 
+        # Skip vendored/generated files
+        file_class = classify_file(str(rel))
+        if file_class["type"] in {"vendored", "generated"}:
+            continue
+
         lines = text.splitlines()
         for i, line in enumerate(lines):
             if not name_re.search(line):
@@ -765,6 +844,18 @@ def find_route_to_function(
             for pat in _ROUTE_PATTERNS:
                 m = pat.search(line)
                 if m:
+                    # Ensure the function name appears as a proper reference
+                    # near the route, not in a separate expression (minified code).
+                    # Check: name must be within the same parenthesized call.
+                    name_match = name_re.search(line)
+                    if name_match and m.end() > 0:
+                        # If the name appears before the route pattern start
+                        # in what looks like a separate statement (after ; or ,
+                        # not followed by ( ), skip it.
+                        name_start = name_match.start()
+                        between = line[m.end():name_start] if name_start > m.end() else ""
+                        if ";" in between or (")," in between and "(" not in between):
+                            continue
                     results.append({
                         "file": str(rel),
                         "line": i + 1,

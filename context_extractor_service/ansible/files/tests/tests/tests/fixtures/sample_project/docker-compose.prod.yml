@@ -1,0 +1,6 @@
+services:
+  web:
+    environment:
+      DD_DEBUG: "False"
+      DD_SECRET_KEY: "${DD_SECRET_KEY}"
+    privileged: false

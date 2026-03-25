@@ -195,6 +195,23 @@ def _find_node_at_line(node, line_number: int):
     return node
 
 
+def _climb_to_statement(node, nodeset):
+    """Walk up from *node* to the nearest key-statement ancestor.
+
+    Stops at block/function boundaries to avoid escaping scope.
+    """
+    key_types = nodeset.get("key", set())
+    block_types = nodeset.get("block", set()) | nodeset.get("function", set())
+    current = node
+    while current is not None:
+        if current.type in key_types:
+            return current
+        if current.type in block_types:
+            return node
+        current = current.parent
+    return node
+
+
 # ── MCP Server ───────────────────────────────────────────────────
 
 mcp = FastMCP(
@@ -253,6 +270,7 @@ def find_identifiers(pipeline_id: str, file_path: str, line_number: int) -> dict
     if not target_node:
         return {"reads": [], "writes": [], "error": "No node found at line"}
 
+    target_node = _climb_to_statement(target_node, nodeset)
     reads, writes = split_reads_writes(target_node, source_bytes, lang_key, nodeset)
     return {"reads": sorted(reads), "writes": sorted(writes), "language": lang_key}
 

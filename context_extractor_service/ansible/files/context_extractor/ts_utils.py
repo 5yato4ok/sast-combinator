@@ -99,6 +99,8 @@ SUPPORTED_LANGUAGES = {
     ".java": JAVA_LANGUAGE,
     ".cs": CSHARP_LANGUAGE,
     ".ts": TYPESCRIPT_LANGUAGE,
+    ".tsx": TYPESCRIPT_LANGUAGE,
+    ".jsx": JS_LANGUAGE,
     ".go": GO_LANGUAGE,
     ".rb": RUBY_LANGUAGE,
     ".kt": KOTLIN_LANGUAGE,

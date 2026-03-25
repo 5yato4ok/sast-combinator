@@ -56,11 +56,20 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
     search_root = func_node if func_node is not None else tree.root_node
     node_at_line = find_smallest_node_covering_line(search_root, line_number)
 
-    # If that node is single-line, climb up until multi-line (or root)
+    # If that node is single-line, climb up until multi-line — but stop
+    # at block/function boundaries and avoid returning a key-statement that
+    # starts on the target line (the caller should use the source line instead).
+    block_types = nodeset.get("block", set()) | nodeset.get("function", set())
+    key_types = nodeset.get("key", set())
+
     def climb_to_multiline(node: Optional[Node]) -> Optional[Node]:
         while node is not None:
+            if node.type in block_types:
+                return None
             s, e = line_range(node)
             if e > s:  # multi-line node found
+                if node.type in key_types and (s + 1) == line_number:
+                    return None
                 return node
             node = node.parent
         return None

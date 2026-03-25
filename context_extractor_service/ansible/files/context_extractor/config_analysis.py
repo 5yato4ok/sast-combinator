@@ -35,6 +35,15 @@ _SKIP_DIRS = frozenset({
     "vendor", "third_party", ".tox", ".mypy_cache",
 })
 
+# Extensions considered "config" for the cross-reference relationship check.
+# Scripts (.sh, .bash) and source code are excluded to avoid false positives
+# from plain-text mentions of config filenames.
+_CONFIG_CROSS_REF_EXTS = frozenset({
+    ".yaml", ".yml", ".json", ".toml",
+    ".tf", ".tfvars", ".hcl",
+    ".env", ".ini", ".cfg", ".conf", ".properties",
+})
+
 _SECRET_PATTERNS = re.compile(
     r"(?i)(?:secret|password|passwd|token|api_?key|private_?key|credential|auth)",
 )
@@ -701,12 +710,19 @@ def _detect_relationship(
         if "templates" in str(origin) and "values" in rel_name:
             return "helm_template_uses_values"
 
-    # Cross-reference check: does the file reference the other by name?
-    try:
-        text = (source_dir / rel).read_text(encoding="utf-8", errors="replace")
-        if origin.name in text:
-            return "references_origin"
-    except OSError:
-        pass
+    # Cross-reference check — only between config files (not scripts/source code)
+    # to avoid false positives from plain-text mentions of filenames.
+    rel_ext = rel.suffix.lower()
+    rel_is_config = (
+        rel_ext in _CONFIG_CROSS_REF_EXTS
+        or rel_name.startswith(("dockerfile", "docker-compose", ".env"))
+    )
+    if rel_is_config:
+        try:
+            text = (source_dir / rel).read_text(encoding="utf-8", errors="replace")
+            if origin.name in text:
+                return "references_origin"
+        except OSError:
+            pass
 
     return None

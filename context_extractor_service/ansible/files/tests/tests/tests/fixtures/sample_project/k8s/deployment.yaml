@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: myapp:latest
+          env:
+            - name: DD_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: myapp-secrets
+                  key: secret_key
+            - name: DD_DEBUG
+              value: "False"

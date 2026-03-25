@@ -31,8 +31,8 @@ def collect_idents_in_node(root: Node, source_bytes: bytes, nodeset) -> Set[str]
         stack.extend(n.children)
     return ids
 
-def _collect_decl_names(n: Node, source_bytes: bytes, nodeset) -> Set[str]:
-    """Грубовато: под декларацией пробегаемся вглубь и всё, что похоже на идентификатор, считаем 'write'."""
+def _collect_leaf_idents(n: Node, source_bytes: bytes, nodeset) -> Set[str]:
+    """Collect all identifier leaf nodes in a subtree."""
     out: Set[str] = set()
     stack: List[Node] = [n]
     while stack:
@@ -41,6 +41,34 @@ def _collect_decl_names(n: Node, source_bytes: bytes, nodeset) -> Set[str]:
             out.add(node_text(x, source_bytes))
         else:
             stack.extend(x.children)
+    return out
+
+
+def _collect_decl_names(n: Node, source_bytes: bytes, nodeset) -> Set[str]:
+    """Collect only the declared variable name(s) from a declaration node (LHS only)."""
+    out: Set[str] = set()
+
+    # Go: short_var_declaration has a "left" field with the declared names
+    left = n.child_by_field_name("left")
+    if left is not None:
+        return _collect_leaf_idents(left, source_bytes, nodeset)
+
+    # JS/TS/Java/C++: declarations contain variable_declarator or init_declarator children
+    for child in n.children:
+        if child.type in {"variable_declarator", "init_declarator"}:
+            name_node = child.child_by_field_name("name")
+            if name_node is None:
+                # C++ init_declarator uses "declarator" field
+                name_node = child.child_by_field_name("declarator")
+            if name_node is not None:
+                out |= _collect_leaf_idents(name_node, source_bytes, nodeset)
+
+    # Fallback: take only the first direct identifier child (the variable name)
+    if not out:
+        for child in n.children:
+            if is_identifier(child, nodeset):
+                out.add(node_text(child, source_bytes))
+                break
     return out
 
 def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) -> Tuple[Set[str], Set[str]]:

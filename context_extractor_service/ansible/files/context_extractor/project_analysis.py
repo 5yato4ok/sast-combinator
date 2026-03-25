@@ -47,6 +47,16 @@ _SOURCE_EXTS = frozenset({
 _MAX_RESULTS = 50
 _SNIPPET_CONTEXT = 2  # lines of context around a match
 
+# Well-known third-party JS/CSS library names — used by classify_file to
+# detect vendored assets even when they are not inside a vendor/ directory.
+_KNOWN_VENDORED_LIBS = frozenset({
+    "jquery", "bootstrap", "lodash", "underscore", "backbone", "angular",
+    "react", "vue", "moment", "tinymce", "ckeditor", "d3", "three",
+    "popper", "axios", "zepto", "mootools", "prototype", "dojo",
+    "handlebars", "mustache", "knockout", "ember", "highcharts",
+    "chartjs", "sweetalert", "select2", "datatables", "codemirror",
+})
+
 
 def _iter_source_files(source_dir: Path):
     """Yield relative Path objects for source files under *source_dir*."""
@@ -138,7 +148,11 @@ def find_callers(
             if pattern.search(line):
                 # Skip the definition itself
                 stripped = line.lstrip()
-                if stripped.startswith(("def ", "func ", "function ", "fn ")):
+                if re.match(
+                    r"(?:export\s+)?(?:default\s+)?(?:async\s+)?"
+                    r"(?:def|func|function|fn)\s+",
+                    stripped,
+                ):
                     continue
                 caller = None
                 tree, lang_key, _src_bytes = _try_parse(text, full)
@@ -282,6 +296,23 @@ def classify_file(file_path: str) -> dict[str, Any]:
     if name in config_names:
         return {"type": "config", "confidence": 0.9,
                 "reason": "filename is a known configuration file"}
+
+    # Minified assets (*.min.js, *.min.css, etc.)
+    if ".min." in name:
+        return {"type": "generated", "confidence": 0.85,
+                "reason": "minified asset (contains .min. in filename)"}
+
+    # Well-known third-party library filenames
+    stem = name.split(".")[0]
+    if stem in _KNOWN_VENDORED_LIBS:
+        return {"type": "vendored", "confidence": 0.85,
+                "reason": f"well-known third-party library: {stem}"}
+
+    # Static directory containing a known third-party library path
+    parts_lower = [p.lower() for p in parts]
+    if "static" in parts_lower and any(p in _KNOWN_VENDORED_LIBS for p in parts_lower):
+        return {"type": "vendored", "confidence": 0.8,
+                "reason": "static directory contains known third-party library path"}
 
     return {"type": "production", "confidence": 0.7,
             "reason": "no test/migration/vendor/config indicators found"}

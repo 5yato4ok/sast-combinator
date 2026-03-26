@@ -111,16 +111,28 @@ def extract_config_block(
 
 
 def _find_deepest_node_at_line(node, line_number: int):
-    """Find the deepest AST node that contains *line_number* (1-based)."""
+    """Find the deepest AST node that contains *line_number* (1-based).
+
+    When multiple children cover the same line (e.g. a newline node and
+    an instruction node), prefer the one that *starts* on the target line
+    so that whitespace/newline nodes don't shadow real content.
+    """
     s = node.start_point[0] + 1
     e = node.end_point[0] + 1
     if not (s <= line_number <= e):
         return None
+    # Prefer children that start on the target line over those that merely
+    # end on it (avoids picking up trailing newline nodes).
+    best = None
     for ch in node.children:
         hit = _find_deepest_node_at_line(ch, line_number)
         if hit:
-            return hit
-    return node
+            hit_start = hit.start_point[0] + 1
+            if hit_start == line_number:
+                return hit
+            if best is None:
+                best = hit
+    return best if best is not None else node
 
 
 # Node types that represent meaningful "blocks" per config language.
@@ -149,17 +161,33 @@ _BLOCK_TYPES: dict[str, set[str]] = {
         "command", "if_statement", "for_statement", "function_definition",
         "pipeline", "variable_assignment",
     },
+    "python": {
+        "expression_statement", "assignment", "import_statement",
+        "import_from_statement", "function_definition", "class_definition",
+        "if_statement", "for_statement", "with_statement",
+    },
 }
 
 
 def _find_block_ancestor(node, lang_key: str):
     """Walk up the AST to find the nearest meaningful block node."""
     types = _BLOCK_TYPES.get(lang_key, set())
+    # Check the node itself first
+    if node.type in types:
+        return node
     current = node
     while current.parent:
         if current.type in types:
             return current
         current = current.parent
+    # current is now root — if node was root (e.g. tree-sitter version
+    # difference), search root's children for a block type covering the
+    # same line range as the original node.
+    if current == node and types:
+        line = node.start_point[0]
+        for ch in current.children:
+            if ch.type in types and ch.start_point[0] <= line <= ch.end_point[0]:
+                return ch
     return node  # fallback: return the node itself
 
 
@@ -280,6 +308,7 @@ _ENV_PATTERNS: list[tuple[str, str, str]] = [
     ("*-test.*", "test", "filename contains -test."),
     ("*.ci", "ci", "filename ends with .ci"),
     ("*.ci.*", "ci", "filename contains .ci."),
+    ("*.jenkins.*", "ci", "filename contains .jenkins."),
 ]
 
 
@@ -663,7 +692,59 @@ def find_related_configs(
             })
         if len(results) >= 30:
             break
+    results.sort(key=lambda r: (r["relationship"], r["file"]))
     return results
+
+
+def _is_parent_or_child(a: Path, b: Path) -> bool:
+    """True if *a* is an ancestor of *b* or vice versa (proper path containment)."""
+    try:
+        a.relative_to(b)
+        return True
+    except ValueError:
+        pass
+    try:
+        b.relative_to(a)
+        return True
+    except ValueError:
+        return False
+
+
+def _file_references_path(source_dir: Path, rel: Path, origin: Path) -> bool:
+    """Check whether *rel* contains a reference to the *origin* file.
+
+    For generic basenames (``Dockerfile``, ``Makefile``) a bare name match
+    is only accepted when both files share a directory tree.  Otherwise,
+    the relative path from *rel* to *origin* (or from the project root)
+    must appear in the text — this avoids false positives from unrelated
+    config files that happen to mention a common filename.
+    """
+    try:
+        text = (source_dir / rel).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+
+    origin_name = origin.name
+
+    # Check for an explicit path reference first (strongest signal).
+    # e.g. "cloud/ams/deploy/crash_receiver/Dockerfile" or "./Dockerfile"
+    if str(origin) in text:
+        return True
+
+    # Try the path relative from the candidate file's directory.
+    try:
+        rel_path = os.path.relpath(origin, rel.parent)
+        if rel_path in text:
+            return True
+    except ValueError:
+        pass
+
+    # Bare filename match — strong only when the files share a directory tree.
+    if origin_name in text:
+        if origin.parent == rel.parent or _is_parent_or_child(origin.parent, rel.parent):
+            return True
+
+    return False
 
 
 def _detect_relationship(
@@ -671,15 +752,21 @@ def _detect_relationship(
     source_dir: Path, origin: Path, rel: Path,
 ) -> str | None:
     """Detect the relationship between two config files."""
-    # Dockerfile ↔ docker-compose
-    if origin_name.startswith("dockerfile") and rel_name.startswith("docker-compose"):
-        return "referenced_by_compose"
-    if origin_name.startswith("docker-compose") and rel_name.startswith("dockerfile"):
-        return "builds_dockerfile"
+    same_dir = origin.parent == rel.parent
 
-    # docker-compose variants (override, dev, prod)
+    # Dockerfile ↔ docker-compose: same directory is always a match;
+    # cross-directory requires the compose to actually reference this file.
+    if origin_name.startswith("dockerfile") and rel_name.startswith("docker-compose"):
+        if same_dir or _file_references_path(source_dir, rel, origin):
+            return "referenced_by_compose"
+    if origin_name.startswith("docker-compose") and rel_name.startswith("dockerfile"):
+        if same_dir or _file_references_path(source_dir, rel, origin):
+            return "builds_dockerfile"
+
+    # docker-compose variants (override, dev, prod) — same directory
     if (origin_name.startswith("docker-compose")
-            and rel_name.startswith("docker-compose")):
+            and rel_name.startswith("docker-compose")
+            and same_dir):
         return "compose_variant"
 
     # .env family
@@ -710,19 +797,13 @@ def _detect_relationship(
         if "templates" in str(origin) and "values" in rel_name:
             return "helm_template_uses_values"
 
-    # Cross-reference check — only between config files (not scripts/source code)
-    # to avoid false positives from plain-text mentions of filenames.
+    # Cross-reference check — only between config files (not scripts/source code).
     rel_ext = rel.suffix.lower()
     rel_is_config = (
         rel_ext in _CONFIG_CROSS_REF_EXTS
         or rel_name.startswith(("dockerfile", "docker-compose", ".env"))
     )
-    if rel_is_config:
-        try:
-            text = (source_dir / rel).read_text(encoding="utf-8", errors="replace")
-            if origin.name in text:
-                return "references_origin"
-        except OSError:
-            pass
+    if rel_is_config and _file_references_path(source_dir, rel, origin):
+        return "references_origin"
 
     return None

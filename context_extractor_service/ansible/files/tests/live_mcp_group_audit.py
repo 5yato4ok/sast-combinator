@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -162,6 +163,37 @@ _RESERVED_WORDS = frozenset({
     "int", "float", "double", "char", "bool", "string", "var", "let", "const",
 })
 
+_CALLER_SKIP_DIRS = frozenset({
+    ".git",
+    ".svn",
+    ".hg",
+    ".idea",
+    ".vscode",
+    "node_modules",
+    "__pycache__",
+    ".tox",
+    ".mypy_cache",
+    "vendor",
+    "third_party",
+    "build",
+    "dist",
+    ".next",
+    "target",
+    "bin",
+    "obj",
+    ".gradle",
+})
+
+_CALLER_SOURCE_EXTS = frozenset({
+    ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx",
+    ".java", ".kt", ".scala", ".c", ".h", ".cpp", ".cc", ".cxx", ".hpp",
+    ".cs", ".go", ".rs", ".rb", ".php", ".swift", ".m", ".mm",
+})
+
+_CALLER_PARAM_NAMES = frozenset({
+    "error", "event", "result", "data", "item", "value", "response",
+})
+
 
 def _candidate_function_name(payload: Any) -> str | None:
     if not isinstance(payload, dict):
@@ -180,6 +212,163 @@ def _candidate_function_name(payload: Any) -> str | None:
     return None
 
 
+def _iter_caller_source_files(source_dir: Path):
+    for dirpath, dirnames, filenames in os.walk(source_dir):
+        dirnames[:] = [d for d in dirnames if d not in _CALLER_SKIP_DIRS]
+        for fname in filenames:
+            fpath = Path(dirpath) / fname
+            if fpath.suffix.lower() in _CALLER_SOURCE_EXTS:
+                yield fpath.relative_to(source_dir)
+
+
+def _looks_vendored_path(path: str) -> bool:
+    lower = path.lower()
+    name = Path(path).name.lower()
+    return (
+        ".min." in name
+        or "/tinymce/" in lower
+        or "/jquery" in lower
+        or "/vendor/" in lower
+        or "/third_party/" in lower
+        or "/node_modules/" in lower
+    )
+
+
+def _brace_function_name(line: str) -> str | None:
+    stripped = line.strip()
+    if not stripped or stripped.startswith(("//", "#", "*")):
+        return None
+    if re.match(r"^(if|for|while|switch|catch|return|new)\b", stripped):
+        return None
+    patterns = [
+        re.compile(r"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\("),
+        re.compile(r"^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\b.*=>"),
+        re.compile(r"^\s*(?:async\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\([^;]*\)\s*\{"),
+        re.compile(r"^\s*(?:[\w:<>\[\],*&]+\s+)+(?:[\w:]+::)?([A-Za-z_][A-Za-z0-9_]*)\s*\([^;]*\)\s*(?:const\b)?\s*(?:\{|$)"),
+    ]
+    for pattern in patterns:
+        match = pattern.match(line)
+        if not match:
+            continue
+        name = match.group(1)
+        if name.lower() in _RESERVED_WORDS:
+            continue
+        return name
+    return None
+
+
+def _is_definition_line(line: str, function_name: str) -> bool:
+    stripped = line.lstrip()
+    if re.match(
+        r"(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:def|func|function|fn)\s+"
+        + re.escape(function_name) + r"\b",
+        stripped,
+    ):
+        return True
+    if re.search(r"\w+(?:::\w+)*::" + re.escape(function_name) + r"\s*\(", stripped):
+        return True
+    if re.search(
+        r"(?:^|[\s;{])(?:virtual\s+|static\s+|inline\s+)*\w[\w\s*&<>,:]*\s+"
+        + re.escape(function_name) + r"\s*\([^)]*\)\s*(?:const\s*)?(?:override\s*)?(?:=\s*0\s*)?[;{]?",
+        stripped,
+    ):
+        return True
+    if re.match(r"^\s*(?:export\s+)?(?:const|let|var)\s+" + re.escape(function_name) + r"\b.*=>", stripped):
+        return True
+    return False
+
+
+def _normalize_caller_records(payload: Any) -> list[dict[str, Any]]:
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    if isinstance(payload, dict):
+        return [payload]
+    return []
+
+
+def _expected_callers(source_dir: Path, function_name: str) -> list[dict[str, Any]]:
+    pattern = re.compile(r"(?<![A-Za-z0-9_])" + re.escape(function_name) + r"\s*\(")
+    results: list[dict[str, Any]] = []
+
+    for rel in _iter_caller_source_files(source_dir):
+        rel_str = str(rel)
+        if _looks_vendored_path(rel_str):
+            continue
+        full = source_dir / rel
+        try:
+            text = full.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        lines = text.splitlines()
+        python_stack: list[tuple[str, int]] = []
+        brace_stack: list[tuple[str, int]] = []
+        pending_brace: tuple[str, int] | None = None
+        brace_depth = 0
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            indent = len(line) - len(line.lstrip(" "))
+            if stripped and not stripped.startswith("#"):
+                while python_stack and indent <= python_stack[-1][1]:
+                    python_stack.pop()
+            py_match = re.match(r"^\s*def\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", line)
+            if py_match:
+                python_stack.append((py_match.group(1), indent))
+            brace_name = _brace_function_name(line)
+            if brace_name:
+                if "{" in line:
+                    brace_stack.append((brace_name, brace_depth))
+                else:
+                    pending_brace = (brace_name, brace_depth)
+            elif pending_brace and "{" in line:
+                brace_stack.append(pending_brace)
+                pending_brace = None
+
+            if pattern.search(line) and not _is_definition_line(line, function_name):
+                caller = python_stack[-1][0] if python_stack else (brace_stack[-1][0] if brace_stack else None)
+                results.append({
+                    "file": rel_str,
+                    "line": i + 1,
+                    "caller_function": caller,
+                })
+
+            brace_depth += line.count("{") - line.count("}")
+            while brace_stack and brace_depth <= brace_stack[-1][1]:
+                brace_stack.pop()
+    return results
+
+
+def _find_callers_oracle_anomalies(
+    source_dir: Path,
+    function_name: str,
+    payload: Any,
+) -> list[str]:
+    actual_records = _normalize_caller_records(payload)
+    if not actual_records:
+        return []
+    expected_records = _expected_callers(source_dir, function_name)
+    expected_map = {
+        (item["file"], item["line"]): item["caller_function"]
+        for item in expected_records
+    }
+    actual_map = {
+        (item.get("file"), item.get("line")): item.get("caller_function")
+        for item in actual_records
+        if item.get("file") and item.get("line")
+    }
+    anomalies: list[str] = []
+    if set(expected_map) - set(actual_map):
+        anomalies.append("caller_missing_expected")
+    if set(actual_map) - set(expected_map):
+        anomalies.append("caller_extra_unexpected")
+    for key, caller in actual_map.items():
+        if caller in _CALLER_PARAM_NAMES and "caller_param_name" not in anomalies:
+            anomalies.append("caller_param_name")
+        if key in expected_map and caller != expected_map[key] and "caller_enclosing_mismatch" not in anomalies:
+            anomalies.append("caller_enclosing_mismatch")
+    return anomalies
+
+
 def run_mcp_audit(groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
     groups_json = json.dumps(groups)
     script = f"""
@@ -187,6 +376,7 @@ import json
 import os
 import re
 import anyio
+import mcp_server
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
@@ -198,6 +388,25 @@ FUNCTION_PATTERNS = [
     re.compile(r"\\b([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(?:async\\s+)?\\([^)]*\\)\\s*=>"),
     re.compile(r"\\b([A-Za-z_][A-Za-z0-9_:<>]*)::([A-Za-z_][A-Za-z0-9_]*)\\s*\\("),
 ]
+
+CALLER_SKIP_DIRS = {{
+    '.git', '.svn', '.hg', '.idea', '.vscode', 'node_modules', '__pycache__',
+    '.tox', '.mypy_cache', 'vendor', 'third_party', 'build', 'dist', '.next',
+    'target', 'bin', 'obj', '.gradle',
+}}
+CALLER_SOURCE_EXTS = {{
+    '.py', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.java', '.kt', '.scala',
+    '.c', '.h', '.cpp', '.cc', '.cxx', '.hpp', '.cs', '.go', '.rs', '.rb', '.php',
+    '.swift', '.m', '.mm',
+}}
+CALLER_PARAM_NAMES = {{
+    'error', 'event', 'result', 'data', 'item', 'value', 'response',
+}}
+RESERVED_WORDS = {{
+    'void', 'null', 'undefined', 'true', 'false', 'return', 'new', 'this',
+    'class', 'if', 'else', 'for', 'while', 'switch', 'case', 'int', 'float',
+    'double', 'char', 'bool', 'string', 'var', 'let', 'const',
+}}
 
 def is_config_path(path: str) -> bool:
     lower = path.lower()
@@ -254,6 +463,17 @@ def parse_text_payload(text):
     except Exception:
         return text
 
+def collect_mcp_payload(items):
+    texts = [getattr(item, 'text', '') for item in items if getattr(item, 'text', '')]
+    if not texts:
+        return None
+    parsed = [parse_text_payload(text) for text in texts]
+    if len(parsed) == 1:
+        return parsed[0]
+    if all(isinstance(item, dict) for item in parsed):
+        return parsed
+    return parsed
+
 def candidate_trace_identifiers(payload, limit=2):
     if not isinstance(payload, dict):
         return []
@@ -284,6 +504,122 @@ def candidate_function_name(payload):
             return match.group(2)
         return match.group(1)
     return None
+
+def iter_caller_source_files(source_dir):
+    for dirpath, dirnames, filenames in os.walk(source_dir):
+        dirnames[:] = [d for d in dirnames if d not in CALLER_SKIP_DIRS]
+        for fname in filenames:
+            fpath = os.path.join(dirpath, fname)
+            if os.path.splitext(fpath)[1].lower() in CALLER_SOURCE_EXTS:
+                yield os.path.relpath(fpath, source_dir)
+
+def looks_vendored_path(path):
+    lower = path.lower()
+    name = path.rsplit('/', 1)[-1].lower()
+    return (
+        '.min.' in name or '/tinymce/' in lower or '/jquery' in lower
+        or '/vendor/' in lower or '/third_party/' in lower or '/node_modules/' in lower
+    )
+
+def brace_function_name(line):
+    stripped = line.strip()
+    if not stripped or stripped.startswith(('//', '#', '*')):
+        return None
+    if re.match(r'^(if|for|while|switch|catch|return|new)\\b', stripped):
+        return None
+    patterns = [
+        re.compile(r'^\\s*(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?function\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\('),
+        re.compile(r'^\\s*(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b.*=>'),
+        re.compile(r'^\\s*(?:async\\s+)?([A-Za-z_][A-Za-z0-9_]*)\\s*\\([^;]*\\)\\s*\\{{'),
+        re.compile(r'^\\s*(?:[\\w:<>\\[\\],*&]+\\s+)+(?:[\\w:]+::)?([A-Za-z_][A-Za-z0-9_]*)\\s*\\([^;]*\\)\\s*(?:const\\b)?\\s*(?:\\{{|$)'),
+    ]
+    for pattern in patterns:
+        match = pattern.match(line)
+        if not match:
+            continue
+        name = match.group(1)
+        if name.lower() in RESERVED_WORDS:
+            continue
+        return name
+    return None
+
+def is_definition_line(line, function_name):
+    stripped = line.lstrip()
+    if re.match(
+        r'(?:export\\s+)?(?:default\\s+)?(?:async\\s+)?(?:def|func|function|fn)\\s+'
+        + re.escape(function_name) + r'\\b',
+        stripped,
+    ):
+        return True
+    if re.search(r'\\w+(?:::\\w+)*::' + re.escape(function_name) + r'\\s*\\(', stripped):
+        return True
+    if re.search(
+        r'(?:^|[\\s;\\{{])(?:virtual\\s+|static\\s+|inline\\s+)*\\w[\\w\\s*&<>,:]*\\s+'
+        + re.escape(function_name) + r'\\s*\\([^)]*\\)\\s*(?:const\\s*)?(?:override\\s*)?(?:=\\s*0\\s*)?[;\\{{]?',
+        stripped,
+    ):
+        return True
+    if re.match(r'^\\s*(?:export\\s+)?(?:const|let|var)\\s+' + re.escape(function_name) + r'\\b.*=>', stripped):
+        return True
+    return False
+
+def normalize_caller_records(payload):
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    if isinstance(payload, dict):
+        return [payload]
+    return []
+
+def expected_callers(pipeline_id, function_name):
+    source_dir = str(mcp_server._resolve_source_dir(pipeline_id))
+    pattern = re.compile(r'(?<![A-Za-z0-9_])' + re.escape(function_name) + r'\\s*\\(')
+    results = []
+    for rel in iter_caller_source_files(source_dir):
+        if looks_vendored_path(rel):
+            continue
+        full = os.path.join(source_dir, rel)
+        try:
+            with open(full, encoding='utf-8', errors='replace') as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        lines = text.splitlines()
+        python_stack = []
+        brace_stack = []
+        pending_brace = None
+        brace_depth = 0
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            indent = len(line) - len(line.lstrip(' '))
+            if stripped and not stripped.startswith('#'):
+                while python_stack and indent <= python_stack[-1][1]:
+                    python_stack.pop()
+            py_match = re.match(r'^\\s*def\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\(', line)
+            if py_match:
+                python_stack.append((py_match.group(1), indent))
+            name = brace_function_name(line)
+            if name:
+                if '{{' in line:
+                    brace_stack.append((name, brace_depth))
+                else:
+                    pending_brace = (name, brace_depth)
+            elif pending_brace and '{{' in line:
+                brace_stack.append(pending_brace)
+                pending_brace = None
+            if pattern.search(line) and not is_definition_line(line, function_name):
+                caller = python_stack[-1][0] if python_stack else (brace_stack[-1][0] if brace_stack else None)
+                results.append({{'file': rel, 'line': i + 1, 'caller_function': caller}})
+            brace_depth += line.count('{{') - line.count('}}')
+            while brace_stack and brace_depth <= brace_stack[-1][1]:
+                brace_stack.pop()
+    return results
+
+def find_callers_oracle_anomalies(group, payload):
+    records = normalize_caller_records(payload)
+    if not records:
+        return []
+    expected = expected_callers(group['pipeline_id'], candidate_function_name({{'text': ''}}) or '')
+    return []
 
 def detect_anomalies(tool_name, group, payload):
     anomalies = []
@@ -326,12 +662,33 @@ def detect_anomalies(tool_name, group, payload):
         target_file = payload.get('file', '')
         if ('.min.' in target_file or '/tinymce/' in target_file) and payload.get('pattern'):
             anomalies.append('route_to_vendor_asset')
+        pattern = payload.get('pattern')
+        if isinstance(pattern, str) and len(pattern) <= 2 and target_file:
+            anomalies.append('route_symbol_collision')
+    if tool_name == 'find_callers':
+        records = normalize_caller_records(payload)
+        for record in records:
+            caller_function = record.get('caller_function')
+            snippet = record.get('snippet', '')
+            if caller_function in CALLER_PARAM_NAMES:
+                anomalies.append('caller_param_name')
+            if isinstance(snippet, str):
+                stripped = snippet.lower()
+                if 'function ' in stripped or 'def ' in stripped or '::' in snippet:
+                    anomalies.append('caller_definition_site')
+    if tool_name == 'find_definition' and isinstance(payload, list):
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            target_file = item.get('file', '')
+            if '.min.' in target_file or '/tinymce/' in target_file:
+                anomalies.append('definition_to_vendor_asset')
+                break
     return anomalies
 
 async def call_and_store(session, entry, tool_name, args):
     result = await session.call_tool(tool_name, args)
-    texts = [getattr(item, 'text', '') for item in result.content]
-    payload = parse_text_payload(texts[0]) if texts else None
+    payload = collect_mcp_payload(result.content)
     record = {{
         'tool': tool_name,
         'args': args,
@@ -378,7 +735,7 @@ async def main():
                     )
                 function_name = candidate_function_name(base_results.get('extract_function', {{}}).get('payload'))
                 if function_name:
-                    await call_and_store(
+                    callers_record = await call_and_store(
                         session,
                         entry,
                         'find_callers',
@@ -388,6 +745,24 @@ async def main():
                             'function_name': function_name,
                         }},
                     )
+                    expected = expected_callers(group['pipeline_id'], function_name)
+                    expected_map = {{
+                        (item['file'], item['line']): item['caller_function']
+                        for item in expected
+                    }}
+                    actual = normalize_caller_records(callers_record['payload'])
+                    actual_map = {{
+                        (item.get('file'), item.get('line')): item.get('caller_function')
+                        for item in actual
+                        if item.get('file') and item.get('line')
+                    }}
+                    if set(expected_map) - set(actual_map):
+                        callers_record['anomalies'].append('caller_missing_expected')
+                    if set(actual_map) - set(expected_map):
+                        callers_record['anomalies'].append('caller_extra_unexpected')
+                    for key, caller in actual_map.items():
+                        if key in expected_map and caller != expected_map[key]:
+                            callers_record['anomalies'].append('caller_enclosing_mismatch')
                     await call_and_store(
                         session,
                         entry,
@@ -434,6 +809,23 @@ def summarize(report: list[dict[str, Any]]) -> dict[str, Any]:
         "tool_counts": dict(sorted(tool_counts.items())),
         "anomalies": dict(sorted(anomaly_counts.items(), key=lambda item: (-item[1], item[0]))),
     }
+
+
+def _collect_mcp_payload(items: list[Any]) -> Any:
+    texts = [getattr(item, "text", "") for item in items if getattr(item, "text", "")]
+    if not texts:
+        return None
+    parsed = []
+    for text in texts:
+        try:
+            parsed.append(json.loads(text))
+        except Exception:
+            parsed.append(text)
+    if len(parsed) == 1:
+        return parsed[0]
+    if all(isinstance(item, dict) for item in parsed):
+        return parsed
+    return parsed
 
 
 def main() -> int:

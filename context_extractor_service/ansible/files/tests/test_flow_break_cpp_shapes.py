@@ -47,7 +47,7 @@ static void backup(Object* object, Get get, Set set, const char* backupId)
     assert "get" in signature_result["writes"]
     assert "set" in signature_result["writes"]
     assert "backupId" in signature_result["writes"]
-    assert "QnTypedPropertyBackup" in body_result["reads"]
+    assert "object" in body_result["reads"]  # QnTypedPropertyBackup is a type, not a value
     assert "object" in body_result["reads"]
     assert "get" in body_result["reads"]
     assert "set" in body_result["reads"]

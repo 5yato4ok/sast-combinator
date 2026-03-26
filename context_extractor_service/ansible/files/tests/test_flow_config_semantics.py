@@ -105,6 +105,6 @@ def test_find_related_configs_should_keep_expected_compose_relationships():
 
     assert related == [
         {"file": "Dockerfile", "relationship": "builds_dockerfile"},
-        {"file": ".env", "relationship": "env_file"},
         {"file": "docker-compose.prod.yml", "relationship": "compose_variant"},
+        {"file": ".env", "relationship": "env_file"},
     ]

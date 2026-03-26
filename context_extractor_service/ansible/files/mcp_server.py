@@ -48,7 +48,9 @@ from context_extractor.project_analysis import (
     find_definition as _find_definition,
 )
 from context_extractor.project_analysis import (
-    find_imports as _find_imports,
+    _imports_from_ast,
+    _imports_from_regex,
+    _try_parse,
 )
 from context_extractor.project_analysis import (
     find_route_to_function as _find_route,
@@ -196,8 +198,10 @@ def _find_node_at_line(node, line_number: int):
 
 
 def _climb_to_statement(node, nodeset):
-    """Walk up from *node* to the nearest key-statement or structural ancestor.
+    """Walk up from *node* to the outermost key-statement covering the target line.
 
+    Prefers the broadest statement (e.g. expression_statement over a nested
+    call_expression) so that ``split_reads_writes`` sees the full context.
     Stops at block/function boundaries to avoid escaping scope.
     """
     key_types = nodeset.get("key", set())
@@ -209,14 +213,46 @@ def _climb_to_statement(node, nodeset):
         "expression_statement", "with_clause",
         "formal_parameters",
     }
+    all_stmt_types = key_types | extra_types
+    best = node
     current = node
     while current is not None:
-        if current.type in key_types or current.type in extra_types:
-            return current
+        if current.type in all_stmt_types:
+            best = current
         if current.type in block_types:
-            return node
+            break
         current = current.parent
-    return node
+    return best
+
+
+def _inject_html_script(html_source, line_number, html_lang, html_key):
+    """Language injection for HTML: find the ``<script>`` ``raw_text`` node
+    covering *line_number*, extract its content, and return JavaScript
+    language/source/line for re-parsing.
+
+    Falls back to the original HTML language if no script block covers the line.
+    """
+    from context_extractor.ts_utils import JS_LANGUAGE
+
+    parser = create_parser(html_lang)
+    html_bytes = html_source.encode("utf-8", errors="replace")
+    tree = parser.parse(html_bytes)
+
+    # Walk HTML AST to find raw_text nodes inside script_element
+    for child in tree.root_node.children:
+        if child.type == "script_element":
+            for sub in child.children:
+                if sub.type == "raw_text":
+                    s_line = sub.start_point[0] + 1  # 1-based
+                    e_line = sub.end_point[0] + 1
+                    if s_line <= line_number <= e_line:
+                        js_source = html_bytes[sub.start_byte:sub.end_byte].decode(
+                            "utf-8", errors="replace",
+                        )
+                        adjusted = line_number - s_line + 1
+                        return JS_LANGUAGE, "javascript", js_source, adjusted
+
+    return html_lang, html_key, html_source, line_number
 
 
 # ── MCP Server ───────────────────────────────────────────────────
@@ -268,6 +304,14 @@ def find_identifiers(pipeline_id: str, file_path: str, line_number: int) -> dict
     """
     source, full_path = _read_source(pipeline_id, file_path)
     lang, lang_key = detect_language(full_path)
+
+    # HTML language injection: parse HTML to find the <script> raw_text
+    # covering the target line, then re-parse that block as JavaScript.
+    if lang_key == "html":
+        lang, lang_key, source, line_number = _inject_html_script(
+            source, line_number, lang, lang_key,
+        )
+
     parser = create_parser(lang)
     source_bytes = source.encode("utf-8", errors="replace")
     tree = parser.parse(source_bytes)
@@ -404,8 +448,11 @@ def find_imports(pipeline_id: str, file_path: str) -> list[str]:
         file_path: Relative path within the project
 
     """
-    source_dir = _resolve_source_dir(pipeline_id)
-    return _find_imports(source_dir, file_path)
+    source, full_path = _read_source(pipeline_id, file_path)
+    tree, lang_key, src_bytes = _try_parse(source, full_path)
+    if tree and lang_key and src_bytes:
+        return _imports_from_ast(tree.root_node, lang_key, src_bytes)
+    return _imports_from_regex(source)
 
 
 @mcp.tool()
@@ -452,8 +499,13 @@ def classify_file(pipeline_id: str, file_path: str) -> dict:
         file_path: Relative path within the project
 
     """
-    _resolve_source_dir(pipeline_id)  # validate pipeline access
-    return _classify_file(file_path)
+    source = None
+    try:
+        source_dir = _resolve_source_dir(pipeline_id)
+        source = (source_dir / file_path).read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+    return _classify_file(file_path, source=source)
 
 
 # ── Navigation tools ─────────────────────────────────────────────

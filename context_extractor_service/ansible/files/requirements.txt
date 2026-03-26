@@ -1,28 +1,29 @@
-flask
-requests
-tree_sitter
-tree-sitter-cpp
-tree-sitter-python
-tree-sitter-javascript
-tree-sitter-java
-tree-sitter-c-sharp
-tree_sitter_typescript
-tree_sitter_go
-tree_sitter_kotlin
-tree_sitter_ruby
-tree_sitter_php
+flask==3.1.1
+requests==2.32.5
+tree_sitter==0.25.0
+tree-sitter-cpp==0.23.4
+tree-sitter-python==0.23.6
+tree-sitter-javascript==0.23.1
+tree-sitter-java==0.23.5
+tree-sitter-c-sharp==0.23.1
+tree_sitter_typescript==0.23.2
+tree_sitter_go==0.23.4
+tree_sitter_kotlin==1.1.0
+tree_sitter_ruby==0.23.1
+tree_sitter_php==0.24.1
 
 # Config language grammars (YAML, Dockerfile, HCL/Terraform, TOML, JSON, Bash)
-tree-sitter-yaml
-tree-sitter-dockerfile
-tree-sitter-hcl
-tree-sitter-toml
-tree-sitter-json
-tree-sitter-bash
+tree-sitter-yaml==0.7.2
+tree-sitter-dockerfile==0.2.0
+tree-sitter-hcl==1.2.0
+tree-sitter-toml==0.7.0
+tree-sitter-json==0.24.8
+tree-sitter-bash==0.25.1
+tree-sitter-html==0.23.2
 
 # MCP server
-mcp>=1.26.0
-httpx
+mcp==1.26.0
+httpx==0.28.1
 
 # Testing
-pytest
+pytest==8.4.1

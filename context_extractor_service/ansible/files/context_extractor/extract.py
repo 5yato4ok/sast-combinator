@@ -8,23 +8,6 @@ from .ts_utils import detect_language, create_parser, line_range
 from .config import LANG_NODESETS
 from .io import load_source_from_url
 
-# Node types that represent structural containers — climb_to_multiline should
-# never return these as "the code on the target line".
-_STRUCTURAL_CONTAINERS = frozenset({
-    # Module/program roots
-    "program", "module", "translation_unit", "source_file",
-    # Parameter lists
-    "formal_parameters", "parameters", "parameter_list",
-    # Class/struct bodies and declarations
-    "field_declaration_list", "class_body", "enum_body",
-    "struct_specifier", "class_specifier",
-    # Destructuring patterns
-    "object_pattern", "array_pattern",
-    # Preprocessor conditionals
-    "preproc_if", "preproc_ifdef", "preproc_else", "preproc_elif",
-    # JSX elements
-    "jsx_element", "jsx_opening_element", "jsx_self_closing_element",
-})
 
 def extract_function_from_source(source_code: str, filename: str, line_number: int, max_lines) -> Dict[str, Any]:
     from . import compress_function_from_source
@@ -74,21 +57,25 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
     search_root = func_node if func_node is not None else tree.root_node
     node_at_line = find_smallest_node_covering_line(search_root, line_number)
 
-    # If that node is single-line, climb up until multi-line — but stop
-    # at block/function boundaries and avoid returning a key-statement that
-    # starts on the target line (the caller should use the source line instead).
-    block_types = nodeset.get("block", set()) | nodeset.get("function", set())
-    key_types = nodeset.get("key", set())
-
+    # Climb up from the smallest node to find a multi-line data literal or
+    # expression that is worth returning as "code on line".  For everything
+    # else (control flow, statements, blocks) fall back to the source line.
     def climb_to_multiline(node: Optional[Node]) -> Optional[Node]:
+        # For SAST triage, showing the exact source line is almost always
+        # more useful than expanding to a multi-line AST node.  We only
+        # return multi-line for expression operators (boolean conditions)
+        # that genuinely span the target line.
+        _expression_types = frozenset({
+            "binary_expression", "boolean_operator", "comparison_operator",
+            "conditional_expression", "ternary_expression",
+            "jsx_expression",
+        })
         while node is not None:
-            if node.type in block_types or node.type in _STRUCTURAL_CONTAINERS:
-                return None
             s, e = line_range(node)
             if e > s:  # multi-line node found
-                if node.type in key_types and (s + 1) == line_number:
-                    return None
-                return node
+                if node.type in _expression_types:
+                    return node
+                return None
             node = node.parent
         return None
 

@@ -41,7 +41,7 @@ struct P {
     result = mcp_server.find_identifiers("pipe", "live_preview.cpp", 2)
 
     assert "thumbnailSource" in result["writes"]
-    assert "LivePreviewThumbnail" in result["reads"]
+    assert "q" in result["reads"]  # LivePreviewThumbnail is a type, not a value
     assert "q" in result["reads"]
 
 

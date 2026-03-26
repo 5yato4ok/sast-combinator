@@ -38,8 +38,8 @@ def test_find_related_configs_should_keep_env_and_variant_relationships():
         related = find_related_configs(root, "docker-compose.yml")
 
     assert related == [
-        {"file": ".env", "relationship": "env_file"},
         {"file": "docker-compose.prod.yml", "relationship": "compose_variant"},
+        {"file": ".env", "relationship": "env_file"},
     ]
 
 

@@ -6,6 +6,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from live_mcp_group_audit import (
+    _collect_mcp_payload,
     _candidate_function_name,
     _candidate_trace_identifiers,
     _is_config_path,
@@ -142,6 +143,25 @@ def test_summarize_counts_errors_anomalies_and_tool_usage():
         "trace_self_referential_assignment": 1,
         "unsupported_tsx_identifiers": 1,
     }
+
+
+class _FakeContentItem:
+    def __init__(self, text: str):
+        self.text = text
+
+
+def test_collect_mcp_payload_should_preserve_multiple_dict_items():
+    payload = _collect_mcp_payload(
+        [
+            _FakeContentItem('{"file":"page.ts","line":2,"caller_function":"run"}'),
+            _FakeContentItem('{"file":"page.ts","line":5,"caller_function":null}'),
+        ]
+    )
+
+    assert payload == [
+        {"file": "page.ts", "line": 2, "caller_function": "run"},
+        {"file": "page.ts", "line": 5, "caller_function": None},
+    ]
 
 
 

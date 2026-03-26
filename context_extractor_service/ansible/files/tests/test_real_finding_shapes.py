@@ -371,6 +371,6 @@ def test_config_flow_handles_dev_template_and_override_semantics():
 
     assert related == [
         {"file": "Dockerfile", "relationship": "builds_dockerfile"},
-        {"file": ".env", "relationship": "env_file"},
         {"file": "docker-compose.prod.yml", "relationship": "compose_variant"},
+        {"file": ".env", "relationship": "env_file"},
     ]

@@ -8,6 +8,7 @@ import tree_sitter_cpp as cpp_lang
 import tree_sitter_dockerfile as dockerfile_lang
 import tree_sitter_go as go_lang
 import tree_sitter_hcl as hcl_lang
+import tree_sitter_html as html_lang
 import tree_sitter_java as java_lang
 import tree_sitter_javascript as js_lang
 import tree_sitter_json as json_lang
@@ -55,6 +56,7 @@ HCL_LANGUAGE = _resolve_language(hcl_lang, "language", "language_hcl")
 TOML_LANGUAGE = _resolve_language(toml_lang, "language", "language_toml")
 JSON_LANGUAGE = _resolve_language(json_lang, "language", "language_json")
 BASH_LANGUAGE = _resolve_language(bash_lang, "language", "language_bash")
+HTML_LANGUAGE = _resolve_language(html_lang, "language", "language_html")
 
 # tree-sitter-dockerfile v0.2.0 has a broken binding (no language() export).
 # Load it gracefully — if unavailable, Dockerfiles fall back to text analysis.
@@ -82,6 +84,7 @@ _LANG_KEY_MAP: dict[Language, str] = {
     TOML_LANGUAGE: "toml",
     JSON_LANGUAGE: "json",
     BASH_LANGUAGE: "bash",
+    HTML_LANGUAGE: "html",
 }
 if DOCKERFILE_LANGUAGE:
     _LANG_KEY_MAP[DOCKERFILE_LANGUAGE] = "dockerfile"
@@ -117,6 +120,9 @@ SUPPORTED_LANGUAGES = {
     ".hcl": HCL_LANGUAGE,
     ".sh": BASH_LANGUAGE,
     ".bash": BASH_LANGUAGE,
+    # HTML
+    ".html": HTML_LANGUAGE,
+    ".htm": HTML_LANGUAGE,
 }
 
 # Files matched by full name (no extension-based matching)

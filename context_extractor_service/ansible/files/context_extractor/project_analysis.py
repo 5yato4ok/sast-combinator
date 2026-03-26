@@ -282,9 +282,21 @@ def _imports_from_regex(source: str) -> list[str]:
     return [m.group(0).strip() for m in _IMPORT_RE.finditer(source)]
 
 
-def classify_file(file_path: str) -> dict[str, Any]:
+_CONFIG_CONTENT_RE = re.compile(
+    r"(?i)(?:password|passwd|secret|token|api_?key|private_?key|credential|"
+    r"smtp|database_url|redis_url|connection_string|bucket|endpoint|"
+    r"access_key|auth|oauth|certificate)",
+)
+
+
+def classify_file(file_path: str, source: str | None = None) -> dict[str, Any]:
     """
     Classify a file by its path as test/migration/generated/vendored/config/production.
+
+    When *source* is provided and path-based heuristics fall through to
+    ``"production"``, the content is checked for configuration patterns
+    (secrets, connection strings, infrastructure keys).  This catches
+    config files like ``cloud_portal.yaml`` that have generic paths.
 
     Returns ``{type, confidence, reason}``.
     """
@@ -337,9 +349,24 @@ def classify_file(file_path: str) -> dict[str, Any]:
         return {"type": "config", "confidence": 0.9,
                 "reason": "filename is a known configuration file"}
 
+    # Config filename patterns — only for non-source-code extensions
+    # (avoids classifying runtime modules like config.ts as infrastructure config)
+    _infra_config_exts = {".yaml", ".yml", ".json", ".toml", ".ini", ".cfg",
+                          ".conf", ".properties", ".env"}
+    file_ext = Path(file_path).suffix.lower()
+    if file_ext in _infra_config_exts:
+        config_file_patterns = [
+            "*config*",     # cloud_portal.yaml, flowerconfig.yml
+            "*settings*",   # base_settings.yaml
+            "*.jenkins.*",  # cloud_portal.jenkins.yaml
+        ]
+        if any(fnmatch.fnmatch(name, pat) for pat in config_file_patterns):
+            return {"type": "config", "confidence": 0.85,
+                    "reason": "filename matches configuration pattern"}
+
     # CI/pipeline filenames
     ci_names = {"jenkinsfile", "vagrantfile", "rakefile",
-                ".travis.yml", "appveyor.yml"}
+                ".travis.yml", "appveyor.yml", ".gitlab-ci.yml"}
     if name in ci_names:
         return {"type": "config", "confidence": 0.9,
                 "reason": "filename is a CI/build pipeline file"}
@@ -349,23 +376,23 @@ def classify_file(file_path: str) -> dict[str, Any]:
         return {"type": "config", "confidence": 0.9,
                 "reason": "docker-compose variant file"}
 
-    # CI/build directories
-    ci_build_dirs = {".circleci", ".gitlab", "build_scripts",
-                     "deploy_scripts"}
-    if any(p.lower() in ci_build_dirs for p in parts):
+    # Deploy directories — files here are infrastructure config, not runtime code
+    deploy_dirs = {"deploy", ".circleci", ".gitlab", "build_scripts",
+                   "deploy_scripts", "infra", "infrastructure"}
+    if any(p.lower() in deploy_dirs for p in parts):
         return {"type": "config", "confidence": 0.85,
-                "reason": "path is in a CI/build directory"}
+                "reason": "path is in a deploy/infrastructure directory"}
 
     # GitHub Actions workflows specifically (not all .github/ content)
     if ".github/workflows" in path_lower or ".github\\workflows" in path_lower:
         return {"type": "config", "confidence": 0.9,
                 "reason": "GitHub Actions workflow file"}
 
-    # Tooling/deploy script directories
-    tooling_prefixes = ("etc/scripts", "tools/scripts", "deploy/scripts")
+    # Tooling/build script directories
+    tooling_prefixes = ("etc/scripts", "tools/scripts")
     if any(path_lower.startswith(p) for p in tooling_prefixes):
         return {"type": "config", "confidence": 0.85,
-                "reason": "path is in a tooling/deploy scripts directory"}
+                "reason": "path is in a tooling/build scripts directory"}
 
     # Minified assets (*.min.js, *.min.css, etc.)
     if ".min." in name:
@@ -383,6 +410,15 @@ def classify_file(file_path: str) -> dict[str, Any]:
     if "static" in parts_lower and any(p in _KNOWN_VENDORED_LIBS for p in parts_lower):
         return {"type": "vendored", "confidence": 0.8,
                 "reason": "static directory contains known third-party library path"}
+
+    # Content-based fallback for non-source-code files: check for config patterns.
+    # Only applied to data/config file extensions — source code files (.ts, .py, .js, etc.)
+    # often reference secrets in runtime logic without being config themselves.
+    _content_check_exts = {".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf",
+                           ".properties", ".env"}
+    if source and file_ext in _content_check_exts and _CONFIG_CONTENT_RE.search(source):
+        return {"type": "config", "confidence": 0.75,
+                "reason": "file content contains configuration/secret patterns"}
 
     return {"type": "production", "confidence": 0.7,
             "reason": "no test/migration/vendor/config indicators found"}

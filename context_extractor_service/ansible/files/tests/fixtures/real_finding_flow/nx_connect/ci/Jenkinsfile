@@ -1,0 +1,15 @@
+pipeline {
+    environment {
+        // Primary constants
+        SERVICE_NAME = "nx-connect-ui"
+        AWS_ACCOUNT_ID = "036867143060"
+        AWS_REGION = "us-east-1"
+
+        // Derivative constants
+        ECR_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        SERVICE_ECR_REPOSITORY = "${ECR_URI}/${SERVICE_NAME}"
+        UNIQUE_DOCKER_TAG = "${env.GIT_COMMIT}.${env.BUILD_NUMBER}"
+        IMAGE_FULL_SPEC = "${SERVICE_ECR_REPOSITORY}:${UNIQUE_DOCKER_TAG}"
+        IMAGE_LATEST_SPEC = "${SERVICE_ECR_REPOSITORY}:latest"
+    }
+}

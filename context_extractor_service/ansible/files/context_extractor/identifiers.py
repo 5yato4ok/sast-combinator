@@ -13,16 +13,21 @@ def is_declaration(n: Node, nodeset) -> bool:   return n.type in nodeset["declar
 def is_call(n: Node, nodeset) -> bool:          return n.type in nodeset["call"]
 def is_loop(n: Node, nodeset) -> bool:          return n.type in nodeset.get("loop", set())
 
+# Runtime value keywords that should be collected alongside identifiers.
+_VALUE_KEYWORDS = frozenset({"this", "self"})
+
+
 def collect_idents_in_node(root: Node, source_bytes: bytes, nodeset) -> Set[str]:
-    """
-    Собираем все идентификаторы в поддереве. Для member/field-узлов (obj.field)
-    дополнительно собираем составляющие идентификаторы.
+    """Collect runtime-value identifiers in a subtree.
+
+    Includes variables, fields, property accesses, and ``this``/``self``.
+    Does NOT include type names (``type_identifier``).
     """
     ids: Set[str] = set()
     stack: List[Node] = [root]
     while stack:
         n = stack.pop()
-        if is_identifier(n, nodeset):
+        if is_identifier(n, nodeset) or n.type in _VALUE_KEYWORDS:
             ids.add(node_text(n, source_bytes))
         elif is_member_like(n, nodeset):
             for ch in n.children:
@@ -71,8 +76,6 @@ def _collect_decl_names(n: Node, source_bytes: bytes, nodeset) -> Set[str]:
                 break
     return out
 
-_EXTRA_READ_TYPES = frozenset({"type_identifier", "this", "self"})
-
 # Node types that represent parameter names in destructuring patterns
 _PARAM_NAME_TYPES = frozenset({
     "identifier", "shorthand_property_identifier_pattern",
@@ -103,18 +106,6 @@ def _collect_param_names(root: Node, source_bytes: bytes, nodeset) -> Set[str]:
         else:
             stack.extend(n.children)
     return out
-
-
-def _collect_extra_reads(root: Node, source_bytes: bytes, reads: Set[str], exclude: Set[str]):
-    """Collect type_identifier and this/self nodes as reads (not in standard ident sets)."""
-    stack: List[Node] = [root]
-    while stack:
-        n = stack.pop()
-        if n.type in _EXTRA_READ_TYPES:
-            text = node_text(n, source_bytes)
-            if text not in exclude:
-                reads.add(text)
-        stack.extend(n.children)
 
 
 def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) -> Tuple[Set[str], Set[str]]:
@@ -164,12 +155,9 @@ def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) 
             # Collect reads from all children (excluding declared names)
             for ch in n.children:
                 reads |= (collect_idents_in_node(ch, source_bytes, nodeset) - decl_names)
-            # Also collect type_identifier and this/self keywords as reads
-            _collect_extra_reads(n, source_bytes, reads, decl_names)
 
         elif is_call(n, nodeset):
             reads |= collect_idents_in_node(n, source_bytes, nodeset)
-            _collect_extra_reads(n, source_bytes, reads, set())
 
         elif n.type == "with_statement":
             # Python: with open(x) as f: ... → open, x are reads; f is write
@@ -209,15 +197,8 @@ def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) 
 
         elif n.type == "field_declaration":
             # C++ struct member: type* name = initializer;
+            # Collect only value identifiers (not type names)
             all_ids = collect_idents_in_node(n, source_bytes, nodeset)
-            # Also collect type_identifier nodes (not in standard ident set)
-            for ch in n.children:
-                if ch.type == "type_identifier":
-                    all_ids.add(node_text(ch, source_bytes))
-                if ch.type == "new_expression":
-                    for sub in ch.children:
-                        if sub.type == "type_identifier":
-                            all_ids.add(node_text(sub, source_bytes))
             # The field identifier is the write, rest are reads
             for ch in n.children:
                 if ch.type == "field_identifier":
@@ -258,6 +239,4 @@ def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) 
     # Базовая подстраховка: всё, что не классифицировали как write, считаем read
     raw_ids = collect_idents_in_node(root, source_bytes, nodeset)
     reads |= (raw_ids - writes)
-    # Also collect type_identifier and this/self as reads from the whole tree
-    _collect_extra_reads(root, source_bytes, reads, writes)
     return reads, writes

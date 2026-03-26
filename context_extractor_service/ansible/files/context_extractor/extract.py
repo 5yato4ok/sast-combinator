@@ -4,13 +4,15 @@ from pathlib import Path
 from urllib.parse import urlparse
 from tree_sitter import Node
 
-from .ts_utils import detect_language, create_parser, line_range
+from .ts_utils import (
+    detect_language, create_parser, line_range,
+    find_enclosing_function, find_deepest_node_at_line,
+)
 from .config import LANG_NODESETS
 from .io import load_source_from_url
 
 
 def extract_function_from_source(source_code: str, filename: str, line_number: int, max_lines) -> Dict[str, Any]:
-    from . import compress_function_from_source
     if line_number <= 0:
         return {"text": "// Invalid line number (must be 1-based and > 0).", "meta": {"target_line": line_number}}
     if not source_code:
@@ -28,34 +30,10 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
     nodeset = LANG_NODESETS[lang_key]
     func_types = nodeset["function"]
 
-    def is_function_like(n: Node) -> bool:
-        return n.type in func_types
-
-    def find_enclosing_function(n: Node) -> Optional[Node]:
-        s, e = line_range(n)
-        if not (s + 1 <= line_number <= e + 1):
-            return None
-        if is_function_like(n):
-            return n
-        for ch in n.children:
-            hit = find_enclosing_function(ch)
-            if hit:
-                return hit
-        return None
-
-    def find_smallest_node_covering_line(n: Node, line: int) -> Optional[Node]:
-        s, e = line_range(n)
-        if not (s + 1 <= line <= e + 1):
-            return None
-        for ch in n.children:
-            hit = find_smallest_node_covering_line(ch, line)
-            if hit:
-                return hit
-        return n
-    func_node = find_enclosing_function(tree.root_node)
+    func_node = find_enclosing_function(tree.root_node, line_number, func_types)
 
     search_root = func_node if func_node is not None else tree.root_node
-    node_at_line = find_smallest_node_covering_line(search_root, line_number)
+    node_at_line = find_deepest_node_at_line(search_root, line_number)
 
     # Climb up from the smallest node to find a multi-line data literal or
     # expression that is worth returning as "code on line".  For everything

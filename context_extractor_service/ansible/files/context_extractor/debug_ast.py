@@ -164,22 +164,18 @@ def _find_enclosing_function(root: Node, line_1based: int, lang_key: str) -> Opt
         }
     func_types = LANG_NODESETS.get(lang_key, {}).get("function", set())
 
-    def is_func(n: Node) -> bool:
-        return n.type in func_types
-
-    def dfs(n: Node) -> Optional[Node]:
+    # Iterative DFS — avoids RecursionError on deeply nested ASTs.
+    # Returns the outermost function node covering line_1based (same semantics as recursive version).
+    stack: List[Node] = [root]
+    while stack:
+        n = stack.pop()
         sL, eL = n.start_point[0] + 1, n.end_point[0] + 1
         if not (sL <= line_1based <= eL):
-            return None
-        if is_func(n):
+            continue
+        if n.type in func_types:
             return n
-        for ch in n.children:
-            hit = dfs(ch)
-            if hit:
-                return hit
-        return None
-
-    return dfs(root)
+        stack.extend(n.children)
+    return None
 
 
 def function_ast_to_string(
@@ -226,36 +222,19 @@ def print_function_ast(
     print(function_ast_to_string(source_code, filename, line_number, opts))
 
 
-# --- CLI для быстрого дебага: python -m context_extractor.debug_ast file.cpp:LINE ---
+# --- CLI для быстрого дебага: python -m context_extractor.debug_ast <path>:<line> ---
 if __name__ == "__main__":
-    # if not sys.argv[1:]:
-    #     print("usage: python -m context_extractor.debug_ast <path or file://url>:<line> [text_limit]")
-    #     sys.exit(2)
-    #
-    # target = sys.argv[1]
-    # tl = int(sys.argv[2]) if len(sys.argv) > 2 else 80
+    if not sys.argv[1:]:
+        print("usage: python -m context_extractor.debug_ast <path>:<line> [text_limit]")
+        sys.exit(2)
 
-    # # простая загрузка файла с диска/URL
-    # if "://" in target:
-    #     from urllib.parse import urlparse, unquote
-    #     import requests
-    #     u, ln = target.rsplit(":", 1)
-    #     ln = int(ln)
-    #     parsed = urlparse(u)
-    #     if parsed.scheme == "file":
-    #         p = Path(unquote(parsed.path))
-    #         text = p.read_text(encoding="utf-8", errors="replace")
-    #         fname = p.name
-    #     else:
-    #         r = requests.get(u, timeout=15)
-    #         r.raise_for_status()
-    #         text = r.text
-    #         fname = Path(parsed.path).name
-    # else:
-    #     p, ln = target.rsplit(":", 1)
-    ln = 243
-    path = Path("/Users/butkevichveronika/develop/nx_copy/open/vms/client/nx_vms_client_desktop/src/nx/vms/client/desktop/lookup_lists/lookup_list_action_handler.cpp")
+    target = sys.argv[1]
+    text_limit = int(sys.argv[2]) if len(sys.argv) > 2 else 80
+
+    p_str, ln_str = target.rsplit(":", 1)
+    ln = int(ln_str)
+    path = Path(p_str)
     text = path.read_text(encoding="utf-8", errors="replace")
     fname = path.name
 
-    print(function_ast_to_string(text, fname, ln))
+    print(function_ast_to_string(text, fname, ln, DumpOpts(text_limit=text_limit)))

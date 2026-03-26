@@ -14,6 +14,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .config import SKIP_DIRS
 from .ts_utils import (
     create_parser,
     detect_language,
@@ -30,10 +31,7 @@ _CONFIG_EXTS = frozenset({
     ".sh", ".bash",
 })
 
-_SKIP_DIRS = frozenset({
-    ".git", ".svn", ".hg", "node_modules", "__pycache__",
-    "vendor", "third_party", ".tox", ".mypy_cache",
-})
+_SKIP_DIRS = SKIP_DIRS
 
 # Extensions considered "config" for the cross-reference relationship check.
 # Scripts (.sh, .bash) and source code are excluded to avoid false positives
@@ -116,23 +114,31 @@ def _find_deepest_node_at_line(node, line_number: int):
     When multiple children cover the same line (e.g. a newline node and
     an instruction node), prefer the one that *starts* on the target line
     so that whitespace/newline nodes don't shadow real content.
+
+    Iterative implementation to avoid RecursionError on deeply nested configs.
     """
     s = node.start_point[0] + 1
     e = node.end_point[0] + 1
     if not (s <= line_number <= e):
         return None
-    # Prefer children that start on the target line over those that merely
-    # end on it (avoids picking up trailing newline nodes).
-    best = None
-    for ch in node.children:
-        hit = _find_deepest_node_at_line(ch, line_number)
-        if hit:
-            hit_start = hit.start_point[0] + 1
-            if hit_start == line_number:
-                return hit
-            if best is None:
-                best = hit
-    return best if best is not None else node
+
+    current = node
+    while True:
+        best_child = None
+        for ch in current.children:
+            cs = ch.start_point[0] + 1
+            ce = ch.end_point[0] + 1
+            if not (cs <= line_number <= ce):
+                continue
+            # Prefer children that start on the target line
+            if cs == line_number:
+                best_child = ch
+                break
+            if best_child is None:
+                best_child = ch
+        if best_child is None:
+            return current
+        current = best_child
 
 
 # Node types that represent meaningful "blocks" per config language.
@@ -546,56 +552,61 @@ def _env_from_yaml_ast(
 
 
 def _walk_yaml_for_env(node, src_bytes: bytes, results: list):
-    """Recursively walk YAML AST looking for 'environment:' blocks."""
-    if node.type == "block_mapping_pair":
-        key_node = None
-        value_node = None
-        for ch in node.children:
-            if ch.type == "flow_node" or ch.type.endswith("_scalar"):
-                if key_node is None:
-                    key_node = ch
-            elif ch.type in {"block_node", "flow_node", "block_mapping",
-                             "block_sequence", "flow_sequence"}:
-                value_node = ch
-        if key_node:
-            key_text = node_text(key_node, src_bytes).strip()
-            if key_text == "environment" and value_node:
-                _collect_yaml_env_pairs(value_node, src_bytes, results)
-                return
-    for ch in node.children:
-        _walk_yaml_for_env(ch, src_bytes, results)
+    """Iteratively walk YAML AST looking for 'environment:' blocks."""
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        if current.type == "block_mapping_pair":
+            key_node = None
+            value_node = None
+            for ch in current.children:
+                if ch.type == "flow_node" or ch.type.endswith("_scalar"):
+                    if key_node is None:
+                        key_node = ch
+                elif ch.type in {"block_node", "flow_node", "block_mapping",
+                                 "block_sequence", "flow_sequence"}:
+                    value_node = ch
+            if key_node:
+                key_text = node_text(key_node, src_bytes).strip()
+                if key_text == "environment" and value_node:
+                    _collect_yaml_env_pairs(value_node, src_bytes, results)
+                    continue
+        stack.extend(current.children)
 
 
 def _collect_yaml_env_pairs(node, src_bytes: bytes, results: list):
     """Collect env vars from a YAML 'environment:' value node."""
-    for ch in node.children:
-        if ch.type == "block_mapping_pair":
-            text = node_text(ch, src_bytes).strip()
-            if ":" in text:
-                k, _, v = text.partition(":")
-                name = k.strip()
-                value = v.strip().strip('"').strip("'")
-                results.append({
-                    "name": name,
-                    "value": value,
-                    "source": "yaml_environment",
-                    "line": ch.start_point[0] + 1,
-                    "has_secret_pattern": bool(_SECRET_PATTERNS.search(name)),
-                })
-        elif ch.type in {"flow_node", "block_scalar"}:
-            text = node_text(ch, src_bytes).strip().strip("- ")
-            if "=" in text:
-                k, _, v = text.partition("=")
-                name = k.strip()
-                value = v.strip().strip('"').strip("'")
-                results.append({
-                    "name": name,
-                    "value": value,
-                    "source": "yaml_environment",
-                    "line": ch.start_point[0] + 1,
-                    "has_secret_pattern": bool(_SECRET_PATTERNS.search(name)),
-                })
-        _collect_yaml_env_pairs(ch, src_bytes, results)
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        for ch in current.children:
+            if ch.type == "block_mapping_pair":
+                text = node_text(ch, src_bytes).strip()
+                if ":" in text:
+                    k, _, v = text.partition(":")
+                    name = k.strip()
+                    value = v.strip().strip('"').strip("'")
+                    results.append({
+                        "name": name,
+                        "value": value,
+                        "source": "yaml_environment",
+                        "line": ch.start_point[0] + 1,
+                        "has_secret_pattern": bool(_SECRET_PATTERNS.search(name)),
+                    })
+            elif ch.type in {"flow_node", "block_scalar"}:
+                text = node_text(ch, src_bytes).strip().strip("- ")
+                if "=" in text:
+                    k, _, v = text.partition("=")
+                    name = k.strip()
+                    value = v.strip().strip('"').strip("'")
+                    results.append({
+                        "name": name,
+                        "value": value,
+                        "source": "yaml_environment",
+                        "line": ch.start_point[0] + 1,
+                        "has_secret_pattern": bool(_SECRET_PATTERNS.search(name)),
+                    })
+            stack.append(ch)
 
 
 def _env_from_bash_ast(root, src_bytes: bytes) -> list[dict[str, Any]]:

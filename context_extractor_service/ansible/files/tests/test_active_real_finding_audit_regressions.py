@@ -45,7 +45,7 @@ export const config: Config = {
   },
   logLevel: (process.env.NEXT_PUBLIC_LOG_LEVEL as keyof typeof LogLevel) ?? LogLevel.ALL,
   cloudUrl: { prod: 'https://{cloudSystemId}.relay.vmsproxy.com' },
-  mapboxApiKey: 'pk.eyJ1IjoibW1hbG9uZS1ueCIsImEiOiJjbWdnOTRnMTkwZHQxMmxzY3duZDVyd3VzIn0.9aIxfps5azwN9XcX4BsY3Q',
+  mapboxApiKey: 'pk.TEST_ONLY_NOT_A_REAL_TOKEN_xxxxxxxxxxxxxxxxxxx',
   googleAnalyticsMeasurementId: 'G-3KQ976MRQ0',
   version: packageJson.version,
 };
@@ -61,7 +61,7 @@ export const config: Config = {
     assert extracted["text"] == "// Function not found."
     assert (
         extracted["meta"]["code_on_line"]
-        == "  mapboxApiKey: 'pk.eyJ1IjoibW1hbG9uZS1ueCIsImEiOiJjbWdnOTRnMTkwZHQxMmxzY3duZDVyd3VzIn0.9aIxfps5azwN9XcX4BsY3Q',"
+        == "  mapboxApiKey: 'pk.TEST_ONLY_NOT_A_REAL_TOKEN_xxxxxxxxxxxxxxxxxxx',"
     )
     assert identifiers["writes"] == ["config"]
     assert identifiers["language"] == "typescript"

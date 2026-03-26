@@ -15,22 +15,18 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .config import LANG_NODESETS
+from .config import LANG_NODESETS, SKIP_DIRS
 from .identifiers import (
     is_key_stmt,
     split_reads_writes,
 )
-from .ts_utils import create_parser, detect_language, line_range, node_text
+from .ts_utils import (
+    create_parser, detect_language, find_enclosing_function, line_range, node_text,
+)
 
 # ── Shared helpers ───────────────────────────────────────────────
 
-# Directories to always skip when walking a project tree.
-_SKIP_DIRS = frozenset({
-    ".git", ".svn", ".hg", ".idea", ".vscode",
-    "node_modules", "__pycache__", ".tox", ".mypy_cache",
-    "vendor", "third_party", "build", "dist", ".next",
-    "target", "bin", "obj", ".gradle",
-})
+_SKIP_DIRS = SKIP_DIRS
 
 # Extensions considered "source code" (broad — intentionally inclusive).
 _SOURCE_EXTS = frozenset({
@@ -98,40 +94,14 @@ def _find_enclosing_function_name(
     nodeset = LANG_NODESETS.get(lang_key, {})
     func_types = nodeset.get("function", set())
 
-    def _walk(node):
-        s, e = line_range(node)
-        if not (s + 1 <= line_number <= e + 1):
-            return None
-        if node.type in func_types:
-            # Arrow functions used as callbacks don't have a meaningful name
-            if node.type == "arrow_function":
-                return None
-            # Try named field first (most reliable)
-            name_node = node.child_by_field_name("name")
-            if name_node:
-                return node_text(name_node, root.text)
-            # C++: name is inside function_declarator
-            declarator = node.child_by_field_name("declarator")
-            if declarator:
-                inner = declarator.child_by_field_name("declarator")
-                if inner and inner.type == "identifier":
-                    return node_text(inner, root.text)
-                for ch in declarator.children:
-                    if ch.type == "identifier":
-                        return node_text(ch, root.text)
-            # Fallback: direct identifier child
-            for ch in node.children:
-                if ch.type in {"identifier", "name", "simple_identifier",
-                               "property_identifier"}:
-                    return node_text(ch, root.text)
-            return None
-        for ch in node.children:
-            hit = _walk(ch)
-            if hit:
-                return hit
+    func_node = find_enclosing_function(root, line_number, func_types)
+    if func_node is None:
         return None
-
-    return _walk(root)
+    # Arrow functions used as callbacks don't have a meaningful name
+    if func_node.type == "arrow_function":
+        return None
+    name = _get_node_name(func_node, root.text)
+    return name if name != "<anonymous>" else None
 
 
 # ── Tool implementations ─────────────────────────────────────────
@@ -160,6 +130,7 @@ def find_callers(
         except OSError:
             continue
         lines = text.splitlines()
+        _cached_tree, _cached_lang_key, _cached_src_bytes = _try_parse(text, full)
         for i, line in enumerate(lines):
             if pattern.search(line):
                 # Skip the definition itself
@@ -195,10 +166,9 @@ def find_callers(
                 ):
                     continue
                 caller = None
-                tree, lang_key, _src_bytes = _try_parse(text, full)
-                if tree and lang_key:
+                if _cached_tree and _cached_lang_key:
                     caller = _find_enclosing_function_name(
-                        tree.root_node, i + 1, lang_key,
+                        _cached_tree.root_node, i + 1, _cached_lang_key,
                     )
                 results.append({
                     "file": str(rel),
@@ -505,16 +475,7 @@ def _decorators_from_regex(source: str, line_number: int) -> list[str]:
 
 def _find_func_node(root, line_number: int, func_types: set):
     """Find the AST function node enclosing *line_number*."""
-    s, e = line_range(root)
-    if not (s + 1 <= line_number <= e + 1):
-        return None
-    if root.type in func_types:
-        return root
-    for ch in root.children:
-        hit = _find_func_node(ch, line_number, func_types)
-        if hit:
-            return hit
-    return None
+    return find_enclosing_function(root, line_number, func_types)
 
 
 def trace_identifier_backward(
@@ -615,11 +576,13 @@ def _trace_regex(
 
 
 def _collect_key_stmts(node, nodeset: dict, out: list):
-    """Recursively collect (0-based line, node) for key statements."""
-    if is_key_stmt(node, nodeset):
-        out.append((node.start_point[0], node))
-    for ch in node.children:
-        _collect_key_stmts(ch, nodeset, out)
+    """Iteratively collect (0-based line, node) for key statements."""
+    stack = [node]
+    while stack:
+        n = stack.pop()
+        if is_key_stmt(n, nodeset):
+            out.append((n.start_point[0], n))
+        stack.extend(n.children)
 
 
 def get_file_structure(
@@ -685,14 +648,17 @@ def _extract_class_info(
 
 
 def _find_methods(node, src_bytes: bytes, func_types: set, out: list):
-    """Recursively find method definitions inside a class body."""
-    if node.type in func_types:
-        name = _get_node_name(node, src_bytes)
-        s, e = line_range(node)
-        out.append({"name": name, "line": s + 1, "end_line": e + 1})
-        return  # Don't recurse into nested functions
-    for ch in node.children:
-        _find_methods(ch, src_bytes, func_types, out)
+    """Iteratively find method definitions inside a class body."""
+    stack = list(node.children)
+    while stack:
+        n = stack.pop()
+        if n.type in func_types:
+            name = _get_node_name(n, src_bytes)
+            s, e = line_range(n)
+            out.append({"name": name, "line": s + 1, "end_line": e + 1})
+            # Don't recurse into nested functions
+        else:
+            stack.extend(n.children)
 
 
 def _get_node_name(node, src_bytes: bytes) -> str:
@@ -707,6 +673,15 @@ def _get_node_name(node, src_bytes: bytes) -> str:
     name_node = node.child_by_field_name("name")
     if name_node is not None:
         return node_text(name_node, src_bytes)
+    # Priority 0b: C++ function_declarator — name is nested inside declarator field
+    declarator = node.child_by_field_name("declarator")
+    if declarator is not None and declarator.type == "function_declarator":
+        inner = declarator.child_by_field_name("declarator")
+        if inner is not None and inner.type == "identifier":
+            return node_text(inner, src_bytes)
+        for ch in declarator.children:
+            if ch.type == "identifier":
+                return node_text(ch, src_bytes)
     # Priority 1: actual name identifiers
     primary = {"identifier", "name", "simple_identifier", "property_identifier"}
     for child in node.children:

@@ -7,6 +7,7 @@ data-flow tracing, project search) that resolve source paths via the AIST API.
 External AI agents connect over Streamable HTTP and call tools lazily —
 requesting only the context they actually need for TP/FP triage.
 """
+import concurrent.futures
 import hmac
 import logging
 import os
@@ -173,9 +174,12 @@ def _resolve_source_dir(pipeline_id: str) -> Path:
 
 def _read_source(pipeline_id: str, file_path: str) -> tuple[str, Path]:
     """Read a source file for a given pipeline, with path traversal guard."""
+    if ".." in Path(file_path).parts or Path(file_path).is_absolute():
+        msg = "Path traversal detected"
+        raise ValueError(msg)
     source_dir = _resolve_source_dir(pipeline_id)
     full_path = (source_dir / file_path).resolve()
-    if not str(full_path).startswith(str(source_dir.resolve())):
+    if not full_path.is_relative_to(source_dir.resolve()):
         msg = "Path traversal detected"
         raise ValueError(msg)
     if not full_path.is_file():
@@ -238,8 +242,11 @@ def _inject_html_script(html_source, line_number, html_lang, html_key):
     html_bytes = html_source.encode("utf-8", errors="replace")
     tree = parser.parse(html_bytes)
 
-    # Walk HTML AST to find raw_text nodes inside script_element
-    for child in tree.root_node.children:
+    # Walk the full HTML AST (iterative DFS) to find raw_text inside any script_element.
+    # Scripts may appear at any nesting depth: <html><body><script>, <template>, etc.
+    stack = list(tree.root_node.children)
+    while stack:
+        child = stack.pop()
         if child.type == "script_element":
             for sub in child.children:
                 if sub.type == "raw_text":
@@ -251,6 +258,8 @@ def _inject_html_script(html_source, line_number, html_lang, html_key):
                         )
                         adjusted = line_number - s_line + 1
                         return JS_LANGUAGE, "javascript", js_source, adjusted
+        else:
+            stack.extend(child.children)
 
     return html_lang, html_key, html_source, line_number
 
@@ -503,8 +512,8 @@ def classify_file(pipeline_id: str, file_path: str) -> dict:
     try:
         source_dir = _resolve_source_dir(pipeline_id)
         source = (source_dir / file_path).read_text(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("classify_file: could not read source for pipeline=%s file=%s: %s", pipeline_id, file_path, e)
     return _classify_file(file_path, source=source)
 
 
@@ -680,8 +689,9 @@ def find_related_configs(pipeline_id: str, file_path: str) -> list[dict]:
 
 # ── Filesystem tools (replaces standalone filesystem MCP server) ──
 
-_MAX_FILE_SIZE = 1_048_576  # 1 MB — refuse to return larger files
-_MAX_SEARCH_RESULTS = 50
+_MAX_FILE_SIZE = int(os.environ.get("MAX_FILE_SIZE", str(1_048_576)))  # default 1 MB
+_MAX_SEARCH_RESULTS = int(os.environ.get("MAX_SEARCH_RESULTS", "50"))
+_SEARCH_TIMEOUT_SECONDS = float(os.environ.get("SEARCH_TIMEOUT", "30"))
 
 
 @mcp.tool()
@@ -730,29 +740,37 @@ def search_files(pipeline_id: str, pattern: str, path: str = "") -> list[dict]:
     except re.error as e:
         return [{"error": f"Invalid regex: {e}"}]
 
-    results: list[dict] = []
-    for dirpath, dirnames, filenames in os.walk(search_root):
-        dirnames[:] = [
-            d for d in dirnames
-            if d not in {".git", "node_modules", "__pycache__", "vendor", ".tox"}
-        ]
-        for fname in filenames:
-            fpath = Path(dirpath) / fname
-            try:
-                text = fpath.read_text(encoding="utf-8", errors="replace")
-            except OSError:
-                continue
-            for i, line in enumerate(text.splitlines()):
-                if compiled.search(line):
-                    rel = fpath.relative_to(source_dir)
-                    results.append({
-                        "file": str(rel),
-                        "line": i + 1,
-                        "match": line.strip()[:200],
-                    })
-                    if len(results) >= _MAX_SEARCH_RESULTS:
-                        return results
-    return results
+    def _do_search() -> list[dict]:
+        results: list[dict] = []
+        for dirpath, dirnames, filenames in os.walk(search_root):
+            dirnames[:] = [
+                d for d in dirnames
+                if d not in {".git", "node_modules", "__pycache__", "vendor", ".tox"}
+            ]
+            for fname in filenames:
+                fpath = Path(dirpath) / fname
+                try:
+                    text = fpath.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+                for i, line in enumerate(text.splitlines()):
+                    if compiled.search(line):
+                        rel = fpath.relative_to(source_dir)
+                        results.append({
+                            "file": str(rel),
+                            "line": i + 1,
+                            "match": line.strip()[:200],
+                        })
+                        if len(results) >= _MAX_SEARCH_RESULTS:
+                            return results
+        return results
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(_do_search)
+        try:
+            return future.result(timeout=_SEARCH_TIMEOUT_SECONDS)
+        except concurrent.futures.TimeoutError:
+            return [{"error": f"Search timed out after {_SEARCH_TIMEOUT_SECONDS:.0f}s"}]
 
 
 @mcp.tool()
@@ -769,6 +787,9 @@ def list_directory(pipeline_id: str, path: str = "") -> list[dict]:
         path: Relative directory path (empty string for project root)
 
     """
+    if path and (".." in Path(path).parts or Path(path).is_absolute()):
+        return [{"error": "Path traversal detected"}]
+
     source_dir = _resolve_source_dir(pipeline_id)
     target = source_dir / path if path else source_dir
 
@@ -776,7 +797,7 @@ def list_directory(pipeline_id: str, path: str = "") -> list[dict]:
         return [{"error": f"Not a directory: {path}"}]
 
     # Path traversal guard
-    if not str(target.resolve()).startswith(str(source_dir.resolve())):
+    if not target.resolve().is_relative_to(source_dir.resolve()):
         return [{"error": "Path traversal detected"}]
 
     entries: list[dict] = []

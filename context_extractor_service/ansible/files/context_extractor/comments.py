@@ -30,7 +30,7 @@ def compute_comment_lines(lang_key: str, lines: list[str]) -> set[int]:
                         break
                     in_block = True
                     comment_lines.add(i)
-                    j = idx_open + len(end_tok)  # move past opener (len mismatch not critical here)
+                    j = idx_open + len(beg)  # move past the opening delimiter
                     idx_close = s.find(end_tok, j)
                     if idx_close != -1:
                         in_block = False
@@ -53,14 +53,44 @@ def compute_comment_lines(lang_key: str, lines: list[str]) -> set[int]:
 
     return comment_lines
 
+def _build_quoted_mask(line: str) -> list[bool]:
+    """Return a mask where True marks characters inside string literals."""
+    mask = [False] * len(line)
+    in_quote = ""
+    i = 0
+    while i < len(line):
+        ch = line[i]
+        if not in_quote:
+            if ch in ('"', "'", '`'):
+                in_quote = ch
+                mask[i] = True
+        else:
+            mask[i] = True
+            if ch == '\\' and i + 1 < len(line):
+                i += 1
+                mask[i] = True
+            elif ch == in_quote:
+                in_quote = ""
+        i += 1
+    return mask
+
+
 def first_inline_comment_index(line: str, lang_key: str) -> Optional[int]:
     style = COMMENT_STYLE.get(lang_key, {"line": [], "block": []})
     tokens = list(style.get("line", [])) + [beg for (beg, _end) in style.get("block", [])]
+    quoted = _build_quoted_mask(line)
     best = None
     for tok in tokens:
-        k = line.find(tok)
-        if k != -1 and any(ch not in " \t" for ch in line[:k]):
-            best = k if best is None else min(best, k)
+        start = 0
+        while True:
+            k = line.find(tok, start)
+            if k == -1:
+                break
+            if not quoted[k]:
+                if any(ch not in " \t" for ch in line[:k]):
+                    best = k if best is None else min(best, k)
+                break
+            start = k + 1
     return best
 
 def mask_code_keep_comment(line: str, lang_key: str) -> Optional[str]:

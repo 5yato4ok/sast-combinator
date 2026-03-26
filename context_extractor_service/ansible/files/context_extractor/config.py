@@ -1,7 +1,37 @@
-# Centralized language-specific configuration (no heavy imports here).
+"""Centralized language-specific configuration (no heavy imports here)."""
+
+from __future__ import annotations
+
+from typing import TypedDict
+
+
+class LangNodeset(TypedDict):
+    """Type-safe definition for per-language AST node type sets."""
+
+    function: set[str]
+    block: set[str]
+    key: set[str]
+    ident: set[str]
+    member_like: set[str]
+    assign: set[str]
+    declaration: set[str]
+    loop: set[str]
+    call: set[str]
+    control: set[str]
+    closing_is_brace: bool
+    line_comment_prefix: str
+
+
+# Directories to always skip when walking a project tree — shared across modules.
+SKIP_DIRS = frozenset({
+    ".git", ".svn", ".hg", ".idea", ".vscode",
+    "node_modules", "__pycache__", ".tox", ".mypy_cache",
+    "vendor", "third_party", "build", "dist", ".next",
+    "target", "bin", "obj", ".gradle",
+})
 
 # Node type sets per language key used by Tree-sitter grammars.
-LANG_NODESETS = {
+LANG_NODESETS: dict[str, LangNodeset] = {
     "cpp": {
         "function": {"function_definition", "function_declaration", "lambda_expression"},
         "block": {"compound_statement", "lambda_expression", "function_definition"},
@@ -213,4 +243,5 @@ COMMENT_STYLE = {
     "go":          {"line": ["//"], "block": [("/*", "*/")]},
     "ruby":        {"line": ["#"], "block": []},
     "kotlin":      {"line": ["//"], "block": [("/*", "*/")]},
+    "php":         {"line": ["//", "#"], "block": [("/*", "*/")]},
 }

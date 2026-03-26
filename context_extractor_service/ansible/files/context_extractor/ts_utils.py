@@ -5,7 +5,6 @@ from pathlib import Path
 import tree_sitter_bash as bash_lang
 import tree_sitter_c_sharp as csharp_lang
 import tree_sitter_cpp as cpp_lang
-import tree_sitter_dockerfile as dockerfile_lang
 import tree_sitter_go as go_lang
 import tree_sitter_hcl as hcl_lang
 import tree_sitter_html as html_lang
@@ -22,6 +21,7 @@ import tree_sitter_typescript as ts_lang
 # Config language grammars
 import tree_sitter_yaml as yaml_lang
 from tree_sitter import Language, Node, Parser
+from tree_sitter_language_pack import get_language as _lp_get_language
 
 
 def _resolve_language(mod, *candidate_funcs: str) -> Language:
@@ -58,12 +58,9 @@ JSON_LANGUAGE = _resolve_language(json_lang, "language", "language_json")
 BASH_LANGUAGE = _resolve_language(bash_lang, "language", "language_bash")
 HTML_LANGUAGE = _resolve_language(html_lang, "language", "language_html")
 
-# tree-sitter-dockerfile v0.2.0 has a broken binding (no language() export).
-# Load it gracefully — if unavailable, Dockerfiles fall back to text analysis.
-try:
-    DOCKERFILE_LANGUAGE = _resolve_language(dockerfile_lang, "language", "language_dockerfile")
-except AttributeError:
-    DOCKERFILE_LANGUAGE = None
+# Dockerfile grammar via tree-sitter-language-pack (cross-platform, aarch64+x86_64).
+# tree-sitter-dockerfile has no Linux aarch64 wheel; language-pack provides it.
+DOCKERFILE_LANGUAGE: Language = _lp_get_language("dockerfile")
 
 # Extension → (Language, lang_key) mapping.
 # _LANG_KEY_MAP is used by detect_language to return a human-readable key.
@@ -85,9 +82,8 @@ _LANG_KEY_MAP: dict[Language, str] = {
     JSON_LANGUAGE: "json",
     BASH_LANGUAGE: "bash",
     HTML_LANGUAGE: "html",
+    DOCKERFILE_LANGUAGE: "dockerfile",
 }
-if DOCKERFILE_LANGUAGE:
-    _LANG_KEY_MAP[DOCKERFILE_LANGUAGE] = "dockerfile"
 
 SUPPORTED_LANGUAGES = {
     # Source code
@@ -126,10 +122,10 @@ SUPPORTED_LANGUAGES = {
 }
 
 # Files matched by full name (no extension-based matching)
-_FILENAME_LANGUAGES: dict[str, Language] = {}
-if DOCKERFILE_LANGUAGE:
-    _FILENAME_LANGUAGES["dockerfile"] = DOCKERFILE_LANGUAGE
-    _FILENAME_LANGUAGES["Dockerfile"] = DOCKERFILE_LANGUAGE
+_FILENAME_LANGUAGES: dict[str, Language] = {
+    "dockerfile": DOCKERFILE_LANGUAGE,
+    "Dockerfile": DOCKERFILE_LANGUAGE,
+}
 
 
 def detect_language(filepath: Path) -> tuple[Language, str]:
@@ -146,7 +142,6 @@ def detect_language(filepath: Path) -> tuple[Language, str]:
 
 
 def create_parser(lang: Language) -> Parser:
-    # Use the environment's working constructor (user wants Parser(lang))
     return Parser(lang)
 
 
@@ -156,3 +151,52 @@ def node_text(node: Node, src: bytes) -> str:
 
 def line_range(node: Node) -> tuple[int, int]:
     return node.start_point[0], node.end_point[0]
+
+
+def find_enclosing_function(
+    root: Node,
+    line_number: int,
+    func_types: set[str],
+) -> Node | None:
+    """Find the outermost function node enclosing *line_number* (1-based).
+
+    Returns the first (topmost) function node that contains the target line,
+    consistent with the original recursive implementations.  Nested functions
+    (e.g. arrow callbacks inside a method) are NOT returned — the enclosing
+    named function is.
+
+    Iterative DFS to avoid RecursionError on deeply nested code.
+    """
+    stack: list[Node] = [root]
+    while stack:
+        n = stack.pop()
+        s, e = n.start_point[0], n.end_point[0]
+        if not (s + 1 <= line_number <= e + 1):
+            continue
+        if n.type in func_types:
+            return n  # Outermost match — stop; don't recurse into nested functions
+        stack.extend(n.children)
+    return None
+
+
+def find_deepest_node_at_line(
+    root: Node,
+    line_number: int,
+) -> Node | None:
+    """Find the deepest (smallest) AST node that covers *line_number* (1-based).
+
+    Iterative implementation to avoid RecursionError.
+    """
+    target_0 = line_number - 1  # convert to 0-based
+    current = root
+    if not (current.start_point[0] <= target_0 <= current.end_point[0]):
+        return None
+    while True:
+        went_deeper = False
+        for ch in current.children:
+            if ch.start_point[0] <= target_0 <= ch.end_point[0]:
+                current = ch
+                went_deeper = True
+                break
+        if not went_deeper:
+            return current

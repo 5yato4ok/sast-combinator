@@ -4,7 +4,7 @@ from pathlib import Path
 from tree_sitter import Node
 
 from .config import LANG_NODESETS
-from .ts_utils import detect_language, create_parser, line_range
+from .ts_utils import detect_language, create_parser, line_range, find_enclosing_function, find_deepest_node_at_line
 from .comments import compute_comment_lines, mask_code_keep_comment
 from .header import collect_multiline_header
 from .indent import dedent_minimum
@@ -60,32 +60,11 @@ def compress_function_from_source(
         line_comment = markers["line_comment"]
 
     # --- Find function and target nodes ---
-    def find_function_node(n: Node) -> Optional[Node]:
-        if is_function_like(n, nodeset):
-            s, e = line_range(n)
-            if s + 1 <= line_number <= e + 1:
-                return n
-        for c in n.children:
-            fn = find_function_node(c)
-            if fn:
-                return fn
-        return None
-
-    def find_target_node(n: Node) -> Optional[Node]:
-        s, e = line_range(n)
-        if s <= (line_number - 1) <= e:
-            for c in n.children:
-                hit = find_target_node(c)
-                if hit:
-                    return hit
-            return n
-        return None
-
-    func_node = find_function_node(tree.root_node)
+    func_node = find_enclosing_function(tree.root_node, line_number, nodeset["function"])
     if not func_node:
         return {"text": f"{line_comment} Function not found.", "meta": {"language": lang_key, "target_line": line_number}}
 
-    target_node = find_target_node(func_node)
+    target_node = find_deepest_node_at_line(func_node, line_number)
     if not target_node:
         f_start, f_end = line_range(func_node)
         return {

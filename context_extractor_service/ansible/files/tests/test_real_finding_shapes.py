@@ -232,7 +232,7 @@ export default function OAuthDebugPage() {
     ]
 
 
-def test_find_identifiers_returns_semantically_correct_reads_and_writes_for_js_assignment(monkeypatch):
+def test_find_identifiers_returns_semantically_correct_reads_and_writes_for_js_assignment():
     source = """\
 function fetch(url, maxRedirects = 5) {
   return new Promise((resolve, reject) => {
@@ -243,7 +243,7 @@ function fetch(url, maxRedirects = 5) {
   });
 }
 """
-    monkeypatch.setattr(mcp_server, "_read_source", _stub_read_source(source, "generate-customization.js"))
+    mcp_server._read_source = _stub_read_source(source, "generate-customization.js")
 
     result = mcp_server.find_identifiers("pipe", "generate-customization.js", 3)
 
@@ -254,7 +254,7 @@ function fetch(url, maxRedirects = 5) {
     }
 
 
-def test_code_flow_returns_semantically_correct_context_for_oauth_handler_redirect(monkeypatch):
+def test_code_flow_returns_semantically_correct_context_for_oauth_handler_redirect():
     source = """\
 export function handleOAuthCodeInUrl(): boolean {
   if (typeof window === 'undefined') return false;
@@ -264,7 +264,7 @@ export function handleOAuthCodeInUrl(): boolean {
   return true;
 }
 """
-    monkeypatch.setattr(mcp_server, "_read_source", _stub_read_source(source, "oauth-handler.ts"))
+    mcp_server._read_source = _stub_read_source(source, "oauth-handler.ts")
 
     extracted = extract_function_from_source(source, "oauth-handler.ts", 5, 200)
     identifiers = mcp_server.find_identifiers("pipe", "oauth-handler.ts", 5)

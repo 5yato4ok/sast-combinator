@@ -202,6 +202,29 @@ def find_deepest_node_at_line(
             return current
 
 
+def promote_single_statement_control_body(
+    root: Node,
+    call_node_types: set[str],
+    excluded_body_types: set[str],
+) -> Node:
+    """Promote a control node to its single body statement when the header is simple."""
+    header_line = root.start_point[0]
+    stack: list[Node] = [root]
+    while stack:
+        node = stack.pop()
+        if node.start_point[0] == header_line and node.type in call_node_types:
+            return root
+        stack.extend(node.children)
+
+    body_children = [
+        child for child in root.children
+        if child.start_point[0] > header_line and child.type not in excluded_body_types
+    ]
+    if len(body_children) == 1:
+        return body_children[0]
+    return root
+
+
 def inject_html_script_source(
     source_code: str,
     line_number: int,

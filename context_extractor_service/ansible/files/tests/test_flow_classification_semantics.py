@@ -29,6 +29,21 @@ def test_classify_file_should_route_build_script_into_config_flow():
     assert result["type"] == "config"
 
 
+def test_classify_file_should_keep_source_modules_out_of_content_based_config_fallback():
+    result = classify_file(
+        "src/runtime/config.ts",
+        "export const token = process.env.API_TOKEN;\nexport const password = 'x';\n",
+    )
+
+    assert result["type"] == "production"
+
+
+def test_classify_file_should_prefer_vendored_path_signal_over_minified_asset_rule():
+    result = classify_file("vendor/assets/jquery.min.js")
+
+    assert result["type"] == "vendored"
+
+
 def test_classify_environment_should_keep_real_prod_dev_template_shapes():
     assert classify_environment("deploy/docker-compose.prod.yml")["environment"] == "production"
     assert classify_environment("deploy/docker-compose.override.yml")["environment"] == "dev"

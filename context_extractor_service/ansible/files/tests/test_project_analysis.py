@@ -18,6 +18,7 @@ from context_extractor.project_analysis import (
     get_file_structure,
     trace_identifier_backward,
 )
+import context_extractor.project_analysis as project_analysis
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "sample_project"
 
@@ -61,6 +62,11 @@ class TestClassifyFile:
     def test_spec_file(self):
         result = classify_file("src/auth/views.spec.js")
         assert result["type"] == "test"
+
+    def test_project_analysis_facade_exports_mcp_server_dependencies(self):
+        assert callable(project_analysis._try_parse)
+        assert callable(project_analysis._imports_from_ast)
+        assert callable(project_analysis._imports_from_regex)
 
 
 # ── find_imports ─────────────────────────────────────────────────

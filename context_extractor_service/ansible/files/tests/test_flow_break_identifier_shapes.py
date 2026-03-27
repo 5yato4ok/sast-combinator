@@ -71,3 +71,36 @@ const channel = new BroadcastChannel(COOKIE_POLICY_CHANNEL)
     assert "channel" in result["writes"]
     assert "BroadcastChannel" in result["reads"]
     assert "COOKIE_POLICY_CHANNEL" in result["reads"]
+
+
+def test_find_identifiers_should_classify_python_with_alias_reads_and_writes(monkeypatch):
+    source = """\
+def load_config(path):
+    with open(path) as handle:
+        return handle.read()
+"""
+    monkeypatch.setattr(mcp_server, "_read_source", _stub_read_source(source, "config.py"))
+
+    result = mcp_server.find_identifiers("pipe", "config.py", 2)
+
+    assert "handle" in result["writes"]
+    assert "open" in result["reads"]
+    assert "path" in result["reads"]
+
+
+def test_find_identifiers_should_preserve_cpp_qualified_function_name_reads(monkeypatch):
+    source = """\
+void ItemGrabber::grabToImage(QQuickItem* item, const QJSValue& callback)
+{
+    new ItemGrabberWorker(item, callback);
+}
+"""
+    monkeypatch.setattr(mcp_server, "_read_source", _stub_read_source(source, "item_grabber.cpp"))
+
+    result = mcp_server.find_identifiers("pipe", "item_grabber.cpp", 1)
+
+    assert "grabToImage" in result["writes"]
+    assert "ItemGrabber" in result["reads"]
+    assert "grabToImage" in result["reads"]
+    assert "item" in result["writes"]
+    assert "callback" in result["writes"]

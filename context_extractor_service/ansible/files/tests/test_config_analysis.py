@@ -15,6 +15,7 @@ from context_extractor.config_analysis import (
     find_config_overrides,
     find_related_configs,
 )
+import context_extractor.config_analysis as config_analysis
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "sample_project"
 
@@ -66,6 +67,11 @@ class TestClassifyEnvironment:
     def test_terraform_prod_vars(self):
         result = classify_environment("terraform.prod.tfvars")
         assert result["environment"] == "production"
+
+    def test_config_analysis_facade_exports_split_module_entrypoints(self):
+        assert callable(config_analysis.extract_env_variables)
+        assert callable(config_analysis.find_config_overrides)
+        assert callable(config_analysis.find_related_configs)
 
 
 # ── extract_config_block ─────────────────────────────────────────
@@ -169,12 +175,69 @@ class TestExtractEnvVariables:
         secret_vars = [v for v in result if v["has_secret_pattern"]]
         assert any(v["name"] == "DD_SECRET_KEY" for v in secret_vars)
 
+    def test_dockerfile_arg_and_quoted_env_values(self):
+        source = 'ARG BUILD_MODE=prod\nENV APP_NAME="api service"\nARG EMPTY_ARG\n'
+
+        result = extract_env_variables(source, Path("Dockerfile"))
+
+        assert result == [
+            {
+                "name": "BUILD_MODE",
+                "value": "prod",
+                "source": "ARG",
+                "line": 1,
+                "has_secret_pattern": False,
+            },
+            {
+                "name": "APP_NAME",
+                "value": "api service",
+                "source": "ENV",
+                "line": 2,
+                "has_secret_pattern": False,
+            },
+            {
+                "name": "EMPTY_ARG",
+                "value": "",
+                "source": "ARG",
+                "line": 3,
+                "has_secret_pattern": False,
+            },
+        ]
+
     def test_yaml_environment_section(self):
         source = (FIXTURES / "docker-compose.yml").read_text()
         filepath = FIXTURES / "docker-compose.yml"
         result = extract_env_variables(source, filepath)
         names = [v["name"] for v in result]
         assert "DD_DEBUG" in names or "DD_SECRET_KEY" in names
+
+    def test_yaml_environment_list_style_values(self):
+        source = (
+            "services:\n"
+            "  web:\n"
+            "    environment:\n"
+            "      - APP_ENV=prod\n"
+            "      - API_TOKEN=${API_TOKEN}\n"
+        )
+
+        result = extract_env_variables(source, Path("docker-compose.yml"))
+
+        assert result == [
+            {
+                "name": "APP_ENV",
+                "value": "prod",
+                "source": "yaml_environment",
+                "line": 4,
+                "has_secret_pattern": False,
+            },
+            {
+                "name": "API_TOKEN",
+                "value": "${API_TOKEN}",
+                "source": "yaml_environment",
+                "line": 5,
+                "has_secret_pattern": True,
+            },
+        ]
 
     def test_bash_export_vars(self):
         source = (FIXTURES / "scripts/setup.sh").read_text()

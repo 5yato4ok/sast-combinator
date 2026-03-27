@@ -7,10 +7,108 @@ from tree_sitter import Node
 from .ts_utils import (
     detect_language, create_parser, line_range,
     find_enclosing_function, find_deepest_node_at_line,
-    inject_html_script_source, node_text,
+    inject_html_script_source, promote_single_statement_control_body,
 )
 from .config import LANG_NODESETS
 from .io import load_source_from_url
+
+
+_CONTROL_TYPES = frozenset({
+    "if_statement",
+    "for_statement",
+    "for_in_statement",
+    "for_of_statement",
+    "while_statement",
+    "do_statement",
+})
+
+_CONTROL_PROMOTION_CALL_TYPES = frozenset({
+    "call_expression",
+    "method_invocation",
+    "call",
+})
+
+_CONTROL_PROMOTION_EXCLUDED_BODY_TYPES = frozenset({
+    "comment",
+    "{",
+    "}",
+    ";",
+    "if",
+    "for",
+    "while",
+    "do",
+})
+
+_MULTILINE_EXPRESSION_CHAIN_TYPES = frozenset({
+    "binary_expression",
+    "boolean_operator",
+    "comparison_operator",
+    "conditional_expression",
+    "ternary_expression",
+})
+
+_MULTILINE_CONTINUATION_EXPRESSION_TYPES = frozenset({
+    "assignment_expression",
+    "augmented_assignment_expression",
+    "compound_assignment_expression",
+})
+
+
+def _promote_single_line_control_body(node: Node | None, line_number: int, nodeset) -> Node | None:
+    if node is None or not nodeset["closing_is_brace"]:
+        return node
+    current_line = line_number - 1
+    current = node
+    while current is not None:
+        if current.type in _CONTROL_TYPES and current.start_point[0] == current_line:
+            return promote_single_statement_control_body(
+                current,
+                _CONTROL_PROMOTION_CALL_TYPES,
+                _CONTROL_PROMOTION_EXCLUDED_BODY_TYPES,
+            )
+        current = current.parent
+    return node
+
+
+def _find_multiline_candidate(node: Node | None, line_number: int) -> Node | None:
+    multiline_candidate: Node | None = None
+    target_line_0 = line_number - 1
+    current = node
+    while current is not None:
+        start_line, end_line = line_range(current)
+        if end_line > start_line:
+            is_expression_chain = current.type in _MULTILINE_EXPRESSION_CHAIN_TYPES
+            is_continuation_expression = (
+                current.type in _MULTILINE_CONTINUATION_EXPRESSION_TYPES
+                and target_line_0 > current.start_point[0]
+            )
+            if is_expression_chain or is_continuation_expression:
+                multiline_candidate = current
+        current = current.parent
+    return multiline_candidate
+
+
+def _resolve_code_on_line(
+    source_code: str,
+    source_bytes: bytes,
+    node_at_line: Node | None,
+    line_number: int,
+) -> str | None:
+    lines = source_code.splitlines()
+    multiline_node = _find_multiline_candidate(node_at_line, line_number)
+    if multiline_node is not None:
+        return source_bytes[multiline_node.start_byte: multiline_node.end_byte].decode(
+            "utf-8",
+            errors="replace",
+        )
+    if node_at_line is not None:
+        line_index = node_at_line.start_point[0]
+        if 0 <= line_index < len(lines):
+            return lines[line_index]
+        return None
+    if 1 <= line_number <= len(lines):
+        return lines[line_number - 1]
+    return None
 
 
 def extract_function_from_source(source_code: str, filename: str, line_number: int, max_lines) -> Dict[str, Any]:
@@ -39,99 +137,8 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
 
     search_root = func_node if func_node is not None else tree.root_node
     node_at_line = find_deepest_node_at_line(search_root, line_number)
-
-    def promote_single_line_control_body(node: Optional[Node]) -> Optional[Node]:
-        if node is None:
-            return None
-        if lang_key == "python":
-            return node
-        control_types = {
-            "if_statement", "for_statement", "for_in_statement", "for_of_statement",
-            "while_statement", "do_statement",
-        }
-        current_line = line_number - 1
-        current = node
-        while current is not None:
-            if current.type in control_types and current.start_point[0] == current_line:
-                header_has_call = False
-                stack = [current]
-                while stack:
-                    child = stack.pop()
-                    if child.start_point[0] != current_line:
-                        continue
-                    if child.type in {"call_expression", "method_invocation", "call"}:
-                        header_has_call = True
-                        break
-                    stack.extend(child.children)
-                if header_has_call:
-                    return node
-                body_children = [
-                    child for child in current.children
-                    if child.start_point[0] > current.start_point[0]
-                    and child.type not in {"comment", "{", "}", ";", "if", "for", "while", "do"}
-                ]
-                if len(body_children) == 1:
-                    return body_children[0]
-                return node
-            current = current.parent
-        return node
-
-    node_at_line = promote_single_line_control_body(node_at_line)
-
-    # Climb up from the smallest node to find a multi-line data literal or
-    # expression that is worth returning as "code on line".  For everything
-    # else (control flow, statements, blocks) fall back to the source line.
-    def climb_to_multiline(node: Optional[Node]) -> Optional[Node]:
-        # For SAST triage, showing the exact source line is usually more useful
-        # than expanding to a larger AST fragment. Preserve full multiline text
-        # only for expression families where the target line would otherwise
-        # lose essential context by snapping to a nested subtree or a trailing
-        # continuation line.
-        expression_chain_types = frozenset({
-            "binary_expression", "boolean_operator", "comparison_operator",
-            "conditional_expression", "ternary_expression",
-        })
-        continuation_expression_types = {
-            "assignment_expression",
-            "augmented_assignment_expression",
-            "compound_assignment_expression",
-        }
-        multiline_candidate: Optional[Node] = None
-        target_line_0 = line_number - 1
-        current = node
-        while current is not None:
-            s, e = line_range(current)
-            if e > s:
-                is_expression_chain = current.type in expression_chain_types
-                is_continuation_expression = (
-                    lang_key == "cpp"
-                    and current.type in continuation_expression_types
-                    and target_line_0 > current.start_point[0]
-                )
-                if is_expression_chain or is_continuation_expression:
-                    multiline_candidate = current
-            current = current.parent
-        return multiline_candidate
-
-    code_on_line: Optional[str] = None
-    lines = source_code.splitlines()
-
-    multiline_node = climb_to_multiline(node_at_line)
-    if multiline_node:
-        # return entire multi-line node text
-        code_on_line = source_bytes[multiline_node.start_byte: multiline_node.end_byte].decode(
-            "utf-8", errors="replace"
-        )
-    elif node_at_line:
-        # fallback: single-line node → return full source line
-        line_index = node_at_line.start_point[0]
-        if 0 <= line_index < len(lines):
-            code_on_line = lines[line_index]
-    else:
-        # fallback: no node at all
-        if 1 <= line_number <= len(lines):
-            code_on_line = lines[line_number - 1]
-
+    node_at_line = _promote_single_line_control_body(node_at_line, line_number, nodeset)
+    code_on_line = _resolve_code_on_line(source_code, source_bytes, node_at_line, line_number)
 
     if not func_node:
         return {

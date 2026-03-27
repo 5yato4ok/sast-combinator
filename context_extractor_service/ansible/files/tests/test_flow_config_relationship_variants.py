@@ -43,6 +43,34 @@ def test_find_related_configs_should_keep_env_and_variant_relationships():
     ]
 
 
+def test_find_related_configs_should_prefer_compose_specific_relationship_over_generic_reference():
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        (root / "Dockerfile").write_text("FROM python:3.12\n")
+        (root / "docker-compose.yml").write_text(
+            "services:\n"
+            "  web:\n"
+            "    build:\n"
+            "      context: .\n"
+            "      dockerfile: Dockerfile\n",
+        )
+
+        related = find_related_configs(root, "Dockerfile")
+
+    assert related == [{"file": "docker-compose.yml", "relationship": "referenced_by_compose"}]
+
+
+def test_find_related_configs_should_prefer_env_variant_over_generic_reference():
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        (root / ".env.dev").write_text("DB_PASSWORD=dev\n")
+        (root / ".env.prod").write_text("DB_PASSWORD=prod\n# docs mention .env.dev\n")
+
+        related = find_related_configs(root, ".env.dev")
+
+    assert related == [{"file": ".env.prod", "relationship": "env_variant"}]
+
+
 def test_find_config_overrides_should_keep_env_value_override_chain():
     with TemporaryDirectory() as tmp:
         root = Path(tmp)

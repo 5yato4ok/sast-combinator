@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
 
 import mcp_server
 from context_extractor import project_analysis
+from context_extractor.project_analysis import callers as project_analysis_callers
 from context_extractor.config_analysis import extract_config_block, find_related_configs
 from context_extractor.extract import extract_function_from_source
 
@@ -3623,8 +3624,8 @@ public:
         parse_calls.append(str(filepath.relative_to(tmp_path)))
         return original_try_parse(source, filepath)
 
-    monkeypatch.setattr(project_analysis, "_iter_source_files", deterministic_iter_source_files)
-    monkeypatch.setattr(project_analysis, "_try_parse", counting_try_parse)
+    monkeypatch.setattr(project_analysis_callers, "_iter_source_files", deterministic_iter_source_files)
+    monkeypatch.setattr(project_analysis_callers, "_try_parse", counting_try_parse)
 
     callers = project_analysis.find_callers(tmp_path, target_file, "Engine")
 

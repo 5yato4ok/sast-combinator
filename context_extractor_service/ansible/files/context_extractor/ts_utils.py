@@ -200,3 +200,39 @@ def find_deepest_node_at_line(
                 break
         if not went_deeper:
             return current
+
+
+def inject_html_script_source(
+    source_code: str,
+    line_number: int,
+    lang: Language,
+    lang_key: str,
+) -> tuple[Language, str, str, int]:
+    """Re-parse inline ``<script>`` content as JavaScript when a line hits HTML raw_text."""
+    if lang_key != "html":
+        return lang, lang_key, source_code, line_number
+
+    parser = create_parser(lang)
+    source_bytes = source_code.encode("utf-8", errors="replace")
+    tree = parser.parse(source_bytes)
+
+    stack: list[Node] = [tree.root_node]
+    while stack:
+        node = stack.pop()
+        if node.type == "script_element":
+            raw_text = next((child for child in node.children if child.type == "raw_text"), None)
+            if raw_text is not None:
+                start_line = raw_text.start_point[0] + 1
+                end_line = raw_text.end_point[0] + 1
+                if start_line <= line_number <= end_line:
+                    script_source = source_bytes[raw_text.start_byte:raw_text.end_byte].decode(
+                        "utf-8",
+                        errors="replace",
+                    )
+                    adjusted_line = line_number - start_line + 1
+                    if script_source.startswith("\n"):
+                        adjusted_line += 1
+                    return JS_LANGUAGE, "javascript", script_source, adjusted_line
+        stack.extend(reversed(node.children))
+
+    return lang, lang_key, source_code, line_number

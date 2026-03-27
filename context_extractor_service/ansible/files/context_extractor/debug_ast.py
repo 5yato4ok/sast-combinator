@@ -58,7 +58,7 @@ from tree_sitter import Node, TreeCursor
 class DumpOpts:
     show_text: bool = True
     text_limit: int = 60
-    max_nodes: int = 10000
+    max_nodes: int = 2000
     show_bytes: bool = False
     include_unnamed: bool = True
     indent: str = "  "
@@ -72,10 +72,14 @@ def _node_span_str(n: Node) -> str:
 
 
 def _node_text_snippet(n: Node, src: bytes, limit: int, one_line: bool) -> str:
-    s = src[n.start_byte:n.end_byte].decode("utf-8", errors="replace")
+    span = src[n.start_byte:n.end_byte]
+    truncated = len(span) > limit
+    if truncated:
+        span = span[:limit]
+    s = span.decode("utf-8", errors="replace")
     if one_line:
         s = s.replace("\r", "").replace("\n", " ")
-    if len(s) > limit:
+    if truncated or len(s) > limit:
         s = s[:limit] + "…"
     return s
 
@@ -128,24 +132,23 @@ def _dump_subtree_with_fields(root: Node, src: bytes, opts: DumpOpts) -> List[st
         lines.append("".join(pieces))
         count += 1
 
-    def walk(depth: int):
-        if count >= opts.max_nodes:
-            return
-        # emit current node
-        emit(cur.node, depth, _cursor_field_name(cur))
-        # descend into children
+    depth = 0
+    emit(cur.node, depth, _cursor_field_name(cur))
+    while count < opts.max_nodes:
         if cur.goto_first_child():
-            try:
-                while True:
-                    # even if unnamed nodes are not included, we still traverse through them,
-                    # otherwise we'd miss named grandchildren.
-                    walk(depth + 1)
-                    if not cur.goto_next_sibling():
-                        break
-            finally:
-                cur.goto_parent()
+            depth += 1
+            emit(cur.node, depth, _cursor_field_name(cur))
+            continue
 
-    walk(0)
+        while not cur.goto_next_sibling():
+            if not cur.goto_parent():
+                if count >= opts.max_nodes:
+                    lines.append(f"{opts.indent}… (truncated at {opts.max_nodes} nodes)")
+                return lines
+            depth -= 1
+
+        emit(cur.node, depth, _cursor_field_name(cur))
+
     if count >= opts.max_nodes:
         lines.append(f"{opts.indent}… (truncated at {opts.max_nodes} nodes)")
     return lines

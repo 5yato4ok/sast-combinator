@@ -62,7 +62,7 @@ from context_extractor.project_analysis import (
 from context_extractor.project_analysis import (
     trace_identifier_backward as _trace_backward,
 )
-from context_extractor.ts_utils import create_parser, detect_language
+from context_extractor.ts_utils import create_parser, detect_language, inject_html_script_source
 from mcp.server.fastmcp import FastMCP
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -230,38 +230,8 @@ def _climb_to_statement(node, nodeset):
 
 
 def _inject_html_script(html_source, line_number, html_lang, html_key):
-    """Language injection for HTML: find the ``<script>`` ``raw_text`` node
-    covering *line_number*, extract its content, and return JavaScript
-    language/source/line for re-parsing.
-
-    Falls back to the original HTML language if no script block covers the line.
-    """
-    from context_extractor.ts_utils import JS_LANGUAGE
-
-    parser = create_parser(html_lang)
-    html_bytes = html_source.encode("utf-8", errors="replace")
-    tree = parser.parse(html_bytes)
-
-    # Walk the full HTML AST (iterative DFS) to find raw_text inside any script_element.
-    # Scripts may appear at any nesting depth: <html><body><script>, <template>, etc.
-    stack = list(tree.root_node.children)
-    while stack:
-        child = stack.pop()
-        if child.type == "script_element":
-            for sub in child.children:
-                if sub.type == "raw_text":
-                    s_line = sub.start_point[0] + 1  # 1-based
-                    e_line = sub.end_point[0] + 1
-                    if s_line <= line_number <= e_line:
-                        js_source = html_bytes[sub.start_byte:sub.end_byte].decode(
-                            "utf-8", errors="replace",
-                        )
-                        adjusted = line_number - s_line + 1
-                        return JS_LANGUAGE, "javascript", js_source, adjusted
-        else:
-            stack.extend(child.children)
-
-    return html_lang, html_key, html_source, line_number
+    """Delegate HTML inline-script handling to the shared context_extractor helper."""
+    return inject_html_script_source(html_source, line_number, html_lang, html_key)
 
 
 # ── MCP Server ───────────────────────────────────────────────────
@@ -300,10 +270,24 @@ def extract_function(pipeline_id: str, file_path: str, line_number: int) -> dict
 @_log_tool
 def find_identifiers(pipeline_id: str, file_path: str, line_number: int) -> dict:
     """
-    Analyze which variables are read and written on the given line.
+    Analyze which identifiers are semantically read and written on the given line.
 
-    Returns {reads: [...], writes: [...]}. Use this to trace data flow:
-    understand where tainted input comes from and where it flows to.
+    Returns ``{reads: [...], writes: [...]}``.
+
+    Important: ``reads`` is intentionally broader than strict backward data-flow.
+    It represents the meaningful operands visible on the selected statement, not
+    only values that should be traced as taint sources. In practice this usually
+    includes:
+    - receiver/object reads such as ``items`` in ``items.append(x)``
+    - method/function names such as ``append`` or ``parse_args`` when they are
+      part of the call expression on that line
+    - argument and member-access inputs such as ``x``, ``args.file``, ``session``
+
+    ``writes`` contains identifiers assigned or bound on that statement.
+
+    This tool is best used as a fast line-local context probe before
+    ``trace_identifier_backward``. Treat ``reads`` as semantic operands on the
+    line, not as a minimal list of true data-dependency sources.
 
     Args:
         pipeline_id: AIST pipeline ID

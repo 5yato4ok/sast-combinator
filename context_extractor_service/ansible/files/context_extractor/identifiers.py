@@ -117,9 +117,27 @@ def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) 
       - Циклы -> переменная(ые) итерации в writes, остальное в reads
     Всегда добавляем «сырае» идентификаторы как reads, если мы не распознали конкретную роль.
     """
+    if root.type in {"if_statement", "while_statement", "do_statement"}:
+        header_line = root.start_point[0]
+        header_has_call = False
+        body_children: List[Node] = []
+        scan_stack: List[Node] = [root]
+        while scan_stack:
+            node = scan_stack.pop()
+            if node.start_point[0] == header_line and node.type in {"call_expression", "method_invocation", "call"}:
+                header_has_call = True
+                break
+            scan_stack.extend(node.children)
+        for child in root.children:
+            if child.start_point[0] > header_line and child.type not in {"comment", "{", "}", ";", "if", "for", "while"}:
+                body_children.append(child)
+        if not header_has_call and len(body_children) == 1:
+            root = body_children[0]
+
     reads: Set[str] = set()
     writes: Set[str] = set()
     stack: List[Node] = [root]
+    raw_root = root
 
     while stack:
         n = stack.pop()
@@ -237,6 +255,24 @@ def split_reads_writes(root: Node, source_bytes: bytes, lang_key: str, nodeset) 
             stack.extend(n.children)
 
     # Базовая подстраховка: всё, что не классифицировали как write, считаем read
-    raw_ids = collect_idents_in_node(root, source_bytes, nodeset)
+    if (
+        lang_key == "cpp"
+        and root.type == "function_definition"
+    ):
+        declarator = root.child_by_field_name("declarator")
+        if declarator is not None:
+            qualified = declarator.child_by_field_name("declarator")
+            if qualified is not None and qualified.type == "qualified_identifier":
+                raw_root = declarator
+
+    raw_ids = collect_idents_in_node(raw_root, source_bytes, nodeset)
+    if lang_key == "cpp" and raw_root.type == "function_declarator":
+        qualified = raw_root.child_by_field_name("declarator")
+        if qualified is not None and qualified.type == "qualified_identifier":
+            for child in qualified.children:
+                if child.type in {"namespace_identifier", "identifier", "destructor_name"}:
+                    raw_ids.add(node_text(child, source_bytes).lstrip("~"))
     reads |= (raw_ids - writes)
+    if lang_key == "cpp" and raw_root.type == "function_declarator":
+        reads |= (raw_ids & writes)
     return reads, writes

@@ -8,6 +8,7 @@ Covers:
   - collect_multiline_header with '{' inside string literals and comments
   - debug_ast._find_enclosing_function on deeply nested AST (RecursionError regression)
 """
+from multiprocessing import Process, Queue
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -260,10 +261,10 @@ def test_find_enclosing_function_should_not_recurse_error_on_deep_nesting():
     Deeply nested lambdas/arrow functions should not cause RecursionError.
     Regression guard for the recursive DFS that was replaced by iterative version.
     """
-    # Build a deeply nested Python source: function containing 200 nested list comprehensions
+    # Build a deeply nested Python source with linear growth in source size.
     inner = "x"
     for _ in range(200):
-        inner = f"[{inner} for {inner} in range(1)]"
+        inner = f"[{inner} for item in range(1)]"
     source = f"def outer():\n    result = {inner}\n    return result\n"
 
     result = function_ast_to_string(source, "deep.py", 2)
@@ -271,6 +272,42 @@ def test_find_enclosing_function_should_not_recurse_error_on_deep_nesting():
     # Should return a valid AST dump, not raise RecursionError
     assert "outer" in result
     assert "function" in result.lower()
+
+
+def test_function_ast_to_string_should_finish_on_deep_linear_call_nesting():
+    """
+    Deep but linearly sized expressions should not hang the AST dump helper.
+    This targets real project-shaped inputs where nested calls create a deep AST
+    without exploding fixture size before the MCP tool runs.
+    """
+    expr = "x"
+    for _ in range(3000):
+        expr = f"f({expr})"
+    source = f"def outer():\n    value = {expr}\n    return value\n"
+
+    queue = Queue()
+
+    def _runner() -> None:
+        try:
+            result = function_ast_to_string(source, "deep.py", 2)
+            queue.put(("ok", "outer" in result and "function" in result.lower()))
+        except Exception as exc:  # pragma: no cover - surfaced through assertion below
+            queue.put(("err", type(exc).__name__, str(exc)))
+
+    proc = Process(target=_runner)
+    proc.start()
+    proc.join(5)
+
+    if proc.is_alive():
+        proc.terminate()
+        proc.join()
+        raise AssertionError("function_ast_to_string hung on deep linear nesting")
+
+    assert proc.exitcode == 0
+    assert not queue.empty()
+    status = queue.get_nowait()
+    assert status[0] == "ok", status
+    assert status[1] is True
 
 
 def test_function_ast_to_string_returns_correct_language_header():

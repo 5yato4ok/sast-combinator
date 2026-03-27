@@ -21,7 +21,8 @@ from .identifiers import (
     split_reads_writes,
 )
 from .ts_utils import (
-    create_parser, detect_language, find_enclosing_function, line_range, node_text,
+    create_parser, detect_language, find_enclosing_function, inject_html_script_source,
+    line_range, node_text,
 )
 
 # ── Shared helpers ───────────────────────────────────────────────
@@ -122,12 +123,18 @@ def find_callers(
         + r"\s*\(",
     )
     results: list[dict[str, Any]] = []
+    treat_as_class_like = bool(function_name[:1].isupper())
 
     for rel in _iter_source_files(source_dir):
+        file_class = classify_file(str(rel))
+        if file_class["type"] in {"vendored", "generated"}:
+            continue
         full = source_dir / rel
         try:
             text = full.read_text(encoding="utf-8", errors="replace")
         except OSError:
+            continue
+        if not pattern.search(text):
             continue
         lines = text.splitlines()
         _cached_tree, _cached_lang_key, _cached_src_bytes = _try_parse(text, full)
@@ -135,6 +142,8 @@ def find_callers(
             if pattern.search(line):
                 # Skip the definition itself
                 stripped = line.lstrip()
+                if re.search(r"\bnew\s+" + re.escape(function_name) + r"\s*\(", stripped):
+                    continue
                 if re.match(
                     r"(?:export\s+)?(?:default\s+)?(?:async\s+)?"
                     r"(?:def|func|function|fn)\s+",
@@ -163,6 +172,20 @@ def find_callers(
                     r"(?:async\s+)?" + re.escape(function_name) + r"\s*\([^)]*\)\s*"
                     r"(?::\s*\w[^{]*)?{",
                     stripped,
+                ):
+                    continue
+                if (
+                    _cached_tree
+                    and _cached_lang_key
+                    and _cached_src_bytes
+                    and not treat_as_class_like
+                    and _is_definition_site_for_symbol(
+                        _cached_tree.root_node,
+                        _cached_src_bytes,
+                        _cached_lang_key,
+                        i + 1,
+                        function_name,
+                    )
                 ):
                     continue
                 caller = None
@@ -296,9 +319,15 @@ def classify_file(file_path: str, source: str | None = None) -> dict[str, Any]:
                 "reason": "path contains migration directory"}
 
     # Generated / vendored
-    vendored = {"vendor", "third_party", "node_modules", "packages",
-                "bower_components", "external", "deps"}
-    if any(p.lower() in vendored for p in parts):
+    vendored_roots = {"vendor", "third_party", "node_modules", "packages",
+                      "bower_components", "external", "deps"}
+    vendored_nested = {"vendor", "node_modules", "packages",
+                       "bower_components", "external", "deps"}
+    parts_lower = [p.lower() for p in parts]
+    if parts_lower and parts_lower[0] in vendored_roots:
+        return {"type": "vendored", "confidence": 0.95,
+                "reason": "path starts in a vendored/third-party root"}
+    if any(part in vendored_nested for part in parts_lower):
         return {"type": "vendored", "confidence": 0.95,
                 "reason": "path indicates vendored/third-party code"}
     generated_markers = {"generated", "autogen", "proto", ".gen."}
@@ -376,7 +405,6 @@ def classify_file(file_path: str, source: str | None = None) -> dict[str, Any]:
                 "reason": f"well-known third-party library: {stem}"}
 
     # Static directory containing a known third-party library path
-    parts_lower = [p.lower() for p in parts]
     if "static" in parts_lower and any(p in _KNOWN_VENDORED_LIBS for p in parts_lower):
         return {"type": "vendored", "confidence": 0.8,
                 "reason": "static directory contains known third-party library path"}
@@ -494,6 +522,12 @@ def trace_identifier_backward(
     For unsupported languages, does a simple regex-based backward scan.
     """
     tree, lang_key, src_bytes = _try_parse(source, filepath)
+    if tree and lang_key == "html":
+        html_lang, _html_key = detect_language(filepath)
+        lang, lang_key, source, line_number = inject_html_script_source(
+            source, line_number, html_lang, lang_key,
+        )
+        tree, lang_key, src_bytes = _try_parse(source, Path("inline-script.js"))
     if tree and lang_key and src_bytes:
         return _trace_ast(tree.root_node, lang_key, src_bytes, source,
                           line_number, identifier, max_depth)
@@ -517,13 +551,22 @@ def _trace_ast(
     lines = source.splitlines()
     chain: list[dict[str, Any]] = []
     targets = {identifier}
+    initial_target_line = line_number
+    target_stmt = next((stmt for stmt_line, stmt in stmts if stmt_line + 1 == line_number), None)
+    stop_after_first_hop = bool(
+        target_stmt is not None and target_stmt.type in {"if_statement", "while_statement", "do_statement"}
+    )
 
     for _depth in range(max_depth):
         found = False
         # Walk backward from line_number looking for writes to any target
         for stmt_line, stmt_node in reversed(stmts):
-            if stmt_line >= line_number:
+            if stmt_line + 1 > line_number:
                 continue
+            if stmt_line + 1 == initial_target_line:
+                code = lines[stmt_line].strip() if stmt_line < len(lines) else ""
+                if re.match(r"^\*+\s*" + re.escape(identifier) + r"\b", code):
+                    continue
             reads, writes = split_reads_writes(
                 stmt_node, src_bytes, lang_key, nodeset,
             )
@@ -536,6 +579,8 @@ def _trace_ast(
                     "writes": sorted(overlap),
                     "reads": sorted(reads),
                 })
+                if stop_after_first_hop:
+                    return chain
                 # Next iteration traces the reads from this assignment
                 targets = reads - writes
                 line_number = stmt_line
@@ -543,6 +588,25 @@ def _trace_ast(
                 break
         if not found or not targets:
             break
+
+    if chain:
+        return chain
+
+    for stmt_line, stmt_node in stmts:
+        if stmt_line + 1 != line_number:
+            continue
+        if stmt_node.type not in nodeset.get("declaration", set()):
+            continue
+        reads, writes = split_reads_writes(stmt_node, src_bytes, lang_key, nodeset)
+        overlap = writes & {identifier}
+        if overlap:
+            code = lines[stmt_line] if stmt_line < len(lines) else ""
+            return [{
+                "line": stmt_line + 1,
+                "code": code.strip(),
+                "writes": sorted(overlap),
+                "reads": sorted(reads),
+            }]
 
     return chain
 
@@ -694,6 +758,63 @@ def _get_node_name(node, src_bytes: bytes) -> str:
     return "<anonymous>"
 
 
+def _symbol_variants(symbol_name: str) -> tuple[str, str]:
+    qualified = symbol_name.strip()
+    leaf = qualified.split("::")[-1].split(".")[-1].lstrip("~")
+    return qualified, leaf
+
+
+def _definition_names(node, src_bytes: bytes) -> set[str]:
+    names: set[str] = set()
+    name = _get_node_name(node, src_bytes)
+    if name and name != "<anonymous>":
+        names.add(name)
+        names.add(name.split("::")[-1].split(".")[-1].lstrip("~"))
+
+    declarator = node.child_by_field_name("declarator")
+    if declarator is not None:
+        inner = declarator.child_by_field_name("declarator")
+        if inner is not None:
+            full_name = node_text(inner, src_bytes).strip()
+            if full_name:
+                names.add(full_name)
+                names.add(full_name.split("::")[-1].split(".")[-1].lstrip("~"))
+    return {name for name in names if name}
+
+
+def _is_definition_site_for_symbol(root, src_bytes: bytes, lang_key: str, line_number: int, symbol_name: str) -> bool:
+    qualified, leaf = _symbol_variants(symbol_name)
+    nodeset = LANG_NODESETS.get(lang_key, {})
+    definition_types = (
+        nodeset.get("function", set())
+        | {
+            "class_definition", "class_declaration", "class",
+            "interface_declaration", "struct_specifier", "enum_declaration",
+            "function_declarator", "function_definition", "function_declaration",
+        }
+    )
+
+    stack = [root]
+    deepest = None
+    while stack:
+        node = stack.pop()
+        start = node.start_point[0] + 1
+        end = node.end_point[0] + 1
+        if not (start <= line_number <= end):
+            continue
+        deepest = node
+        stack.extend(node.children)
+
+    current = deepest
+    while current is not None:
+        if current.type in definition_types:
+            names = _definition_names(current, src_bytes)
+            if qualified in names or leaf in names:
+                return True
+        current = current.parent
+    return False
+
+
 _STRUCT_RE = re.compile(
     r"^\s*(?:(?:export\s+)?(?:default\s+)?)"
     r"(?:(?:public|private|protected|static|abstract|final|async)\s+)*"
@@ -757,32 +878,100 @@ def find_definition(
         ), "type"),
         # C/C++/Java return-type based: ReturnType functionName(
         (re.compile(
-            r"^\s*(?:\w+\s+)+" + re.escape(symbol_name) + r"\s*\(",
+            r"^\s*(?:\w+\s+)+" + re.escape(symbol_name) + r"\b\s*\(",
         ), "function"),
     ]
 
     results: list[dict[str, Any]] = []
+    qualified, leaf = _symbol_variants(symbol_name)
 
     for rel in _iter_source_files(source_dir):
+        file_class = classify_file(str(rel))
+        if file_class["type"] in {"vendored", "generated"}:
+            continue
         full = source_dir / rel
         try:
             text = full.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
+        if leaf not in text and qualified not in text:
+            continue
         lines = text.splitlines()
         for i, line in enumerate(lines):
+            stripped = line.strip()
+            previous = lines[i - 1].strip() if i > 0 else ""
+            next_line = lines[i + 1].strip() if i + 1 < len(lines) else ""
+
+            if (
+                "::" in qualified
+                and re.search(re.escape(qualified) + r"\s*\(", stripped)
+                and not stripped.endswith(";")
+            ):
+                results.append({
+                    "file": str(rel),
+                    "line": i + 1,
+                    "kind": "function",
+                })
+                break
+
+            if (
+                stripped.startswith(f"{leaf}(")
+                and next_line.startswith("{")
+                and previous
+                and not previous.endswith(("{", "}", ";"))
+                and not re.match(r"^(?:return|new|throw|delete)\b", previous)
+            ):
+                results.append({
+                    "file": str(rel),
+                    "line": i + 1,
+                    "kind": "function",
+                })
+                break
+
+            if (
+                "::" not in qualified
+                and re.search(
+                    r"^(?!\s*(?:return|new|throw|delete)\b)"
+                    r".*?(?:^|[\s*&])(?:\w+(?:::\w+)*::)?"
+                    + re.escape(leaf)
+                    + r"\b\s*\(",
+                    line,
+                )
+                and not stripped.endswith(";")
+            ):
+                results.append({
+                    "file": str(rel),
+                    "line": i + 1,
+                    "kind": "function",
+                })
+                break
+
             for pattern, kind in def_patterns:
                 if pattern.match(line):
+                    if kind == "function" and re.match(r"^\s*(?:return|new|throw|delete)\b", line):
+                        continue
+                    if kind == "function" and stripped.endswith(";"):
+                        continue
                     results.append({
                         "file": str(rel),
                         "line": i + 1,
                         "kind": kind,
-                        "snippet": _snippet(lines, i),
                     })
                     break
             if len(results) >= _MAX_RESULTS:
-                return results
-    return results
+                break
+
+    if not results:
+        return []
+
+    prefer_class = bool(leaf and leaf[:1].isupper() and "::" not in qualified)
+
+    def _rank(item: dict[str, Any]) -> tuple[int, int, str, int]:
+        kind_rank = 0 if prefer_class and item["kind"] == "class" else 1
+        return (kind_rank, item["file"].count("/"), item["file"], item["line"])
+
+    results.sort(key=_rank)
+    return [results[0]]
 
 
 # ── Route patterns per framework ─────────────────────────────────

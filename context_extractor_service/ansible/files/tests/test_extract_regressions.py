@@ -196,3 +196,47 @@ function Page() {
 
     assert result["text"] != "// Function not found."
     assert "onClick={() => {" in result["text"]
+
+
+def test_code_on_line_should_preserve_outer_multiline_cpp_expression_for_pointer_arithmetic():
+    source = """\
+int parseBlockSize(const char* const responseBuffer, int responseLength) {
+    const auto optionNameLength = (int) std::strlen(kBlockSizeOption);
+    const int blockSizeValueLength = responseLength
+        - optionNameLength
+        - kOptionAckCodeLen
+        - kTerminatingBytes;
+    const auto blockSizeValuePtr = responseBuffer
+        + responseLength
+        - (blockSizeValueLength + 1);
+    return blockSizeValueLength;
+}
+"""
+    result = extract_function_from_source(source, "simple_tftp_client.cpp", 8, 200)
+
+    assert result["meta"]["code_on_line"] == (
+        "responseBuffer\n"
+        "        + responseLength\n"
+        "        - (blockSizeValueLength + 1)"
+    )
+
+
+def test_code_on_line_should_preserve_multiline_assignment_expression_for_continuation_line():
+    source = """\
+void describe(PluginInfo* pluginInfo) {
+    QString originalPluginInfoDescription;
+    if (pluginInfo)
+    {
+        originalPluginInfoDescription =
+            NX_FMT("Original PluginInfo fields: errorCode [%1], statusMessage %2",
+                pluginInfo->errorCode, nx::kit::utils::toString(pluginInfo->statusMessage));
+    }
+}
+"""
+    result = extract_function_from_source(source, "plugin_manager.cpp", 7, 200)
+
+    assert result["meta"]["code_on_line"] == (
+        "originalPluginInfoDescription =\n"
+        '            NX_FMT("Original PluginInfo fields: errorCode [%1], statusMessage %2",\n'
+        "                pluginInfo->errorCode, nx::kit::utils::toString(pluginInfo->statusMessage))"
+    )

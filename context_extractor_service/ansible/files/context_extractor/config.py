@@ -26,7 +26,7 @@ class LangNodeset(TypedDict):
 SKIP_DIRS = frozenset({
     ".git", ".svn", ".hg", ".idea", ".vscode",
     "node_modules", "__pycache__", ".tox", ".mypy_cache",
-    "vendor", "third_party", "build", "dist", ".next",
+    "vendor", "build", "dist", ".next",
     "target", "bin", "obj", ".gradle",
 })
 

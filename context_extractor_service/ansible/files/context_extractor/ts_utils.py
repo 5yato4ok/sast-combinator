@@ -57,6 +57,7 @@ TOML_LANGUAGE = _resolve_language(toml_lang, "language", "language_toml")
 JSON_LANGUAGE = _resolve_language(json_lang, "language", "language_json")
 BASH_LANGUAGE = _resolve_language(bash_lang, "language", "language_bash")
 HTML_LANGUAGE = _resolve_language(html_lang, "language", "language_html")
+QMLJS_LANGUAGE: Language = _lp_get_language("qmljs")
 
 # Dockerfile grammar via tree-sitter-language-pack (cross-platform, aarch64+x86_64).
 # tree-sitter-dockerfile has no Linux aarch64 wheel; language-pack provides it.
@@ -82,6 +83,7 @@ _LANG_KEY_MAP: dict[Language, str] = {
     JSON_LANGUAGE: "json",
     BASH_LANGUAGE: "bash",
     HTML_LANGUAGE: "html",
+    QMLJS_LANGUAGE: "qml",
     DOCKERFILE_LANGUAGE: "dockerfile",
 }
 
@@ -119,6 +121,7 @@ SUPPORTED_LANGUAGES = {
     # HTML
     ".html": HTML_LANGUAGE,
     ".htm": HTML_LANGUAGE,
+    ".qml": QMLJS_LANGUAGE,
 }
 
 # Files matched by full name (no extension-based matching)

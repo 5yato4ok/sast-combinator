@@ -22,6 +22,18 @@ def _write_source_tree(root: Path, file_path: str, source: str) -> None:
     full.write_text(source, encoding="utf-8")
 
 
+def _pad_to_line(line_number: int, source: str) -> str:
+    if line_number <= 1:
+        return source
+    return ("\n" * (line_number - 1)) + source
+
+
+def _pad_source_line_to_target(target_line: int, source_line: int, source: str) -> str:
+    if source_line < 1:
+        raise ValueError("source_line must be >= 1")
+    return _pad_to_line(target_line - source_line + 1, source)
+
+
 def _exercise_code_flow(
     monkeypatch,
     tmp_path: Path,
@@ -622,3 +634,287 @@ deploy:
     assert "BEGIN RSA PRIVATE KEY" in block["block_text"]
     assert env_vars == []
     assert related == []
+
+
+def test_active_followup_authorization_sso_import_line_keeps_exact_typescript_import_context(
+    monkeypatch,
+    tmp_path,
+):
+    """
+    Audit trail:
+    - live source line 19: `import { formControlValueSignal } from '@utils/nx';`
+    - fixture line 19: `import { formControlValueSignal } from '@utils/nx';`
+    - tool under test: extract_function / find_identifiers
+    """
+    file_path = (
+        "front_end/apps/authorization-sso/src/app/screens/login-path/"
+        "enter-password-or-org-name/enter-password-or-org-name.component.ts"
+    )
+    source = """\
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    effect,
+    inject,
+    signal,
+} from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { of } from 'rxjs';
+import { NxInputFieldModule } from '@components/forms/input/input-field.module';
+import { NxValidators } from '@components/forms/validators';
+import {
+    NxInitialFocusDirective,
+    NxInitialFocusParentDirective,
+} from '@directives/nx-initial-focus.directive';
+
+import { formControlValueSignal } from '@utils/nx';
+"""
+    _write_source_tree(tmp_path, file_path, source)
+    monkeypatch.setattr(mcp_server, "_resolve_source_dir", lambda _pipeline_id: tmp_path)
+
+    classification = mcp_server.classify_file("5a36b942", file_path)
+    extracted = mcp_server.extract_function("5a36b942", file_path, 19)
+    imports = mcp_server.find_imports("5a36b942", file_path)
+    decorators = mcp_server.find_decorators("5a36b942", file_path, 19)
+    identifiers = mcp_server.find_identifiers("5a36b942", file_path, 19)
+
+    assert classification["type"] == "production"
+    assert extracted["text"] == "// Function not found."
+    assert extracted["meta"]["code_on_line"] == "import { formControlValueSignal } from '@utils/nx';"
+    assert imports[-1] == "import { formControlValueSignal } from '@utils/nx';"
+    assert decorators == []
+    assert identifiers == {"reads": [], "writes": [], "language": "typescript"}
+
+
+@pytest.mark.parametrize(
+    (
+        "file_path",
+        "line_number",
+        "source_line",
+        "source",
+        "expected_code_on_line",
+        "expected_writes",
+    ),
+    [
+        (
+            "common/python/nx_cloud_api_client/base_auth.py",
+            25,
+            2,
+            'username = "username"\npassword = "password"\n',
+            'password = "password"',
+            ["password"],
+        ),
+        (
+            "cloud/cloud/controllers/cloud_api.py",
+            250,
+            2,
+            'username = "username"\npassword = "password"\n',
+            'password = "password"',
+            ["password"],
+        ),
+        (
+            "cloud/cloud/helpers/exceptions.py",
+            41,
+            1,
+            "wrong_old_password = 'wrongOldPassword'\nwrong_password = 'wrongPassword'\n",
+            "wrong_old_password = 'wrongOldPassword'",
+            ["wrong_old_password"],
+        ),
+        (
+            "cloud/cloud/helpers/exceptions.py",
+            42,
+            2,
+            "wrong_old_password = 'wrongOldPassword'\nwrong_password = 'wrongPassword'\n",
+            "wrong_password = 'wrongPassword'",
+            ["wrong_password"],
+        ),
+        (
+            "cloud/oauth/views.py",
+            87,
+            3,
+            "successful_introspect_response = {\n"
+            "    'active': True,\n"
+            "    'time_since_password': '11',\n"
+            "}\n",
+            "    'time_since_password': '11',",
+            ["successful_introspect_response"],
+        ),
+    ],
+)
+def test_active_followup_python_literal_lines_keep_current_line_local_context(
+    monkeypatch,
+    tmp_path,
+    file_path,
+    line_number,
+    source_line,
+    source,
+    expected_code_on_line,
+    expected_writes,
+):
+    """
+    Audit trail is carried in the parametrized cases above by keeping the live source text
+    and fixture target line aligned for each finding family.
+    """
+    _write_source_tree(tmp_path, file_path, _pad_source_line_to_target(line_number, source_line, source))
+    monkeypatch.setattr(mcp_server, "_resolve_source_dir", lambda _pipeline_id: tmp_path)
+
+    classification = mcp_server.classify_file("5a36b942", file_path)
+    extracted = mcp_server.extract_function("5a36b942", file_path, line_number)
+    imports = mcp_server.find_imports("5a36b942", file_path)
+    decorators = mcp_server.find_decorators("5a36b942", file_path, line_number)
+    identifiers = mcp_server.find_identifiers("5a36b942", file_path, line_number)
+
+    assert classification["type"] == "production"
+    assert extracted["text"] == "// Function not found."
+    assert extracted["meta"]["code_on_line"].strip() == expected_code_on_line.strip()
+    assert isinstance(imports, list)
+    assert decorators == []
+    assert identifiers["writes"] == expected_writes
+    assert identifiers["language"] == "python"
+
+
+@pytest.mark.parametrize(
+    ("file_path", "line_number", "source"),
+    [
+        ("front_end/ssl_keys/server-old.crt", 1, "-----BEGIN CERTIFICATE-----\nMIIB\n"),
+        ("front_end/ssl_keys/server.crt", 1, "-----BEGIN CERTIFICATE-----\nMIIC\n"),
+    ],
+)
+def test_active_followup_certificate_assets_should_raise_unsupported_extension_errors(
+    monkeypatch,
+    tmp_path,
+    file_path,
+    line_number,
+    source,
+):
+    _write_source_tree(tmp_path, file_path, source)
+    monkeypatch.setattr(mcp_server, "_resolve_source_dir", lambda _pipeline_id: tmp_path)
+
+    classification = mcp_server.classify_file("5a36b942", file_path)
+    extracted = mcp_server.extract_function("5a36b942", file_path, line_number)
+
+    assert classification["type"] == "production"
+    assert extracted["text"] == "// Unsupported file extension: .crt"
+
+    with pytest.raises(ValueError, match=r"Unsupported file extension: \.crt"):
+        mcp_server.find_imports("5a36b942", file_path)
+
+    with pytest.raises(ValueError, match=r"Unsupported file extension: \.crt"):
+        mcp_server.find_decorators("5a36b942", file_path, line_number)
+
+    with pytest.raises(ValueError, match=r"Unsupported file extension: \.crt"):
+        mcp_server.find_identifiers("5a36b942", file_path, line_number)
+
+
+def test_active_followup_api_docstring_line_should_keep_exact_schema_line_text(
+    monkeypatch,
+    tmp_path,
+):
+    file_path = "common/python/nx_cloud_api_client/apis.py"
+    source = """\
+def fetch_security_settings():
+    \"\"\"
+    200,
+    {
+        \"httpDigestAuthEnabled\": true,
+        \"account2faEnabled\": true,
+        \"mfaCode\": \"string\",
+        \"password\": \"string\",
+        \"totpExistsForAccount\": true,
+        \"authSessionLifetime\": \"string\"
+    }
+    \"\"\"
+    return None
+"""
+    _write_source_tree(tmp_path, file_path, source)
+    monkeypatch.setattr(mcp_server, "_resolve_source_dir", lambda _pipeline_id: tmp_path)
+
+    extracted = mcp_server.extract_function("5a36b942", file_path, 8)
+
+    assert extracted["meta"]["code_on_line"] == '        "password": "string",'
+
+
+@pytest.mark.parametrize(
+    ("file_path", "line_number", "source_line"),
+    [
+        ("cloud/cms/structures/cloud_structure.json", 892, '  "apiKey": "AIzaSyA8bA6jCS4GnzmfGEg_I6mQyG5JIBKFrLI",'),
+        ("package-license.json", 12480, '  "url": "https://www.linkedin.com/in/vladimirgorej/",'),
+    ],
+)
+def test_active_followup_json_assets_should_raise_parse_errors_instead_of_raw_keyerrors(
+    monkeypatch,
+    tmp_path,
+    file_path,
+    line_number,
+    source_line,
+):
+    prefix_lines = ["{"] + ['  "pad": 0,' for _ in range(line_number - 2)]
+    source = "\n".join(prefix_lines + [source_line, "}"]) + "\n"
+    _write_source_tree(tmp_path, file_path, source)
+    monkeypatch.setattr(mcp_server, "_resolve_source_dir", lambda _pipeline_id: tmp_path)
+
+    classification = mcp_server.classify_file("5a36b942", file_path)
+    assert classification["type"] == "production"
+
+    extracted = mcp_server.extract_function("5a36b942", file_path, line_number)
+    identifiers = mcp_server.find_identifiers("5a36b942", file_path, line_number)
+
+    assert extracted["meta"]["code_on_line"].strip() == source_line.strip()
+    assert identifiers["language"] == "json"
+
+    with pytest.raises(ValueError, match=r"Failed to parse file: .*\.json"):
+        mcp_server.find_imports("5a36b942", file_path)
+
+    with pytest.raises(ValueError, match=r"Failed to parse file: .*\.json"):
+        mcp_server.find_decorators("5a36b942", file_path, line_number)
+
+
+def test_active_followup_cloud_helper_bash_finding_should_not_raise_raw_language_keyerror(
+    monkeypatch,
+    tmp_path,
+):
+    """
+    Audit trail:
+    - live source line 7: `fi`
+    - fixture line 7: `fi`
+    - tool under test: extract_function / find_identifiers
+
+    The real finding 71010 reports line 7. The scanner's semantic target is likely the
+    preceding shell literal on line 6, but the current MCP failure reproduces on the
+    recorded line 7 as well because bash files fail before line-local analysis begins.
+    """
+    file_path = "cloud_helper.sh"
+    source = """\
+#!/usr/bin/env bash
+
+source ./tools/cloud_helper/manage_volumes.sh
+if [[ ! -f etc/.local_env ]]; then
+    echo "Creating .local_env file in etc directory"
+    echo 'PY_PKG_MANAGER="poetry"' > etc/.local_env
+fi
+source etc/.local_env
+
+if [[ $PY_PKG_MANAGER != "poetry" && $PY_PKG_MANAGER != "uv" ]]; then
+    echo "Unsupported python package manager: PY_PKG_MANAGER=$PY_PKG_MANAGER."
+    echo "Supported values are 'poetry' and 'uv', must be set in etc/.local_env file."
+    exit 1
+fi
+"""
+    _write_source_tree(tmp_path, file_path, source)
+    monkeypatch.setattr(mcp_server, "_resolve_source_dir", lambda _pipeline_id: tmp_path)
+
+    classification = mcp_server.classify_file("5a36b942", file_path)
+    imports = mcp_server.find_imports("5a36b942", file_path)
+    decorators = mcp_server.find_decorators("5a36b942", file_path, 7)
+
+    assert classification["type"] == "production"
+    assert imports == []
+    assert decorators == []
+
+    extracted = mcp_server.extract_function("5a36b942", file_path, 7)
+    identifiers = mcp_server.find_identifiers("5a36b942", file_path, 7)
+
+    assert extracted["meta"]["code_on_line"] == "fi"
+    assert identifiers["language"] == "bash"

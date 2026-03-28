@@ -36,7 +36,7 @@ def test_find_route_to_function_should_keep_real_django_route_hit():
         routes = find_route_to_function(root, "login_view")
 
     assert routes
-    assert routes[0]["pattern"] == "login_view"
+    assert routes[0]["pattern"] == "/login"
     assert routes[0]["file"] == "urls.py"
 
 

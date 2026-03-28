@@ -110,6 +110,12 @@ class TestExtractConfigBlock:
         result = extract_config_block(source, filepath, 2)
         assert result["block_text"]
 
+    def test_extract_config_block_should_raise_on_real_parse_error_for_yaml(self):
+        source = "services:\n  web:\n    environment:\n      DD_DEBUG: true\n    [\n"
+
+        with pytest.raises(ValueError, match=r"Failed to parse config file: .*docker-compose\.yml"):
+            extract_config_block(source, Path("docker-compose.yml"), 5)
+
     def test_toml_block(self):
         source = (FIXTURES / "config/pyproject.toml").read_text()
         filepath = FIXTURES / "config/pyproject.toml"
@@ -164,6 +170,12 @@ class TestExtractEnvVariables:
         secret_names = [v["name"] for v in secret_vars]
         assert "DD_SECRET_KEY" in secret_names
         assert "POSTGRES_PASSWORD" in secret_names
+
+    def test_extract_env_variables_should_raise_on_real_parse_error_for_dockerfile(self):
+        source = "FROM python:3.12\nENV APP_NAME=value\nRUN [\n"
+
+        with pytest.raises(ValueError, match=r"Failed to parse config file: .*Dockerfile"):
+            extract_env_variables(source, Path("Dockerfile"))
 
     def test_dockerfile_env(self):
         source = (FIXTURES / "Dockerfile").read_text()

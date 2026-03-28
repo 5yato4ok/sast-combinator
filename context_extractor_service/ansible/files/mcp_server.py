@@ -50,8 +50,7 @@ from context_extractor.project_analysis import (
 )
 from context_extractor.project_analysis import (
     _imports_from_ast,
-    _imports_from_regex,
-    _try_parse,
+    _parse_required,
 )
 from context_extractor.project_analysis import (
     find_route_to_function as _find_route,
@@ -209,6 +208,7 @@ def _climb_to_statement(node, nodeset):
     Stops at block/function boundaries to avoid escaping scope.
     """
     key_types = nodeset.get("key", set())
+    declaration_types = nodeset.get("declaration", set())
     block_types = nodeset.get("block", set()) | nodeset.get("function", set())
     # Extra statement types that carry useful identifier context
     extra_types = {
@@ -217,7 +217,7 @@ def _climb_to_statement(node, nodeset):
         "expression_statement", "with_clause",
         "formal_parameters",
     }
-    all_stmt_types = key_types | extra_types
+    all_stmt_types = key_types | declaration_types | extra_types
     best = node
     current = node
     while current is not None:
@@ -359,8 +359,7 @@ def find_callers(pipeline_id: str, file_path: str, function_name: str) -> list[d
     Use this to understand how a vulnerable function is invoked and
     whether user-controlled data reaches it.
 
-    Works for any programming language via text search with AST refinement
-    for supported languages.
+    Uses AST-based project search for supported languages.
 
     Args:
         pipeline_id: AIST pipeline ID
@@ -385,7 +384,7 @@ def trace_identifier_backward(
     Traces up to 3 hops backward. Essential for determining whether
     input is user-controlled (from request/params) or safe (constant/config).
 
-    Works for any tree-sitter-supported language with regex fallback for others.
+    Works for supported AST-parsed languages only. If parsing fails, returns an error.
 
     Args:
         pipeline_id: AIST pipeline ID
@@ -408,7 +407,7 @@ def find_definition(pipeline_id: str, symbol_name: str) -> list[dict]:
     Use this to inspect helper functions, custom sanitizers, or type definitions
     that affect whether a finding is TP or FP.
 
-    Works for any programming language via regex pattern matching.
+    Uses AST-based project search for supported languages only.
 
     Args:
         pipeline_id: AIST pipeline ID
@@ -434,7 +433,7 @@ def find_imports(pipeline_id: str, file_path: str) -> list[str]:
     - "import bleach" suggests HTML sanitization is available
     - ORM imports (Django/SQLAlchemy/Hibernate) imply parameterized queries
 
-    AST-based for supported languages, regex fallback for others.
+    AST-based for supported languages only. If parsing fails, returns an error.
 
     Args:
         pipeline_id: AIST pipeline ID
@@ -442,10 +441,8 @@ def find_imports(pipeline_id: str, file_path: str) -> list[str]:
 
     """
     source, full_path = _read_source(pipeline_id, file_path)
-    tree, lang_key, src_bytes = _try_parse(source, full_path)
-    if tree and lang_key and src_bytes:
-        return _imports_from_ast(tree.root_node, lang_key, src_bytes)
-    return _imports_from_regex(source)
+    tree, lang_key, src_bytes = _parse_required(source, full_path)
+    return _imports_from_ast(tree.root_node, lang_key, src_bytes)
 
 
 @mcp.tool()
@@ -461,7 +458,7 @@ def find_decorators(pipeline_id: str, file_path: str, line_number: int) -> list[
     - Authorization: @permission_required, @has_role
     - Input validation: @validated, serializer decorators
 
-    AST-based for supported languages, regex fallback (@decorator pattern) for others.
+    AST-based for supported languages only. If parsing fails, returns an error.
 
     Args:
         pipeline_id: AIST pipeline ID
@@ -514,7 +511,7 @@ def get_file_structure(pipeline_id: str, file_path: str) -> dict:
     Use this to understand a file's layout before reading specific functions.
     Saves tokens by letting you navigate to exactly what you need.
 
-    AST-based for supported languages, regex fallback for others.
+    AST-based for supported languages only. If parsing fails, returns an error.
 
     Args:
         pipeline_id: AIST pipeline ID

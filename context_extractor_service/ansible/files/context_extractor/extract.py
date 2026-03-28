@@ -95,6 +95,7 @@ def _resolve_code_on_line(
     line_number: int,
 ) -> str | None:
     lines = source_code.splitlines()
+    target_index = line_number - 1
     multiline_node = _find_multiline_candidate(node_at_line, line_number)
     if multiline_node is not None:
         return source_bytes[multiline_node.start_byte: multiline_node.end_byte].decode(
@@ -102,7 +103,12 @@ def _resolve_code_on_line(
             errors="replace",
         )
     if node_at_line is not None:
-        line_index = node_at_line.start_point[0]
+        node_start, node_end = line_range(node_at_line)
+        if node_start != node_end and node_start <= target_index <= node_end:
+            if 0 <= target_index < len(lines):
+                return lines[target_index]
+            return None
+        line_index = node_start
         if 0 <= line_index < len(lines):
             return lines[line_index]
         return None

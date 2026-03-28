@@ -134,6 +134,27 @@ function Page() {
 
     assert result["meta"]["code_on_line"] == "    <Button"
 
+
+def test_code_on_line_should_preserve_exact_python_docstring_entry_line():
+    source = '''\
+def fetch_security_settings():
+    """
+    200,
+    {
+        "httpDigestAuthEnabled": true,
+        "account2faEnabled": true,
+        "mfaCode": "string",
+        "password": "string",
+        "totpExistsForAccount": true,
+        "authSessionLifetime": "string"
+    }
+    """
+    return None
+'''
+    result = extract_function_from_source(source, "apis.py", 8, 200)
+
+    assert result["meta"]["code_on_line"] == '        "password": "string",'
+
 def test_code_on_line_should_not_expand_to_cpp_preprocessor_branch_block():
     source = """\
 char* nxai_shm_key_to_string(nxai_shm_t shm)

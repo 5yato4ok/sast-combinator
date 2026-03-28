@@ -26,6 +26,8 @@ def extract_config_block(
     target = _find_deepest_node_at_line(tree.root_node, line_number)
     if not target:
         return _extract_block_text_fallback(source, line_number)
+    if tree.root_node.has_error and _node_or_ancestors_include_error(target):
+        raise ValueError(f"Failed to parse config file: {filepath}")
 
     block = _find_block_ancestor(target, lang_key)
     s, e = line_range(block)
@@ -40,6 +42,15 @@ def extract_config_block(
         "end_line": e + 1,
         "language": lang_key,
     }
+
+
+def _node_or_ancestors_include_error(node) -> bool:
+    current = node
+    while current is not None:
+        if current.type == "ERROR":
+            return True
+        current = current.parent
+    return False
 
 
 def _find_deepest_node_at_line(node, line_number: int):

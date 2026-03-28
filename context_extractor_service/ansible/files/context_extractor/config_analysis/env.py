@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
-from .shared import _try_parse_config
+from .shared import _parse_config_or_none
 from ..ts_utils import node_text
 
 
@@ -16,7 +16,6 @@ FallbackExtractor = Callable[[str], list[EnvEntry]]
 _SECRET_PATTERNS = re.compile(
     r"(?i)(?:secret|password|passwd|token|api_?key|private_?key|credential|auth)",
 )
-_DOCKERFILE_ENV_RE = re.compile(r"^\s*(ENV|ARG)\s+(.+)", re.MULTILINE)
 _DOTENV_RE = re.compile(
     r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)",
 )
@@ -43,7 +42,7 @@ _BASH_EXPORT_COMMAND_TYPES = {
 
 
 def extract_env_variables(source: str, filepath: Path) -> list[EnvEntry]:
-    tree, lang_key, src_bytes = _try_parse_config(source, filepath)
+    tree, lang_key, src_bytes = _parse_config_or_none(source, filepath)
 
     ast_extractor = _AST_ENV_EXTRACTORS.get(lang_key)
     if ast_extractor and tree and src_bytes:
@@ -117,18 +116,6 @@ def _env_from_dockerfile_ast(root, src_bytes: bytes) -> list[EnvEntry]:
             results.append(
                 _build_env_entry(name, value, source_name, child.start_point[0] + 1),
             )
-    return results
-
-
-def _env_from_dockerfile_regex(source: str) -> list[EnvEntry]:
-    results: list[EnvEntry] = []
-    for line_number, line in enumerate(source.splitlines(), start=1):
-        match = _DOCKERFILE_ENV_RE.match(line)
-        if not match:
-            continue
-        instruction, body = match.groups()
-        for name, value in _iter_dockerfile_pairs(body):
-            results.append(_build_env_entry(name, value, instruction, line_number))
     return results
 
 
@@ -296,10 +283,6 @@ def _env_from_dotenv(source: str) -> list[EnvEntry]:
     return results
 
 
-def _is_dockerfile_name(name_lower: str) -> bool:
-    return name_lower.startswith("dockerfile")
-
-
 def _is_dotenv_name(name_lower: str) -> bool:
     return name_lower.startswith(".env") or name_lower.endswith(".env")
 
@@ -311,6 +294,5 @@ _AST_ENV_EXTRACTORS: dict[str, AstExtractor] = {
 }
 
 _FALLBACK_ENV_EXTRACTORS: tuple[tuple[Callable[[str], bool], FallbackExtractor], ...] = (
-    (_is_dockerfile_name, _env_from_dockerfile_regex),
     (_is_dotenv_name, _env_from_dotenv),
 )

@@ -123,7 +123,7 @@ def test_navigation_flow_on_realistic_django_and_express_shapes():
         defs = find_definition(root, "login_view")
 
     assert routes and routes[0]["file"] == "urls.py"
-    assert routes[0]["pattern"] == "login_view"
+    assert routes[0]["pattern"] == "/login"
     assert defs and defs[0]["file"] == "views.py"
     assert defs[0]["kind"] == "function"
 

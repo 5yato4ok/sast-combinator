@@ -14,3 +14,12 @@ def _try_parse_config(source: str, filepath: Path):
     src_bytes = source.encode("utf-8", errors="replace")
     tree = parser.parse(src_bytes)
     return tree, lang_key, src_bytes
+
+
+def _parse_config_or_none(source: str, filepath: Path):
+    tree, lang_key, src_bytes = _try_parse_config(source, filepath)
+    if tree is None:
+        return None, None, None
+    if tree.root_node.has_error:
+        raise ValueError(f"Failed to parse config file: {filepath}")
+    return tree, lang_key, src_bytes

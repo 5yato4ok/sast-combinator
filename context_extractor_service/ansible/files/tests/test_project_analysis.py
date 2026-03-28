@@ -1,6 +1,7 @@
 """Tests for context_extractor.project_analysis tools."""
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -65,8 +66,8 @@ class TestClassifyFile:
 
     def test_project_analysis_facade_exports_mcp_server_dependencies(self):
         assert callable(project_analysis._try_parse)
+        assert callable(project_analysis._parse_required)
         assert callable(project_analysis._imports_from_ast)
-        assert callable(project_analysis._imports_from_regex)
 
 
 # ── find_imports ─────────────────────────────────────────────────
@@ -128,14 +129,12 @@ class TestFindDecorators:
         result = find_decorators(source, filepath, 20)
         assert len(result) == 0
 
-    def test_regex_fallback_for_decorators(self):
-        # Verify regex fallback works for unsupported file types
+    def test_unsupported_extension_should_raise_for_decorators(self):
         source = "@login_required\n@csrf_exempt\ndef my_view(request):\n    pass\n"
-        filepath = Path("unknown_extension.xyz")  # no grammar → regex path
-        result = find_decorators(source, filepath, 3)
-        assert len(result) == 2
-        assert "@login_required" in result
-        assert "@csrf_exempt" in result
+        filepath = Path("unknown_extension.xyz")
+
+        with pytest.raises(ValueError, match=r"Unsupported file extension: \.xyz"):
+            find_decorators(source, filepath, 3)
 
     def test_csharp_http_attribute(self):
         source = (FIXTURES / "src/auth/AuthController.cs").read_text()
@@ -165,6 +164,14 @@ class TestFindCallers:
     def test_find_callers_no_results_for_unused(self):
         results = find_callers(FIXTURES, "src/auth/views.py", "nonexistent_function_xyz")
         assert len(results) == 0
+
+    def test_find_callers_should_raise_on_real_parse_error(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "broken.ts").write_text("function run() {\n  changePort(\n")
+
+            with pytest.raises(ValueError, match=r"Failed to parse file: .*broken\.ts"):
+                find_callers(root, "broken.ts", "changePort")
 
 
 # ── trace_identifier_backward ────────────────────────────────────
@@ -276,6 +283,14 @@ class TestFindDefinition:
         assert len(results) >= 1
         assert any("controller.rb" in r["file"] for r in results)
 
+    def test_find_definition_should_raise_on_real_parse_error(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "broken.ts").write_text("export function brokenSymbol( {\n")
+
+            with pytest.raises(ValueError, match=r"Failed to parse file: .*broken\.ts"):
+                find_definition(root, "brokenSymbol")
+
 
 # ── find_route_to_function ───────────────────────────────────────
 
@@ -296,3 +311,11 @@ class TestFindRouteToFunction:
         assert len(results) >= 1
         assert any("Handler.java" in r["file"] for r in results)
         assert any("/api/login" in r.get("pattern", "") for r in results)
+
+    def test_find_route_to_function_should_raise_on_real_parse_error(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "broken.js").write_text("app.get('/health', healthCheck\n")
+
+            with pytest.raises(ValueError, match=r"Failed to parse file: .*broken\.js"):
+                find_route_to_function(root, "healthCheck")

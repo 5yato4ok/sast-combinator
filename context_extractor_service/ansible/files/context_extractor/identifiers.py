@@ -4,9 +4,18 @@ from typing import Callable, List, Optional, Set, Tuple
 
 from tree_sitter import Node
 
-from .ts_utils import node_text, promote_single_statement_control_body
+from .config import LANG_NODESETS
+from .shell_wrappers import (
+    find_shell_wrapper_command_text,
+    is_bash_redirect_operator,
+    is_input_redirect_operator,
+    is_output_redirect_operator,
+    normalize_shell_word_text,
+)
+from .ts_utils import BASH_LANGUAGE, create_parser, node_text, promote_single_statement_control_body
 
 def is_identifier(n: Node, nodeset) -> bool:    return n.type in nodeset["ident"]
+def is_runtime_identifier(n: Node, nodeset) -> bool: return n.type in nodeset.get("runtime_ident", nodeset["ident"])
 def is_member_like(n: Node, nodeset) -> bool:   return n.type in nodeset["member_like"]
 def is_assign(n: Node, nodeset) -> bool:        return n.type in nodeset["assign"]
 def is_declaration(n: Node, nodeset) -> bool:   return n.type in nodeset["declaration"]
@@ -19,7 +28,6 @@ def is_loop(n: Node, nodeset) -> bool:          return n.type in nodeset.get("lo
 # Runtime-value keywords that should be treated like ordinary reads.
 _VALUE_KEYWORDS = frozenset({"this", "self"})
 
-
 def collect_idents_in_node(root: Node, source_bytes: bytes, nodeset) -> Set[str]:
     """Collect runtime-value identifiers in a subtree.
 
@@ -30,7 +38,7 @@ def collect_idents_in_node(root: Node, source_bytes: bytes, nodeset) -> Set[str]
     stack: List[Node] = [root]
     while stack:
         n = stack.pop()
-        if is_identifier(n, nodeset) or n.type in _VALUE_KEYWORDS:
+        if is_runtime_identifier(n, nodeset) or n.type in _VALUE_KEYWORDS:
             ids.add(node_text(n, source_bytes))
         elif is_member_like(n, nodeset):
             for ch in n.children:
@@ -77,6 +85,19 @@ def _collect_decl_names(n: Node, source_bytes: bytes, nodeset) -> Set[str]:
             if name_node is not None:
                 out |= _collect_leaf_idents(name_node, source_bytes, nodeset)
 
+    if not out:
+        stack: List[Node] = list(n.children)
+        while stack:
+            current = stack.pop()
+            if current.type in {"variable_declarator", "init_declarator", "public_field_definition"}:
+                name_node = current.child_by_field_name("name")
+                if name_node is None:
+                    name_node = current.child_by_field_name("declarator")
+                if name_node is not None:
+                    out |= _collect_leaf_idents(name_node, source_bytes, nodeset)
+                    continue
+            stack.extend(current.children)
+
     # Fallback for simpler grammars that surface the binding as a direct child.
     if not out:
         for child in n.children:
@@ -97,8 +118,12 @@ _LOOP_WRITE_CHILD_TYPES = {
     "javascript": frozenset({"variable_declaration", "lexical_declaration", "identifier"}),
     "java": frozenset({"local_variable_declaration", "variable_declarator", "identifier"}),
     "cpp": frozenset({"declaration", "init_declarator", "identifier"}),
+    "csharp": frozenset({"identifier"}),
     "php": frozenset({"variable_name", "name"}),
+    "typescript": frozenset({"identifier", "lexical_declaration", "variable_declarator"}),
 }
+
+_BINDING_DECLARATOR_TYPES = frozenset({"variable_declarator", "init_declarator", "public_field_definition"})
 
 
 def _collect_param_names(root: Node, source_bytes: bytes, nodeset) -> Set[str]:
@@ -127,12 +152,29 @@ def _collect_param_names(root: Node, source_bytes: bytes, nodeset) -> Set[str]:
 
 def _collect_loop_writes(loop_node: Node, source_bytes: bytes, lang_key: str, nodeset) -> Set[str]:
     writes: Set[str] = set()
+    left = loop_node.child_by_field_name("left")
+    if left is not None:
+        return collect_idents_in_node(left, source_bytes, nodeset)
     write_child_types = _LOOP_WRITE_CHILD_TYPES.get(lang_key, frozenset())
     if not write_child_types:
         return writes
     for child in loop_node.children:
         if child.type in write_child_types:
             writes |= collect_idents_in_node(child, source_bytes, nodeset)
+    return writes
+
+
+def _collect_callable_binding_writes(node: Node, source_bytes: bytes, nodeset) -> Set[str]:
+    writes: Set[str] = set()
+    stack: List[Node] = [node]
+    while stack:
+        current = stack.pop()
+        if current.type in _BINDING_DECLARATOR_TYPES:
+            value = current.child_by_field_name("value")
+            if value is not None and is_function_like(value, nodeset):
+                writes |= _collect_function_like_writes(value, source_bytes, nodeset)
+                continue
+        stack.extend(current.children)
     return writes
 
 
@@ -219,6 +261,61 @@ def _collect_with_statement_reads_writes(
     return reads, writes
 
 
+def _parse_nested_bash_reads_writes(source: str) -> Tuple[Set[str], Set[str]]:
+    parser = create_parser(BASH_LANGUAGE)
+    source_bytes = source.encode("utf-8", errors="replace")
+    tree = parser.parse(source_bytes)
+    root = tree.root_node
+    if root.child_count == 1:
+        root = root.children[0]
+    return split_reads_writes(root, source_bytes, "bash", LANG_NODESETS["bash"])
+
+
+def _collect_redirect_target_writes(
+    node: Node,
+    source_bytes: bytes,
+    collect_ids: CollectIds,
+) -> Tuple[Set[str], Set[str]]:
+    reads: Set[str] = set()
+    writes: Set[str] = set()
+    for redirect in _iter_children_of_type(node, "file_redirect"):
+        operator = next((child.type for child in redirect.children if is_bash_redirect_operator(child.type)), None)
+        target = next(
+            (
+                child for child in reversed(redirect.children)
+                if not is_bash_redirect_operator(child.type)
+            ),
+            None,
+        )
+        if target is None:
+            continue
+        target_reads = collect_ids(target)
+        target_text = normalize_shell_word_text(node_text(target, source_bytes))
+        reads |= target_reads
+        if is_input_redirect_operator(operator) and target_text:
+            reads.add(target_text)
+        if is_output_redirect_operator(operator) and target_text:
+            writes.add(target_text)
+    return reads, writes
+
+
+def _collect_redirected_statement_reads_writes(
+    node: Node,
+    source_bytes: bytes,
+    collect_ids: CollectIds,
+    _nodeset,
+) -> Tuple[Set[str], Set[str]]:
+    reads: Set[str] = set()
+    writes: Set[str] = set()
+    command = next((child for child in node.children if child.type == "command"), None)
+    if command is not None:
+        reads |= collect_ids(command)
+    redirect_reads, redirect_writes = _collect_redirect_target_writes(node, source_bytes, collect_ids)
+    reads |= redirect_reads
+    writes |= redirect_writes
+    return reads, writes
+
+
 def _collect_function_like_writes(
     node: Node,
     source_bytes: bytes,
@@ -237,8 +334,19 @@ def _collect_function_like_writes(
                 writes |= _collect_leaf_idents(inner_name, source_bytes, nodeset)
         if not params:
             params = declarator.child_by_field_name("parameters")
+    if not params:
+        params = next(
+            (
+                child for child in node.children
+                if child.type in {"implicit_parameter", "parameter", "parameter_list", "formal_parameters"}
+            ),
+            None,
+        )
     if params:
-        writes |= _collect_param_names(params, source_bytes, nodeset)
+        if params.type == "implicit_parameter":
+            writes.add(node_text(params, source_bytes))
+        else:
+            writes |= _collect_param_names(params, source_bytes, nodeset)
     return writes
 
 
@@ -273,6 +381,7 @@ _WRITE_AS_READ_RAW_ROOT_TYPES = frozenset({
 })
 
 _NODE_READ_WRITE_HANDLERS = {
+    "redirected_statement": _collect_redirected_statement_reads_writes,
     "with_statement": _collect_with_statement_reads_writes,
 }
 
@@ -341,7 +450,9 @@ def _handle_assign_node(n: Node, source_bytes: bytes, collect_ids: CollectIds, _
 
 def _classify_declaration_node(n: Node, source_bytes: bytes, collect_ids: CollectIds, nodeset) -> NodeEffect:
     reads: Set[str] = set()
-    writes = _collect_decl_names(n, source_bytes, nodeset)
+    writes = _collect_decl_names(n, source_bytes, nodeset) | _collect_callable_binding_writes(
+        n, source_bytes, nodeset,
+    )
     for ch in n.children:
         reads |= (collect_ids(ch) - writes)
     return _effect(reads=reads, writes=writes)
@@ -355,8 +466,15 @@ def _classify_call_node(n: Node, collect_ids: CollectIds) -> NodeEffect:
     return _effect(reads=collect_ids(n))
 
 
-def _handle_call_node(n: Node, _source_bytes: bytes, collect_ids: CollectIds, _lang_key: str, _nodeset) -> NodeEffect:
-    return _classify_call_node(n, collect_ids)
+def _handle_call_node(n: Node, source_bytes: bytes, collect_ids: CollectIds, lang_key: str, _nodeset) -> NodeEffect:
+    effect = _classify_call_node(n, collect_ids)
+    if lang_key != "bash" or n.type != "command":
+        return effect
+    inner_command = find_shell_wrapper_command_text(n, source_bytes)
+    if not inner_command:
+        return effect
+    inner_reads, inner_writes = _parse_nested_bash_reads_writes(inner_command)
+    return _effect(reads=(effect.reads | inner_reads), writes=inner_writes)
 
 
 def _classify_function_like_node(n: Node, source_bytes: bytes, nodeset) -> NodeEffect:
@@ -424,7 +542,7 @@ def _has_node_type_handler(n: Node, _lang_key: str, _nodeset) -> bool:
 
 
 def _is_function_like_node(n: Node, _lang_key: str, _nodeset) -> bool:
-    return n.type in {"function_definition", "function_declaration", "method_declaration"}
+    return is_function_like(n, _nodeset)
 
 
 def _is_field_declaration_node(n: Node, _lang_key: str, _nodeset) -> bool:

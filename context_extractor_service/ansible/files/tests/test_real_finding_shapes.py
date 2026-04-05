@@ -1,10 +1,5 @@
-import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from context_extractor.config_analysis import (
     classify_environment,
@@ -23,13 +18,7 @@ from context_extractor.project_analysis import (
     trace_identifier_backward,
 )
 import mcp_server
-
-
-def _stub_read_source(source: str, file_name: str):
-    def _reader(_pipeline_id: str, _file_path: str):
-        return source, Path(file_name)
-
-    return _reader
+from conftest import _stub_read_source
 
 
 def test_classify_file_real_finding_paths():

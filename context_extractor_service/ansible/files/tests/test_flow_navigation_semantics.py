@@ -75,3 +75,24 @@ def test_find_callers_should_not_use_catch_parameter_as_fake_caller():
 
     assert callers
     assert callers[0]["caller_function"] is None
+
+
+# ---------------------------------------------------------------------------
+# find_definition — no private sort keys in results
+# ---------------------------------------------------------------------------
+
+def test_find_definition_results_contain_no_private_keys(tmp_path):
+    """find_definition must not leak internal sort keys (_exact_match, _definition_priority)."""
+    src = """\
+def process_data(items):
+    return list(items)
+"""
+    (tmp_path / "data.py").write_text(src)
+    results = find_definition(tmp_path, "process_data")
+    assert results, "find_definition must return at least one result"
+    for result in results:
+        private_keys = [k for k in result if k.startswith("_")]
+        assert not private_keys, \
+            f"Private sort keys must not appear in find_definition results: {private_keys}"
+        assert set(result.keys()) <= {"file", "line", "kind"}, \
+            f"Unexpected keys in result: {set(result.keys())}"

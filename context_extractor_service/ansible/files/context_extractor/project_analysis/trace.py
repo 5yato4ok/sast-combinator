@@ -133,7 +133,13 @@ def _trace_ast(
     if nested_function_binding_chain:
         return nested_function_binding_chain
 
-    return _trace_declaration_at_line(stmts, nodeset, lines, src_bytes, lang_key, line_number, identifier)
+    declaration_chain = _trace_declaration_at_line(stmts, nodeset, lines, src_bytes, lang_key, line_number, identifier)
+    if declaration_chain:
+        return declaration_chain
+
+    # Final fallback: identifier may be a parameter of the enclosing regular function
+    # (e.g. FastAPI dependency injection: def endpoint(db: Session = Depends(get_db)))
+    return _trace_function_param_at_line(func_node, lines, src_bytes, lang_key, nodeset, identifier)
 
 
 def _trace_declaration_at_line(
@@ -324,3 +330,61 @@ def _collect_key_stmts(node, nodeset: dict, out: list):
         if current.type in stmt_types:
             out.append((current.start_point[0], current))
         stack.extend(current.children)
+
+
+def _trace_function_param_at_line(
+    func_node,
+    lines: list[str],
+    src_bytes: bytes,
+    lang_key: str,
+    nodeset: dict[str, Any],
+    identifier: str,
+) -> list[dict[str, Any]]:
+    """Trace an identifier that is a parameter of the enclosing regular function.
+
+    Only fires when the parameter has a non-trivial default value (e.g. FastAPI
+    ``db: Session = Depends(get_db)``).  Bare parameters like ``config *Config``
+    return nothing because tracing stops at the function boundary.
+    """
+    if func_node is None:
+        return []
+    params = func_node.child_by_field_name("parameters")
+    if params is None:
+        for child in func_node.children:
+            if child.type in {"parameter_list", "formal_parameters", "parameters"}:
+                params = child
+                break
+    if params is None:
+        return []
+
+    # Find the specific parameter node that binds 'identifier'
+    param_node = None
+    for child in params.children:
+        child_writes = collect_idents_in_node(child, src_bytes, nodeset)
+        if identifier in child_writes:
+            param_node = child
+            break
+
+    if param_node is None:
+        return []
+
+    # Only report if the parameter has a default value containing reads
+    # (e.g. Depends(get_db)).  Bare typed parameters have no "value"/"default".
+    default_node = param_node.child_by_field_name("value")
+    if default_node is None:
+        default_node = param_node.child_by_field_name("default")
+    if default_node is None:
+        return []
+
+    param_reads = collect_idents_in_node(default_node, src_bytes, nodeset)
+    if not param_reads:
+        return []
+
+    param_line = param_node.start_point[0] + 1
+    code = lines[param_line - 1] if 0 < param_line <= len(lines) else ""
+    return [{
+        "line": param_line,
+        "code": code.strip(),
+        "writes": [identifier],
+        "reads": sorted(param_reads),
+    }]

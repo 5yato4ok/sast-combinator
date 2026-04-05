@@ -18,9 +18,11 @@ from ..ts_utils import line_range, node_text
 _CLASS_DEFINITION_TYPES = frozenset({
     "class_definition", "class_declaration", "class", "class_specifier",
     "interface_declaration", "struct_specifier", "enum_declaration",
+    "record_declaration", "record_struct_declaration",  # C# records
 })
 _TYPE_DEFINITION_TYPES = frozenset({
     "type_alias_declaration", "interface_declaration", "enum_declaration",
+    "type_alias_statement",  # Python PEP 695: type Vector[T] = list[T]
 })
 _VARIABLE_DEFINITION_TYPES = frozenset({
     "variable_declarator", "init_declarator", "public_field_definition",
@@ -33,6 +35,43 @@ def find_imports(source_dir: Path, file_path: str) -> list[str]:
     source = full.read_text(encoding="utf-8", errors="replace")
     tree, lang_key, src_bytes = _parse_required(source, full)
     return _imports_from_ast(tree.root_node, lang_key, src_bytes)
+
+
+def _collect_cpp_module_imports(root, src_bytes: bytes, results: list[str]) -> None:
+    """Detect C++23 module-import statements that tree-sitter-cpp may not parse natively.
+
+    Handles three patterns (all as top-level declarations or expression statements):
+      - ``import std;``                → declaration: [type_identifier: import, identifier: std]
+      - ``import <format>;``           → expression_statement → template_function(import, <format>)
+      - ``export import myapp.utils;`` → declaration: [type_identifier: export, identifier: import, ...]
+
+    TODO: remove the text-matching fallbacks below when tree-sitter-cpp gains native
+    C++23 module support (expected node types: module_import_declaration,
+    module_declaration).  Track at https://github.com/tree-sitter/tree-sitter-cpp/issues
+    """
+    for child in root.children:
+        text = node_text(child, src_bytes).strip()
+        if child.type == "declaration":
+            first_child = next((c for c in child.children if c.is_named), None)
+            if first_child is None:
+                continue
+            first_text = node_text(first_child, src_bytes)
+            # import X; or import X.Y;
+            if first_child.type == "type_identifier" and first_text == "import":
+                results.append(text)
+                continue
+            # export import X; — second identifier is "import"
+            if first_child.type == "type_identifier" and first_text == "export":
+                second = next((c for c in child.children if c.is_named and c != first_child), None)
+                if second is not None and node_text(second, src_bytes) == "import":
+                    results.append(text)
+        elif child.type == "expression_statement":
+            # import <format>; is parsed as template_function(identifier: import, <X>)
+            for sub in child.children:
+                if sub.type == "template_function":
+                    fn_name = sub.child_by_field_name("name")
+                    if fn_name is not None and node_text(fn_name, src_bytes) == "import":
+                        results.append(text)
 
 
 def _imports_from_ast(root, lang_key: str, src_bytes: bytes) -> list[str]:
@@ -50,6 +89,9 @@ def _imports_from_ast(root, lang_key: str, src_bytes: bytes) -> list[str]:
     }
     types = import_types.get(lang_key, set())
     results: list[str] = []
+
+    if lang_key == "cpp":
+        _collect_cpp_module_imports(root, src_bytes, results)
 
     for child in root.children:
         if child.type in types:
@@ -94,19 +136,53 @@ def _decorators_from_ast(root, lang_key: str, src_bytes: bytes, line_number: int
             seen.add(ch.id)
             decorators.append(node_text(ch, src_bytes).strip())
 
+    def _collect_from_node(candidate):
+        """Collect decorators/annotations directly on a node or inside its modifiers."""
+        if candidate.type in decorator_types:
+            _add(candidate)
+        elif candidate.type == "modifiers":
+            for sub in candidate.children:
+                if sub.type in decorator_types:
+                    _add(sub)
+
+    # 1. Decorators on the function itself (direct children or inside modifiers)
     for ch in func_node.children:
-        if ch.type in decorator_types:
-            _add(ch)
+        _collect_from_node(ch)
+
+    # 2. Decorators on siblings before the function in its parent (e.g. Python decorated_definition)
     if func_node.parent:
         for ch in func_node.parent.children:
             if ch == func_node:
                 break
-            if ch.type in decorator_types:
-                _add(ch)
-    if func_node.parent and func_node.parent.type == "decorated_definition":
-        for ch in func_node.parent.children:
-            if ch.type in decorator_types:
-                _add(ch)
+            _collect_from_node(ch)
+        if func_node.parent.type == "decorated_definition":
+            for ch in func_node.parent.children:
+                _collect_from_node(ch)
+
+    # 3. Walk up to the enclosing class/struct/record and collect its decorators.
+    # This makes class-level annotations (@RestController, @Service, @Injectable, etc.)
+    # visible when querying a method defined inside that class.
+    _class_like_types = {
+        "class_declaration", "class_definition", "class",
+        "class_specifier", "struct_specifier", "interface_declaration",
+        "object_declaration", "companion_object",
+        "export_statement",  # TypeScript: class decorator lives here
+    }
+    ancestor = func_node.parent
+    while ancestor is not None:
+        if ancestor.type in _class_like_types:
+            for ch in ancestor.children:
+                _collect_from_node(ch)
+            # Also check the ancestor's parent (e.g. TypeScript export_statement wraps class_declaration,
+            # or Python decorated_definition wraps class_definition with stacked decorators)
+            if ancestor.parent:
+                parent_type = ancestor.parent.type
+                if parent_type in _class_like_types or parent_type == "decorated_definition":
+                    for ch in ancestor.parent.children:
+                        _collect_from_node(ch)
+            break
+        ancestor = ancestor.parent
+
     return decorators
 
 def get_file_structure(source: str, filepath: Path) -> dict[str, Any]:
@@ -196,7 +272,22 @@ def find_definition(source_dir: Path, symbol_name: str) -> list[dict[str, Any]]:
     prefer_class = bool(leaf and leaf[:1].isupper() and "::" not in qualified)
     results = _dedupe_definition_results(results)
     results.sort(key=lambda item: _rank_definition_result(item, prefer_class))
-    return [_public_definition_result(results[0])]
+    # Return only results at the best definition priority and kind from the top-ranked file.
+    # E.g. function_definition beats forward declarations; TypeScript implementation beats
+    # overload signatures; only the best class/function kind from the winner file is kept.
+    # When multiple definitions share the same priority+kind in the top file (C++ overloads),
+    # all are returned.
+    best = results[0]
+    best_priority = best.get("_definition_priority", 1)
+    best_file = best["file"]
+    best_kind = best["kind"]
+    filtered = [
+        r for r in results
+        if r.get("_definition_priority", 1) == best_priority
+        and r["file"] == best_file
+        and r["kind"] == best_kind
+    ]
+    return [_public_definition_result(r) for r in filtered]
 
 
 def _find_ast_definitions(rel: Path, tree, lang_key: str | None, src_bytes: bytes | None, qualified: str, leaf: str):
@@ -211,9 +302,10 @@ def _find_ast_definitions(rel: Path, tree, lang_key: str | None, src_bytes: byte
             names = _definition_names(node, src_bytes)
             if qualified in names or leaf in names:
                 exact_match = int(qualified in names)
+                def_line = _definition_line(node)
                 results.append({
                     "file": str(rel),
-                    "line": _definition_line(node),
+                    "line": def_line,
                     "kind": _definition_kind(node, lang_key, src_bytes),
                     "_exact_match": exact_match,
                     "_definition_priority": _definition_priority(node),
@@ -270,7 +362,9 @@ def _definition_line(node) -> int:
 
 
 def _definition_priority(node) -> int:
-    if node.type in {"function_definition", "function_declaration", "method_declaration"}:
+    # function_definition (C++ body with braces) is preferred over function_declaration
+    # (forward declaration). TypeScript overload signatures rank last.
+    if node.type == "function_definition":
         return 0
     if node.type == "function_signature":
         return 2
@@ -513,7 +607,7 @@ def _extract_first_route_string(node, src_bytes: bytes) -> str:
 
 
 _ROUTE_CALL_TARGETS = {
-    "python": {"path", "re_path", "url"},
+    "python": {"path", "re_path", "url", "add_url_rule"},
     "javascript": {"get", "post", "put", "patch", "delete", "all", "use"},
     "typescript": {"get", "post", "put", "patch", "delete", "all", "use"},
     "csharp": {"MapGet", "MapPost", "MapPut", "MapDelete", "MapPatch", "MapMethods"},

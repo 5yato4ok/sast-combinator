@@ -12,13 +12,14 @@ _SKIP_DIRS = SKIP_DIRS
 _SOURCE_EXTS = frozenset({
     ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx",
     ".java", ".kt", ".scala",
-    ".c", ".h", ".cpp", ".cc", ".cxx", ".hpp",
+    ".c", ".h", ".cpp", ".cc", ".cxx", ".hpp", ".cppm",
     ".cs", ".go", ".rs", ".rb",
     ".php", ".swift", ".m", ".mm",
     ".lua", ".pl", ".pm", ".r", ".R",
     ".dart", ".ex", ".exs", ".erl", ".hrl",
     ".zig", ".nim", ".v", ".vala",
     ".qml",
+    ".sh", ".bash",
 })
 _MAX_RESULTS = 50
 _SNIPPET_CONTEXT = 2

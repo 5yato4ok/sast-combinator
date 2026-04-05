@@ -24,6 +24,26 @@ def _normalize_symbol_leaf(name: str) -> str:
 
 
 def _iter_node_name_candidates(node, src_bytes: bytes):
+    # Python PEP 695: `type Vector[T] = list[T]` — the name is the first identifier
+    # inside the second child (the type expression before `=`).
+    if node.type == "type_alias_statement":
+        for child in node.children:
+            if child.type == "=":
+                break
+            if child.type in {"identifier", "name"}:
+                yield node_text(child, src_bytes)
+            elif child.type in {"type", "generic_type"}:
+                # Descend one level to find the name identifier
+                for sub in child.children:
+                    if sub.type in {"identifier", "name", "type_identifier"}:
+                        yield node_text(sub, src_bytes)
+                        break
+                    if sub.type == "generic_type":
+                        for subsub in sub.children:
+                            if subsub.type in {"identifier", "name", "type_identifier"}:
+                                yield node_text(subsub, src_bytes)
+                                break
+
     if node.type == "operator_declaration":
         saw_operator_keyword = False
         for child in node.children:

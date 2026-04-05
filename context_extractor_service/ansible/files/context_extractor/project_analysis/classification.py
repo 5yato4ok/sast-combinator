@@ -64,6 +64,7 @@ _VENDORED_NESTED = frozenset({
     "vendor", "node_modules", "packages", "bower_components", "external", "deps",
 })
 _GENERATED_MARKERS = frozenset({"generated", "autogen", "proto", ".gen."})
+_GENERATED_SUFFIXES = frozenset({"_pb2.py", "_pb2_grpc.py", "_grpc.pb.go", ".pb.go"})
 _CONFIG_NAMES = frozenset({
     "settings.py", "config.py", "config.yaml", "config.yml", "config.json", "config.toml", ".env",
     ".env.example", "webpack.config.js", "tsconfig.json", "pyproject.toml", "setup.cfg", "setup.py",
@@ -111,7 +112,10 @@ def _is_vendored_nested(ctx: FileClassificationContext) -> bool:
 
 
 def _has_generated_marker(ctx: FileClassificationContext) -> bool:
-    return any(marker in ctx.path_lower for marker in _GENERATED_MARKERS)
+    return (
+        any(marker in ctx.path_lower for marker in _GENERATED_MARKERS)
+        or any(ctx.name.endswith(suffix) for suffix in _GENERATED_SUFFIXES)
+    )
 
 
 def _is_known_config_name(ctx: FileClassificationContext) -> bool:

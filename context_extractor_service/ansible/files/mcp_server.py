@@ -51,6 +51,7 @@ from context_extractor.project_analysis import (
 from context_extractor.project_analysis import (
     _imports_from_ast,
     _parse_required,
+    _try_parse,
 )
 from context_extractor.project_analysis import (
     find_route_to_function as _find_route,
@@ -61,7 +62,13 @@ from context_extractor.project_analysis import (
 from context_extractor.project_analysis import (
     trace_identifier_backward as _trace_backward,
 )
-from context_extractor.ts_utils import create_parser, detect_language, inject_html_script_source
+from context_extractor.ts_utils import (
+    CPP_LANGUAGE,
+    SUPPORTED_LANGUAGES,
+    create_parser,
+    detect_language,
+    inject_html_script_source,
+)
 from mcp.server.fastmcp import FastMCP
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -188,19 +195,46 @@ def _read_source(pipeline_id: str, file_path: str) -> tuple[str, Path]:
 
 
 def _find_node_at_line(node, line_number: int):
-    """Find the smallest AST node covering the given 1-based line number."""
+    """Find the deepest named AST node starting on the given 1-based line number.
+
+    Prefers named nodes over anonymous tokens so that analysis operates on
+    semantically meaningful units rather than punctuation or keywords.
+    """
     start = node.start_point[0] + 1
     end = node.end_point[0] + 1
     if not (start <= line_number <= end):
         return None
+    named_hit = None
+    anon_hit = None
     for child in node.children:
         hit = _find_node_at_line(child, line_number)
-        if hit:
-            return hit
+        if hit is None:
+            continue
+        if hit.is_named:
+            named_hit = hit
+            break  # take the first named descendant; _climb_to_statement walks back up
+        elif anon_hit is None:
+            anon_hit = hit
+    if named_hit is not None:
+        return named_hit
+    if anon_hit is not None:
+        return anon_hit
     return node
 
 
-def _climb_to_statement(node, nodeset):
+_EXTRA_STMT_TYPES_COMMON = frozenset({
+    "with_statement", "function_definition", "function_declaration",
+    "method_declaration", "field_declaration", "export_statement",
+    "expression_statement", "with_clause",
+    "formal_parameters",
+})
+_EXTRA_STMT_TYPES_BY_LANG: dict[str, frozenset[str]] = {
+    # C++23: concept_definition and requires_expression carry parameter bindings.
+    "cpp": frozenset({"concept_definition", "requires_expression"}),
+}
+
+
+def _climb_to_statement(node, nodeset, lang_key: str = "") -> object:
     """Walk up from *node* to the outermost key-statement covering the target line.
 
     Prefers the broadest statement (e.g. expression_statement over a nested
@@ -210,13 +244,7 @@ def _climb_to_statement(node, nodeset):
     key_types = nodeset.get("key", set())
     declaration_types = nodeset.get("declaration", set())
     block_types = nodeset.get("block", set()) | nodeset.get("function", set())
-    # Extra statement types that carry useful identifier context
-    extra_types = {
-        "with_statement", "function_definition", "function_declaration",
-        "method_declaration", "field_declaration", "export_statement",
-        "expression_statement", "with_clause",
-        "formal_parameters",
-    }
+    extra_types = _EXTRA_STMT_TYPES_COMMON | _EXTRA_STMT_TYPES_BY_LANG.get(lang_key, frozenset())
     all_stmt_types = key_types | declaration_types | extra_types
     best = node
     current = node
@@ -227,6 +255,25 @@ def _climb_to_statement(node, nodeset):
             break
         current = current.parent
     return best
+
+
+# C/C++ file extensions — derived from SUPPORTED_LANGUAGES to stay in sync.
+_CPP_EXTS = frozenset(ext for ext, lang in SUPPORTED_LANGUAGES.items() if lang is CPP_LANGUAGE)
+
+_IMPORT_NODE_TYPES = frozenset({
+    "import_statement", "import_declaration", "import_from_statement",
+    "using_directive", "preproc_include", "namespace_use_declaration",
+})
+
+
+def _is_in_import_context(node) -> bool:
+    """Return True if *node* is nested inside an import/include declaration."""
+    current = node
+    while current is not None:
+        if current.type in _IMPORT_NODE_TYPES:
+            return True
+        current = current.parent
+    return False
 
 
 def _inject_html_script(html_source, line_number, html_lang, html_key):
@@ -314,7 +361,22 @@ def find_identifiers(pipeline_id: str, file_path: str, line_number: int) -> dict
     if not target_node:
         return {"reads": [], "writes": [], "error": "No node found at line"}
 
-    target_node = _climb_to_statement(target_node, nodeset)
+    # Import/include lines declare symbols rather than consuming them — return empty.
+    if _is_in_import_context(target_node):
+        return {"reads": [], "writes": [], "language": lang_key}
+
+    # Special case: if the target is the function name identifier, analyze the whole
+    # function node. This allows e.g. 'def user_params' to surface body reads (strong params).
+    func_types = nodeset.get("function", set())
+    parent = target_node.parent
+    if (
+        parent is not None
+        and parent.type in func_types
+        and target_node == parent.child_by_field_name("name")
+    ):
+        target_node = parent
+    else:
+        target_node = _climb_to_statement(target_node, nodeset, lang_key)
     reads, writes = split_reads_writes(target_node, source_bytes, lang_key, nodeset)
     return {"reads": sorted(reads), "writes": sorted(writes), "language": lang_key}
 
@@ -441,7 +503,17 @@ def find_imports(pipeline_id: str, file_path: str) -> list[str]:
 
     """
     source, full_path = _read_source(pipeline_id, file_path)
-    tree, lang_key, src_bytes = _parse_required(source, full_path)
+    try:
+        tree, lang_key, src_bytes = _parse_required(source, full_path)
+    except ValueError:
+        # C++23 module syntax (import std; export import …) may produce parse errors
+        # in the current tree-sitter-cpp grammar.  Fall back to best-effort parsing
+        # for C/C++ only; all other languages must propagate the error.
+        if full_path.suffix.lower() not in _CPP_EXTS:
+            raise
+        tree, lang_key, src_bytes = _try_parse(source, full_path)
+        if tree is None:
+            return []
     return _imports_from_ast(tree.root_node, lang_key, src_bytes)
 
 

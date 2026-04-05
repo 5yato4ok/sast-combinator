@@ -96,12 +96,53 @@ def _collect_decl_names(n: Node, source_bytes: bytes, nodeset) -> Set[str]:
                 if name_node is not None:
                     out |= _collect_leaf_idents(name_node, source_bytes, nodeset)
                     continue
+            # Go: var_spec holds the binding name(s)
+            if current.type == "var_spec":
+                handled = False
+                name_node = current.child_by_field_name("name")
+                if name_node is not None:
+                    out |= _collect_leaf_idents(name_node, source_bytes, nodeset)
+                    handled = True
+                else:
+                    # identifier_list or bare identifier
+                    for ch in current.children:
+                        if is_identifier(ch, nodeset) or ch.type == "identifier_list":
+                            out |= _collect_leaf_idents(ch, source_bytes, nodeset)
+                            handled = True
+                            break
+                if handled:
+                    continue
+            # Kotlin: multi_variable_declaration wraps individual variable_declaration nodes
+            if current.type in {"multi_variable_declaration", "variable_declaration"}:
+                handled = False
+                inner = current.child_by_field_name("name")
+                if inner is not None:
+                    text = node_text(inner, source_bytes).strip()
+                    if text:
+                        out.add(text)
+                        handled = True
+                if not handled:
+                    for ch in current.children:
+                        if is_identifier(ch, nodeset) or ch.type == "simple_identifier":
+                            out.add(node_text(ch, source_bytes))
+                            handled = True
+                            break
+                if handled:
+                    continue
             stack.extend(current.children)
+
+    # TypeScript class field: public_field_definition with property_identifier name
+    if not out and n.type == "public_field_definition":
+        name_node = n.child_by_field_name("name")
+        if name_node is not None:
+            name_text = node_text(name_node, source_bytes).strip()
+            if name_text:
+                out.add(name_text)
 
     # Fallback for simpler grammars that surface the binding as a direct child.
     if not out:
         for child in n.children:
-            if is_identifier(child, nodeset):
+            if is_identifier(child, nodeset) or child.type in {"simple_identifier", "property_identifier"}:
                 out.add(node_text(child, source_bytes))
                 break
     return out
@@ -121,6 +162,7 @@ _LOOP_WRITE_CHILD_TYPES = {
     "csharp": frozenset({"identifier"}),
     "php": frozenset({"variable_name", "name"}),
     "typescript": frozenset({"identifier", "lexical_declaration", "variable_declarator"}),
+    "kotlin": frozenset({"variable_declaration", "multi_variable_declaration"}),
 }
 
 _BINDING_DECLARATOR_TYPES = frozenset({"variable_declarator", "init_declarator", "public_field_definition"})
@@ -155,6 +197,11 @@ def _collect_loop_writes(loop_node: Node, source_bytes: bytes, lang_key: str, no
     left = loop_node.child_by_field_name("left")
     if left is not None:
         return collect_idents_in_node(left, source_bytes, nodeset)
+    # For C++ for_range_loop (and similar): the declarator field holds the binding
+    # variable(s) while the right/range field is the iterable — not a write target.
+    declarator = loop_node.child_by_field_name("declarator")
+    if declarator is not None:
+        return collect_idents_in_node(declarator, source_bytes, nodeset)
     write_child_types = _LOOP_WRITE_CHILD_TYPES.get(lang_key, frozenset())
     if not write_child_types:
         return writes
@@ -380,9 +427,134 @@ _WRITE_AS_READ_RAW_ROOT_TYPES = frozenset({
     "function_declarator",
 })
 
-_NODE_READ_WRITE_HANDLERS = {
+
+def _collect_case_pattern_captures(root: Node, source_bytes: bytes) -> Set[str]:
+    """Collect capture-variable identifiers from a match/case pattern subtree.
+
+    A capture is a simple (single-segment, no dots) name inside a ``case_pattern``
+    node.  Dotted names with dots are value patterns, not captures.
+
+    Also handles keyword patterns: ``case Point(x=px, y=py)`` produces
+    ``keyword_pattern`` nodes of the form ``identifier = dotted_name``.  The
+    right-hand ``dotted_name`` (when single-segment) is the capture variable.
+    """
+    captures: Set[str] = set()
+    stack: List[Node] = [root]
+    while stack:
+        node = stack.pop()
+        if node.type == "case_pattern":
+            for child in node.children:
+                if child.type == "dotted_name":
+                    text = node_text(child, source_bytes)
+                    if "." not in text:
+                        for sub in child.children:
+                            if sub.type == "identifier":
+                                captures.add(node_text(sub, source_bytes))
+        # keyword_pattern: key = capture_variable  (e.g. x=px inside a class pattern)
+        if node.type == "keyword_pattern":
+            found_eq = False
+            for child in node.children:
+                if child.type == "=":
+                    found_eq = True
+                    continue
+                if found_eq:
+                    if child.type == "dotted_name":
+                        text = node_text(child, source_bytes)
+                        if "." not in text:
+                            for sub in child.children:
+                                if sub.type == "identifier":
+                                    captures.add(node_text(sub, source_bytes))
+                    elif child.type == "identifier":
+                        captures.add(node_text(child, source_bytes))
+                    break
+        stack.extend(c for c in node.children if c.type != "if_clause")
+    return captures
+
+
+def _collect_case_clause_reads_writes(
+    node: Node,
+    source_bytes: bytes,
+    collect_ids: CollectIds,
+    nodeset,
+) -> Tuple[Set[str], Set[str]]:
+    """Classify a Python ``case_clause`` node.
+
+    Pattern-binding identifiers (captures) are writes; the body block identifiers
+    are reads.
+    """
+    reads: Set[str] = set()
+    writes: Set[str] = set()
+    for child in node.children:
+        if child.type in {"case_pattern", "list_pattern", "dict_pattern",
+                          "class_pattern", "as_pattern"}:
+            writes |= _collect_case_pattern_captures(child, source_bytes)
+        elif child.type == "block":
+            reads |= collect_ids(child)
+        elif child.type not in {"case", ":"}:
+            reads |= collect_ids(child)
+    return reads, writes
+
+
+def _collect_except_clause_reads_writes(
+    node: Node,
+    source_bytes: bytes,
+    collect_ids: CollectIds,
+    nodeset,
+) -> Tuple[Set[str], Set[str]]:
+    """Classify a Python ``except_clause`` (including ``except*``) node.
+
+    The ``as``-bound variable is a write; everything else is a read.
+    """
+    reads: Set[str] = set()
+    writes: Set[str] = set()
+    for child in node.children:
+        if child.type == "as_pattern":
+            target_node = child.child_by_field_name("alias")
+            # as_pattern_target is the alias in except ... as <alias>
+            for sub in child.children:
+                if sub.type == "as_pattern_target":
+                    writes |= _collect_leaf_idents(sub, source_bytes, nodeset)
+            # The exception type itself is a read
+            value_node = child.child_by_field_name("value")
+            if value_node:
+                reads |= collect_ids(value_node)
+            elif target_node:
+                # If grammar uses alias field for the target, the non-alias part is a read
+                for sub in child.children:
+                    if sub.type not in {"as", "as_pattern_target"}:
+                        reads |= collect_ids(sub)
+        elif child.type not in {"except", ":", "*"}:
+            reads |= collect_ids(child)
+    return reads, writes
+
+
+def _collect_declaration_pattern_reads_writes(
+    node: Node,
+    source_bytes: bytes,
+    collect_ids: CollectIds,
+    nodeset,
+) -> Tuple[Set[str], Set[str]]:
+    """Handle C# declaration_pattern: last identifier child is the binding variable (write).
+
+    For ``Circle c`` → writes={'c'}, reads={'Circle'}
+    For ``var len``   → writes={'len'}, reads={}  (implicit_type has no identifier)
+    """
+    ident_children = [ch for ch in node.children if ch.type == "identifier"]
+    if not ident_children:
+        return set(), set()
+    write_name = node_text(ident_children[-1], source_bytes)
+    read_names = {node_text(ch, source_bytes) for ch in ident_children[:-1]}
+    return read_names, {write_name}
+
+
+_NODE_READ_WRITE_HANDLERS: dict = {
     "redirected_statement": _collect_redirected_statement_reads_writes,
     "with_statement": _collect_with_statement_reads_writes,
+    "declaration_pattern": _collect_declaration_pattern_reads_writes,
+    "case_clause": _collect_case_clause_reads_writes,
+    "except_clause": _collect_except_clause_reads_writes,
+    # Python 3.11+ except* groups use the same binding semantics as except
+    "except_group_clause": _collect_except_clause_reads_writes,
 }
 
 
@@ -420,9 +592,16 @@ def _classify_assign_node(n: Node, source_bytes: bytes, collect_ids: CollectIds,
     if n.child_count < 3:
         return _effect(reads=collect_ids(n))
 
+    # Handle TypeScript `using resource = ...` where tree-sitter emits an
+    # assignment_expression with the `using` keyword as children[0] and the
+    # actual write target as children[1].
+    lhs_idx = 0
+    if n.children[0].type == "using" and n.child_count >= 4:
+        lhs_idx = 1
+
     reads: Set[str] = set()
     writes: Set[str] = set()
-    lhs = n.children[0]
+    lhs = n.children[lhs_idx]
     rhs = n.children[-1]
     if is_member_like(lhs, nodeset):
         all_lhs = collect_ids(lhs)
@@ -466,15 +645,36 @@ def _classify_call_node(n: Node, collect_ids: CollectIds) -> NodeEffect:
     return _effect(reads=collect_ids(n))
 
 
-def _handle_call_node(n: Node, source_bytes: bytes, collect_ids: CollectIds, lang_key: str, _nodeset) -> NodeEffect:
+def _handle_call_node(n: Node, source_bytes: bytes, collect_ids: CollectIds, lang_key: str, nodeset) -> NodeEffect:
     effect = _classify_call_node(n, collect_ids)
     if lang_key != "bash" or n.type != "command":
         return effect
+    # Special case: `trap HANDLER SIGNAL` — the handler name is a function reference (read).
+    trap_reads = _collect_bash_trap_handler_reads(n, source_bytes)
+    if trap_reads:
+        return _effect(reads=(effect.reads | trap_reads))
     inner_command = find_shell_wrapper_command_text(n, source_bytes)
     if not inner_command:
         return effect
     inner_reads, inner_writes = _parse_nested_bash_reads_writes(inner_command)
     return _effect(reads=(effect.reads | inner_reads), writes=inner_writes)
+
+
+def _collect_bash_trap_handler_reads(node: Node, source_bytes: bytes) -> Set[str]:
+    """Extract function-name references from bash ``trap HANDLER SIGNAL`` commands."""
+    children = [c for c in node.children if c.is_named]
+    # children[0] = command_name (trap), children[1] = handler, children[2] = signal
+    if len(children) < 2:
+        return set()
+    cmd_name = children[0]
+    if node_text(cmd_name, source_bytes) != "trap":
+        return set()
+    handler = children[1]
+    handler_text = node_text(handler, source_bytes).strip("'\"")
+    # Skip compound trap actions like 'echo interrupted' (contain spaces)
+    if not handler_text or " " in handler_text or handler_text.startswith("-"):
+        return set()
+    return {handler_text}
 
 
 def _classify_function_like_node(n: Node, source_bytes: bytes, nodeset) -> NodeEffect:

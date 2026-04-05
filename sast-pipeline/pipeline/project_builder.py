@@ -41,6 +41,7 @@ def configure_project_run_analyses(
         min_time_class: str = "",
         analyzers=None,
         additional_env=None,
+        network: str | None = None,
 ):
     """
     Build the builder image and run all configured analyzers.
@@ -159,6 +160,7 @@ def configure_project_run_analyses(
             volumes=volumes,
             env=env_dict,
             pipeline_id=pipeline_id,
+            network=network,
         )
     except KeyboardInterrupt:
         # Ensure that all containers associated with this pipeline are terminated

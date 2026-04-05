@@ -1,20 +1,9 @@
-import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-ROOT = Path(__file__).resolve().parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 import mcp_server
+from conftest import _stub_read_source
 from context_extractor.config_analysis import find_related_configs
-
-
-def _stub_read_source(source: str, file_name: str):
-    def _reader(_pipeline_id: str, _file_path: str):
-        return source, Path(file_name)
-
-    return _reader
 
 
 def test_find_related_configs_should_ignore_plain_text_mentions_in_shell_scripts():

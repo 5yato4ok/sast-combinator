@@ -108,3 +108,32 @@ def test_find_related_configs_should_keep_expected_compose_relationships():
         {"file": "docker-compose.prod.yml", "relationship": "compose_variant"},
         {"file": ".env", "relationship": "env_file"},
     ]
+
+
+# ---------------------------------------------------------------------------
+# find_config_overrides — classify_environment called once per file (cache)
+# ---------------------------------------------------------------------------
+
+def test_find_config_overrides_classify_environment_called_once_per_file(
+    tmp_path, monkeypatch
+):
+    """classify_environment must be called at most once per unique file path."""
+    (tmp_path / ".env.dev").write_text("DB_PASSWORD=devpass\nDB_PASSWORD=devpass2\n")
+    (tmp_path / ".env.prod").write_text("DB_PASSWORD=${DB_PASSWORD}\n")
+
+    import context_extractor.config_analysis.relations as rel_mod
+
+    calls: list[str] = []
+    original = rel_mod.classify_environment
+
+    def tracking_classify(path: str) -> dict:
+        calls.append(path)
+        return original(path)
+
+    monkeypatch.setattr(rel_mod, "classify_environment", tracking_classify)
+
+    find_config_overrides(tmp_path, ".env.dev", "DB_PASSWORD")
+
+    # Each file path must appear at most once regardless of how many matching lines it has.
+    assert calls.count(".env.dev") <= 1
+    assert calls.count(".env.prod") <= 1

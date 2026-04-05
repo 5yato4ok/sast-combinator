@@ -103,6 +103,33 @@ def find_config_overrides(
 ) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
     origin = Path(file_path)
+    key_re = _key_regex(key_or_variable)
+    env_cache: dict[str, str] = {}
+
+    def _env_for(rel_str: str) -> str:
+        if rel_str not in env_cache:
+            env_cache[rel_str] = classify_environment(rel_str)["environment"]
+        return env_cache[rel_str]
+
+    # Search within the origin file first: multiple occurrences (e.g. same key
+    # in several YAML sections) count as overrides of each other.
+    origin_full = source_dir / origin
+    try:
+        origin_text = origin_full.read_text(encoding="utf-8", errors="replace")
+        origin_matches: list[dict[str, Any]] = []
+        for i, line in enumerate(origin_text.splitlines()):
+            if key_re.search(line):
+                origin_matches.append({
+                    "file": str(origin),
+                    "line": i + 1,
+                    "value": line.strip(),
+                    "environment": _env_for(str(origin)),
+                })
+        if len(origin_matches) >= 2:
+            results.extend(origin_matches[1:])
+    except OSError:
+        pass
+
     for rel in _iter_config_files(source_dir):
         if rel == origin:
             continue
@@ -112,13 +139,12 @@ def find_config_overrides(
         except OSError:
             continue
         for i, line in enumerate(text.splitlines()):
-            if _key_regex(key_or_variable).search(line):
-                env_info = classify_environment(str(rel))
+            if key_re.search(line):
                 results.append({
                     "file": str(rel),
                     "line": i + 1,
                     "value": line.strip(),
-                    "environment": env_info["environment"],
+                    "environment": _env_for(str(rel)),
                 })
                 break
         if len(results) >= 30:

@@ -8,7 +8,8 @@ Covers:
   - collect_multiline_header with '{' inside string literals and comments
   - debug_ast._find_enclosing_function on deeply nested AST (RecursionError regression)
 """
-from multiprocessing import Process, Queue
+import multiprocessing
+from multiprocessing import Queue
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -294,7 +295,9 @@ def test_function_ast_to_string_should_finish_on_deep_linear_call_nesting():
         except Exception as exc:  # pragma: no cover - surfaced through assertion below
             queue.put(("err", type(exc).__name__, str(exc)))
 
-    proc = Process(target=_runner)
+    # Use fork context to avoid pickling issues with local functions on macOS
+    ctx = multiprocessing.get_context("fork")
+    proc = ctx.Process(target=_runner)
     proc.start()
     proc.join(5)
 

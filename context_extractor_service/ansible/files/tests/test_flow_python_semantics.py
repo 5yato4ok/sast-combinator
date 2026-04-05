@@ -1,20 +1,9 @@
-import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 import mcp_server
+from conftest import _stub_read_source
 from context_extractor.extract import extract_function_from_source
 from context_extractor.project_analysis import trace_identifier_backward
-
-
-def _stub_read_source(source: str, file_name: str):
-    def _reader(_pipeline_id: str, _file_path: str):
-        return source, Path(file_name)
-
-    return _reader
 
 
 def test_extract_function_should_keep_python_function_signature_line():

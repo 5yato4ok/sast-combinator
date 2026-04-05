@@ -1,19 +1,6 @@
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 import mcp_server
+from conftest import _stub_read_source
 from context_extractor.extract import extract_function_from_source
-
-
-def _stub_read_source(source: str, file_name: str):
-    def _reader(_pipeline_id: str, _file_path: str):
-        return source, Path(file_name)
-
-    return _reader
 
 
 def test_find_identifiers_should_capture_dangerously_set_inner_html_reads(monkeypatch):

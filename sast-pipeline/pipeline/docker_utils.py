@@ -139,6 +139,7 @@ def run_container(
     volumes: Optional[Dict[str, str]] = None,
     env: Optional[Dict[str, str]] = None,
     args: Optional[Iterable[str]] = None,
+    network: Optional[str] = None,
 ) -> subprocess.CompletedProcess | None:
     """Run a Docker container with optional volume and environment configuration.
 
@@ -177,6 +178,8 @@ def run_container(
     if env:
         for k, v in env.items():
             cmd += ["-e", f"{k}={v}"]
+    if network:
+        cmd += ["--network", network]
     # Append image and any additional arguments
     cmd += [image]
     if args:

@@ -121,21 +121,51 @@ def _call_matches_symbol(
     names = _extract_call_target_names(node, src_bytes)
     if function_name in names:
         return True
+    # Also check if the function name appears as an identifier argument
+    # (e.g. callbacks like raw.map(processUser) or grpc.UnaryInterceptor(AuthInterceptor))
+    if _call_has_identifier_argument(node, src_bytes, function_name):
+        return True
     if not callable_owner_types:
         return False
     target_types = _extract_call_target_declared_types(node, src_bytes, declared_types)
     return bool(target_types & callable_owner_types)
 
 
+def _call_has_identifier_argument(node, src_bytes: bytes, function_name: str) -> bool:
+    """Check if function_name appears as a bare identifier in the call's argument list.
+
+    For languages with structured argument lists (JS, Go, Java…) this scans the
+    arguments/argument_list child.  For bash commands all arguments are direct
+    ``word`` children of the command node, so we also check those.
+    """
+    for child in node.children:
+        if child.type in {"arguments", "argument_list"}:
+            for arg in child.children:
+                if arg.is_named and arg.type in _CALL_NAME_TYPES and node_text(arg, src_bytes) == function_name:
+                    return True
+            break
+    # Bash: direct word children carry argument values
+    for child in node.children:
+        if child.type == "word" and node_text(child, src_bytes) == function_name:
+            return True
+    return False
+
+
 def _extract_call_target_names(node, src_bytes: bytes) -> set[str]:
     target = node.child_by_field_name("function")
     if target is None:
         target = node.child_by_field_name("type")
+    # Java method_invocation and PHP method_call_expression expose the method name via 'name'
+    if target is None:
+        target = node.child_by_field_name("name")
+    # Ruby call exposes the method name via 'method'
+    if target is None:
+        target = node.child_by_field_name("method")
     if target is None:
         for child in node.children:
             if child.type in {"arguments", "argument_list"}:
                 break
-            if child.type not in {"(", ")", ".", "::", "?.", "optional_chain", "new"}:
+            if child.is_named and child.type not in {"(", ")", ".", "::", "?.", "optional_chain", "new"}:
                 target = child
                 break
     if target is None:
@@ -150,6 +180,13 @@ def _extract_call_target_names(node, src_bytes: bytes) -> set[str]:
         stack.extend(reversed(current.children))
 
     if names:
+        # For method_reference nodes (Java: DataProcessor::sanitize, C++: Obj::method),
+        # also include the method name — the last identifier after '::'.
+        if node.type == "method_reference":
+            for child in reversed(node.children):
+                if child.is_named and child.type in _CALL_NAME_TYPES:
+                    names.append(node_text(child, src_bytes).lstrip("~"))
+                    break
         return set(names)
 
     raw = node_text(target, src_bytes).strip()
@@ -160,6 +197,14 @@ def _extract_call_target_names(node, src_bytes: bytes) -> set[str]:
 
 
 def _call_uses_member_target(node) -> bool:
+    # Java/C++ method_reference (e.g. DataProcessor::sanitize) always has an owner
+    if node.type == "method_reference":
+        return True
+    # Java method_invocation has 'object' field; Ruby call has 'receiver' field
+    if node.child_by_field_name("object") is not None:
+        return True
+    if node.child_by_field_name("receiver") is not None:
+        return True
     target = node.child_by_field_name("function")
     if target is None:
         for child in node.children:
@@ -170,6 +215,7 @@ def _call_uses_member_target(node) -> bool:
                 break
     return bool(target and target.type in {
         "member_expression", "member_access_expression", "field_expression", "attribute",
+        "navigation_expression",
     })
 
 
@@ -285,8 +331,14 @@ def _target_symbol_requires_member_call(source_dir: Path, file_path: str, functi
             if _has_class_like_ancestor(node):
                 return True
             declarator = node.child_by_field_name("declarator")
-            if declarator is not None and "::" in node_text(declarator, src_bytes):
-                return True
+            if declarator is not None:
+                # Check only the inner name part (not parameter types) to avoid
+                # false positives from qualified types in parameter lists like
+                # transform_all(std::vector<int>& v) where std::vector contains ::
+                inner_decl = declarator.child_by_field_name("declarator")
+                name_text = node_text(inner_decl, src_bytes) if inner_decl else node_text(declarator, src_bytes)
+                if "::" in name_text:
+                    return True
         stack.extend(reversed(node.children))
     return False
 

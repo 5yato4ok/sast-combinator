@@ -1,20 +1,7 @@
-import sys
-from pathlib import Path
-
 import pytest
 
-ROOT = Path(__file__).resolve().parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 import mcp_server
-
-
-def _stub_read_source(source: str, file_name: str):
-    def _reader(_pipeline_id: str, _file_path: str):
-        return source, Path(file_name)
-
-    return _reader
+from conftest import _stub_read_source
 
 
 def test_find_identifiers_should_capture_alert_call_on_typescript_line(monkeypatch):

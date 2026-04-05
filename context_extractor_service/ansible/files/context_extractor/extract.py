@@ -154,6 +154,10 @@ def extract_function_from_source(source_code: str, filename: str, line_number: i
 
     f_start, f_end = line_range(func_node)
     text = source_bytes[func_node.start_byte: func_node.end_byte].decode("utf-8", errors="replace")
+    if max_lines and max_lines > 0:
+        lines = text.splitlines()
+        if len(lines) > max_lines:
+            text = "\n".join(lines[:max_lines])
     relative_line_number = (line_number - (f_start + 1)) + 1
 
     return {

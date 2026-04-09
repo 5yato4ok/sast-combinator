@@ -1,0 +1,1494 @@
+openapi: 3.0.3
+
+info:
+  title: Context Extractor REST API
+  version: "1.0.0"
+  description: |
+    REST HTTP wrapper around Context Extractor MCP tools.
+    Designed for AI agents that do **not** support the MCP protocol.
+
+    **Protocol:**
+    - `GET /v1/tools` — list all tools with parameter schemas
+    - `POST /v1/tools/{tool_name}` — call a tool; parameters as a JSON object in the request body
+    - `GET /v1/openapi.yaml` — this specification
+
+    **Auth:** Bearer token (`MCP_AUTH_TOKEN`) — same token as the MCP protocol.
+
+    **Nginx routing:** nginx strips the `/mcp/` prefix, so the external base URL is
+    `/mcp/v1` while the container listens on `http://context-extractor-mcp:8000/v1`.
+
+servers:
+  - url: /mcp/v1
+    description: Production (via nginx, strip /mcp/ prefix)
+  - url: http://localhost:8000/v1
+    description: Direct container access (development / testing)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: discovery
+    description: Tool discovery and schema listing
+  - name: code-analysis
+    description: AST-based code structure analysis
+  - name: data-flow
+    description: Identifier tracing and data-flow analysis
+  - name: security-context
+    description: Security-relevant context extraction (imports, decorators, callers)
+  - name: navigation
+    description: Project navigation (file structure, routes, definitions)
+  - name: config-analysis
+    description: Configuration file analysis (env vars, overrides, related configs)
+  - name: filesystem
+    description: Raw file access (read, search, list directory)
+
+# ── Shared components ───────────────────────────────────────────────────────
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Value of the `MCP_AUTH_TOKEN` environment variable.
+        Pass as: `Authorization: Bearer <token>`
+        When `MCP_AUTH_TOKEN` is empty (development mode), auth is disabled.
+
+  responses:
+    Unauthorized:
+      description: Missing or malformed Authorization header
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Missing Authorization header"
+    Forbidden:
+      description: Incorrect Bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Invalid token"
+    BadRequest:
+      description: Missing required parameter, wrong type, or invalid JSON body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Missing parameter: line_number"
+    NotFound:
+      description: Unknown tool name
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Unknown tool: foobar"
+    InternalError:
+      description: Tool execution error (file not found, parse failure, pipeline not accessible, etc.)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "File not found: src/missing.py"
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    ToolParam:
+      type: object
+      required: [name, type, required]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [string, integer]
+        required:
+          type: boolean
+
+    ToolListItem:
+      type: object
+      required: [name, description, params]
+      properties:
+        name:
+          type: string
+          example: extract_function
+        description:
+          type: string
+        params:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolParam"
+
+    # ── Code-analysis responses ────────────────────────────────────
+
+    ExtractFunctionResult:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Full source text of the extracted function
+        meta:
+          type: object
+          properties:
+            language:
+              type: string
+              example: python
+            function_lines:
+              type: array
+              items:
+                type: integer
+              minItems: 2
+              maxItems: 2
+              description: "[start_line, end_line] of the function (1-based)"
+              example: [42, 78]
+            target_line:
+              type: integer
+              description: Absolute line number that was requested (1-based)
+              example: 55
+            relative_line_number:
+              type: integer
+              description: Offset of target_line within the function (1-based)
+              example: 14
+            code_on_line:
+              type: string
+              description: Exact source text on the requested line_number
+              example: "    cursor.execute(query)"
+
+    FindIdentifiersResult:
+      type: object
+      properties:
+        reads:
+          type: array
+          items:
+            type: string
+          description: Identifiers semantically read on the line (operands, receiver, method name, args)
+        writes:
+          type: array
+          items:
+            type: string
+          description: Identifiers assigned or bound on the line
+        language:
+          type: string
+          example: python
+
+    FileStructureResult:
+      type: object
+      properties:
+        language:
+          type: string
+        classes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              line:
+                type: integer
+              methods:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    line:
+                      type: integer
+        functions:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              line:
+                type: integer
+              end_line:
+                type: integer
+        imports:
+          type: array
+          items:
+            type: string
+
+    # ── Data-flow responses ────────────────────────────────────────
+
+    CallerEntry:
+      type: object
+      properties:
+        file:
+          type: string
+          example: src/api/views.py
+        line:
+          type: integer
+          example: 117
+        caller_function:
+          type: string
+          description: Name of the enclosing function/method at the call site
+          example: user_search
+        snippet:
+          type: string
+
+    TraceEntry:
+      type: object
+      properties:
+        line:
+          type: integer
+        code:
+          type: string
+        writes:
+          type: array
+          items:
+            type: string
+        reads:
+          type: array
+          items:
+            type: string
+
+    DefinitionEntry:
+      type: object
+      properties:
+        file:
+          type: string
+        line:
+          type: integer
+        kind:
+          type: string
+          description: "function | class | variable | type"
+          example: function
+
+    # ── Navigation responses ───────────────────────────────────────
+
+    RouteEntry:
+      type: object
+      properties:
+        file:
+          type: string
+          example: myapp/urls.py
+        line:
+          type: integer
+          example: 34
+        pattern:
+          type: string
+          example: "^api/users/<int:pk>/$"
+        snippet:
+          type: string
+
+    # ── Config-analysis responses ──────────────────────────────────
+
+    ClassifyFileResult:
+      type: object
+      description: Result of classify_file
+      properties:
+        type:
+          type: string
+          description: "test | migration | vendored | generated | config | production"
+          example: production
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Confidence score between 0.0 and 1.0
+          example: 0.95
+        reason:
+          type: string
+
+    ClassifyEnvironmentResult:
+      type: object
+      description: Result of classify_environment
+      properties:
+        environment:
+          type: string
+          description: "dev | staging | production | test | ci | unknown"
+          example: production
+        confidence:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Confidence score between 0.0 and 1.0
+          example: 0.95
+        reason:
+          type: string
+
+    ConfigBlockResult:
+      type: object
+      properties:
+        block_text:
+          type: string
+        block_type:
+          type: string
+        key_path:
+          type: string
+        start_line:
+          type: integer
+        end_line:
+          type: integer
+        language:
+          type: string
+
+    ConfigOverrideEntry:
+      type: object
+      properties:
+        file:
+          type: string
+        line:
+          type: integer
+        value:
+          type: string
+        environment:
+          type: string
+
+    EnvVariableEntry:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        source:
+          type: string
+        line:
+          type: integer
+        has_secret_pattern:
+          type: boolean
+          description: True when name matches SECRET, PASSWORD, TOKEN, API_KEY, etc.
+
+    RelatedConfigEntry:
+      type: object
+      properties:
+        file:
+          type: string
+        relationship:
+          type: string
+
+    # ── Filesystem responses ───────────────────────────────────────
+
+    SearchResultEntry:
+      type: object
+      properties:
+        file:
+          type: string
+        line:
+          type: integer
+        match:
+          type: string
+          description: Matched source line (truncated to 200 chars)
+
+    DirectoryEntry:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [file, directory]
+        size:
+          type: integer
+          description: File size in bytes (only present for files)
+
+# ── Endpoints ───────────────────────────────────────────────────────────────
+
+paths:
+
+  # ── Discovery ─────────────────────────────────────────────────────────────
+
+  /tools:
+    get:
+      tags: [discovery]
+      summary: List all available tools
+      description: |
+        Returns all 20 tools with names, descriptions, and parameter schemas.
+        Use to discover available tools and their expected request body structure.
+      operationId: listTools
+      responses:
+        "200":
+          description: Array of tool descriptors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ToolListItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /openapi.yaml:
+    get:
+      tags: [discovery]
+      summary: OpenAPI 3.0 specification (this document)
+      operationId: getOpenApiSpec
+      responses:
+        "200":
+          description: YAML-formatted OpenAPI spec
+          content:
+            application/yaml:
+              schema:
+                type: string
+
+  # ── Code Analysis ──────────────────────────────────────────────────────────
+
+  /tools/extract_function:
+    post:
+      tags: [code-analysis]
+      summary: Extract function/method containing a line
+      description: |
+        Extract the full source of the function or method that contains the given
+        1-based line number. Returns source code, language, line range, and the exact
+        code on the target line.
+
+        **Use as the first step** before making a TP/FP verdict.
+      operationId: extractFunction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, line_number]
+              properties:
+                pipeline_id:
+                  type: string
+                  description: AIST pipeline ID
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  description: Relative path within the project (no `..`, no leading `/`)
+                  example: "src/auth/login.py"
+                line_number:
+                  type: integer
+                  minimum: 1
+                  description: 1-based line number of the finding
+                  example: 87
+      responses:
+        "200":
+          description: Extracted function
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: extract_function
+                  result:
+                    $ref: "#/components/schemas/ExtractFunctionResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/find_identifiers:
+    post:
+      tags: [data-flow]
+      summary: Analyze reads and writes on a line
+      description: |
+        Returns all identifiers semantically read (operands, receiver, method name,
+        arguments) and written (assigned/bound) on the given statement.
+
+        Use as a fast line-local context probe before `trace_identifier_backward`.
+        Pick suspicious `reads` values and trace them backward.
+      operationId: findIdentifiers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, line_number]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "src/auth/login.py"
+                line_number:
+                  type: integer
+                  minimum: 1
+                  example: 87
+      responses:
+        "200":
+          description: Reads and writes on the line
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_identifiers
+                  result:
+                    $ref: "#/components/schemas/FindIdentifiersResult"
+              example:
+                tool: find_identifiers
+                result:
+                  reads: ["cursor", "execute", "query", "user_id"]
+                  writes: []
+                  language: python
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/dump_ast:
+    post:
+      tags: [code-analysis]
+      summary: Show AST of the function at a line
+      description: |
+        Return the tree-sitter AST of the function containing the given line,
+        as a human-readable string.
+      operationId: dumpAst
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, line_number]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "src/auth/login.py"
+                line_number:
+                  type: integer
+                  minimum: 1
+                  example: 87
+      responses:
+        "200":
+          description: AST as a formatted string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: dump_ast
+                  result:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/list_supported_languages:
+    post:
+      tags: [discovery]
+      summary: List languages supported by smart AST tools
+      description: |
+        Return a sorted list of language identifiers for which AST-based tools
+        (extract_function, find_identifiers, etc.) are available.
+        Files in unsupported languages are still accessible via filesystem tools.
+      operationId: listSupportedLanguages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Empty object — no parameters required
+              example: {}
+      responses:
+        "200":
+          description: List of language identifiers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: list_supported_languages
+                  result:
+                    type: array
+                    items:
+                      type: string
+              example:
+                tool: list_supported_languages
+                result:
+                  - bash
+                  - cpp
+                  - csharp
+                  - go
+                  - java
+                  - javascript
+                  - kotlin
+                  - php
+                  - python
+                  - ruby
+                  - typescript
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /tools/get_file_structure:
+    post:
+      tags: [navigation]
+      summary: Parse top-level structure of a file
+      description: |
+        Return classes (with methods), standalone functions, and import statements.
+        Use to navigate a large file before requesting specific functions.
+      operationId: getFileStructure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "src/auth/views.py"
+      responses:
+        "200":
+          description: File structure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: get_file_structure
+                  result:
+                    $ref: "#/components/schemas/FileStructureResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ── Data Flow ──────────────────────────────────────────────────────────────
+
+  /tools/find_callers:
+    post:
+      tags: [data-flow]
+      summary: Find all call sites of a function in the project
+      description: |
+        Search the entire project for places where the given function is called.
+        Returns `{file, line, caller_function, snippet}` for each call site.
+      operationId: findCallers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, function_name]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  description: File where the function is defined (for context, not a filter)
+                  example: "src/db/queries.py"
+                function_name:
+                  type: string
+                  description: Name of the function to search for
+                  example: "execute_query"
+      responses:
+        "200":
+          description: List of call sites
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_callers
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CallerEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/trace_identifier_backward:
+    post:
+      tags: [data-flow]
+      summary: Trace variable origin (up to 3 hops)
+      description: |
+        Walk backward through the function to find where a variable's value originates.
+        Returns up to 3 assignment steps, each with `{line, code, writes, reads}`.
+
+        Classify the origin:
+        - **TP likely** — user-controlled: `request.GET`, `req.body`, URL params, cookies
+        - **FP likely** — safe: hardcoded constant, `int()` cast, UUID, allowlist lookup
+        - **Check further** — semi-trusted: DB value, env var, config
+      operationId: traceIdentifierBackward
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, line_number, identifier]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "src/auth/login.py"
+                line_number:
+                  type: integer
+                  minimum: 1
+                  description: Sink line where the identifier is used
+                  example: 87
+                identifier:
+                  type: string
+                  description: Variable name to trace backward
+                  example: "query"
+      responses:
+        "200":
+          description: Backward trace chain
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: trace_identifier_backward
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TraceEntry"
+              example:
+                tool: trace_identifier_backward
+                result:
+                  - line: 84
+                    code: "    query = f\"SELECT * FROM users WHERE name='{username}'\""
+                    writes: ["query"]
+                    reads: ["username"]
+                  - line: 82
+                    code: "    username = request.POST.get('user')"
+                    writes: ["username"]
+                    reads: ["request", "POST", "get", "user"]
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/find_definition:
+    post:
+      tags: [navigation]
+      summary: Find symbol definitions across the project
+      description: |
+        Search for where a function, class, variable, or type is defined.
+        Returns `{file, line, kind}`. AST-based for supported languages.
+      operationId: findDefinition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, symbol_name]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                symbol_name:
+                  type: string
+                  description: Symbol name to search for
+                  example: "safe_query"
+      responses:
+        "200":
+          description: Definition locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_definition
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DefinitionEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ── Security Context ───────────────────────────────────────────────────────
+
+  /tools/find_imports:
+    post:
+      tags: [security-context]
+      summary: Extract all import/require/using statements from a file
+      description: |
+        Returns all import statements. Use to detect frameworks and libraries:
+        - Django ORM + `.filter()/.get()` → parameterized, SQLi FP
+        - `import bleach` → HTML sanitization available
+        - `subprocess` with `shell=False` → command injection FP
+      operationId: findImports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "src/auth/login.py"
+      responses:
+        "200":
+          description: List of import statement strings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_imports
+                  result:
+                    type: array
+                    items:
+                      type: string
+              example:
+                tool: find_imports
+                result:
+                  - "from django.db import connection"
+                  - "import bleach"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/find_decorators:
+    post:
+      tags: [security-context]
+      summary: Find decorators/annotations on the function at a line
+      description: |
+        Returns all decorators on the function containing the given line.
+        - `@login_required` / `@IsAuthenticated` → authenticated users only
+        - `@csrf_exempt` → CSRF protection disabled (TP if CSRF finding)
+        - `@permission_required` → restricted access
+      operationId: findDecorators
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, line_number]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "src/auth/views.py"
+                line_number:
+                  type: integer
+                  minimum: 1
+                  example: 55
+      responses:
+        "200":
+          description: List of decorator strings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_decorators
+                  result:
+                    type: array
+                    items:
+                      type: string
+              example:
+                tool: find_decorators
+                result:
+                  - "@login_required"
+                  - "@permission_required('admin')"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/classify_file:
+    post:
+      tags: [security-context]
+      summary: Classify file as test / migration / generated / vendored / config / production
+      description: |
+        Language-agnostic classification using path heuristics.
+
+        **Call first** before any deep analysis:
+        - `test` → FP with high confidence (hardcoded creds in tests are expected)
+        - `migration` → FP (DB migration, not runtime code)
+        - `vendored` / `generated` → FP (not the project's own code)
+        - `config` / `production` → proceed to full analysis
+      operationId: classifyFile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "tests/test_auth.py"
+      responses:
+        "200":
+          description: File classification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: classify_file
+                  result:
+                    $ref: "#/components/schemas/ClassifyFileResult"
+              example:
+                tool: classify_file
+                result:
+                  type: test
+                  confidence: 0.95
+                  reason: "Path starts with 'tests/'"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/find_route_to_function:
+    post:
+      tags: [navigation]
+      summary: Find URL/route mappings to a function
+      description: |
+        Search for URL routing entries that reference the given function name.
+        Returns `{file, line, pattern, snippet}` for each match.
+        No route found → dead/unreachable code → strong FP signal.
+      operationId: findRouteToFunction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, function_name]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                function_name:
+                  type: string
+                  example: "UserView"
+      responses:
+        "200":
+          description: List of route entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_route_to_function
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RouteEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ── Config Analysis ────────────────────────────────────────────────────────
+
+  /tools/extract_config_block:
+    post:
+      tags: [config-analysis]
+      summary: Extract the config block containing a line
+      description: |
+        Extract the logical config block at the given line. AST-based for YAML,
+        Dockerfile, HCL/Terraform, TOML, JSON. Falls back to indentation-based.
+
+        Returns `{block_text, block_type, key_path, start_line, end_line, language}`.
+      operationId: extractConfigBlock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, line_number]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "docker-compose.yml"
+                line_number:
+                  type: integer
+                  minimum: 1
+                  example: 42
+      responses:
+        "200":
+          description: Extracted config block
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: extract_config_block
+                  result:
+                    $ref: "#/components/schemas/ConfigBlockResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/classify_environment:
+    post:
+      tags: [config-analysis]
+      summary: Determine target environment of a config file
+      description: |
+        Classify a config file's target environment using filename heuristics.
+        Returns `{environment, confidence, reason}`.
+
+        `dev`/`staging`/`test`/`ci` → low priority; `production` → high priority;
+        `unknown` → treat as potentially production.
+      operationId: classifyEnvironment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: ".env.production"
+      responses:
+        "200":
+          description: Environment classification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: classify_environment
+                  result:
+                    $ref: "#/components/schemas/ClassifyEnvironmentResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/find_config_overrides:
+    post:
+      tags: [config-analysis]
+      summary: Find the same config key in other files
+      description: |
+        Search the project for the same key/variable in other config files.
+        Returns `{file, line, value, environment}` per occurrence.
+
+        Classic use: `DD_DEBUG=True` in `.env.dev` → check if `DD_DEBUG=False`
+        in `.env.prod`. If yes → FP.
+      operationId: findConfigOverrides
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path, key_or_variable]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  description: Origin file (excluded from results)
+                  example: ".env.dev"
+                key_or_variable:
+                  type: string
+                  description: Config key or env variable name
+                  example: "DD_DEBUG"
+      responses:
+        "200":
+          description: Override locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_config_overrides
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ConfigOverrideEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/extract_env_variables:
+    post:
+      tags: [config-analysis]
+      summary: Extract all env variable definitions from a config file
+      description: |
+        Returns `{name, value, source, line, has_secret_pattern}` for each variable.
+
+        `has_secret_pattern: true` + non-empty hardcoded value → **TP** (hardcoded secret)
+        `has_secret_pattern: true` + `${VAR}` or empty → **FP** (placeholder)
+      operationId: extractEnvVariables
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "docker-compose.yml"
+      responses:
+        "200":
+          description: List of env variable definitions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: extract_env_variables
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/EnvVariableEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/find_related_configs:
+    post:
+      tags: [config-analysis]
+      summary: Find configuration files related to a given file
+      description: |
+        Detects: Dockerfile ↔ docker-compose, docker-compose ↔ .env,
+        Terraform peers, K8s peers, Helm values ↔ templates.
+        Returns `{file, relationship}`.
+      operationId: findRelatedConfigs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  example: "Dockerfile"
+      responses:
+        "200":
+          description: Related config files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: find_related_configs
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RelatedConfigEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  # ── Filesystem ─────────────────────────────────────────────────────────────
+
+  /tools/read_file:
+    post:
+      tags: [filesystem]
+      summary: Read full file contents (max 1 MB)
+      description: |
+        Read the raw text of any file from the project source tree. Max 1 MB.
+        Path traversal (`..`) and absolute paths are rejected with HTTP 500.
+      operationId: readFile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, file_path]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                file_path:
+                  type: string
+                  description: Relative path (no `..`, no leading `/`)
+                  example: "README.md"
+      responses:
+        "200":
+          description: File contents as a plain string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: read_file
+                  result:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/search_files:
+    post:
+      tags: [filesystem]
+      summary: Regex search across project files (grep)
+      description: |
+        Search all files for lines matching a Python regex. Up to 50 results.
+        Times out after 30 seconds. Excludes `.git/`, `node_modules/`, `__pycache__/`,
+        `vendor/`, `.tox/`.
+
+        Because the pattern is in the JSON body, **no URL encoding is needed** —
+        pass complex regexes like `cursor\.execute\(.*f"` as plain strings.
+      operationId: searchFiles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id, pattern]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                pattern:
+                  type: string
+                  description: Python regular expression
+                  example: "cursor\\.execute"
+                path:
+                  type: string
+                  description: Optional subdirectory to limit search (default = project root)
+                  default: ""
+                  example: "src/db"
+      responses:
+        "200":
+          description: Search results (up to 50)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: search_files
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SearchResultEntry"
+              example:
+                tool: search_files
+                result:
+                  - file: src/db/queries.py
+                    line: 87
+                    match: "    cursor.execute(query, params)"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /tools/list_directory:
+    post:
+      tags: [filesystem]
+      summary: List files and directories in a project path
+      description: |
+        Returns `{name, type, size}` for each entry (`size` only for files).
+        Pass empty `path` or omit it to list the project root.
+      operationId: listDirectory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pipeline_id]
+              properties:
+                pipeline_id:
+                  type: string
+                  example: "a1b2c3d4"
+                path:
+                  type: string
+                  description: Relative directory path (default = project root)
+                  default: ""
+                  example: "src/auth"
+      responses:
+        "200":
+          description: Directory listing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tool:
+                    type: string
+                    example: list_directory
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DirectoryEntry"
+              example:
+                tool: list_directory
+                result:
+                  - name: views.py
+                    type: file
+                    size: 4821
+                  - name: tests
+                    type: directory
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalError"

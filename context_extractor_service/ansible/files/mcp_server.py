@@ -70,9 +70,13 @@ from context_extractor.ts_utils import (
     inject_html_script_source,
 )
 from mcp.server.fastmcp import FastMCP
+import inspect
+from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import FileResponse, JSONResponse, Response
+from starlette.routing import Mount, Route, Router
 
 # ── Configuration ────────────────────────────────────────────────
 AIST_API_URL = os.environ.get("AIST_API_URL", "http://nginx:8080")
@@ -873,18 +877,125 @@ def list_directory(pipeline_id: str, path: str = "") -> list[dict]:
     return entries
 
 
+# ── REST API ─────────────────────────────────────────────────────────────────
+
+
+def _build_tool_registry() -> dict:
+    """Build REST registry from decorated tool function signatures via introspection."""
+    _tool_fns = [
+        extract_function, find_identifiers, dump_ast, list_supported_languages,
+        find_callers, trace_identifier_backward, find_definition, find_imports,
+        find_decorators, classify_file, get_file_structure, find_route_to_function,
+        extract_config_block, classify_environment, find_config_overrides,
+        extract_env_variables, find_related_configs, read_file, search_files,
+        list_directory,
+    ]
+    registry: dict = {}
+    for fn in _tool_fns:
+        original = inspect.unwrap(fn)
+        sig = inspect.signature(original)
+        params = []
+        for pname, param in sig.parameters.items():
+            ann = param.annotation
+            python_type = ann if ann is not inspect.Parameter.empty else str
+            required = param.default is inspect.Parameter.empty
+            params.append({
+                "name": pname,
+                "type": "integer" if python_type is int else "string",
+                "python_type": python_type,
+                "required": required,
+                "default": None if required else param.default,
+            })
+        doc = (original.__doc__ or "").strip()
+        description = next((ln.strip() for ln in doc.splitlines() if ln.strip()), "")
+        registry[fn.__name__] = {"fn": fn, "description": description, "params": params}
+    return registry
+
+
+_TOOL_REGISTRY: dict = _build_tool_registry()
+
+
+async def _rest_list_tools(request: Request) -> JSONResponse:
+    return JSONResponse([
+        {
+            "name": name,
+            "description": meta["description"],
+            "params": [
+                {"name": p["name"], "type": p["type"], "required": p["required"]}
+                for p in meta["params"]
+            ],
+        }
+        for name, meta in _TOOL_REGISTRY.items()
+    ])
+
+
+async def _rest_call_tool(request: Request) -> JSONResponse:
+    tool_name = request.path_params["tool_name"]
+    if tool_name not in _TOOL_REGISTRY:
+        return JSONResponse({"error": f"Unknown tool: {tool_name}"}, status_code=404)
+
+    meta = _TOOL_REGISTRY[tool_name]
+
+    try:
+        body: dict = await request.json()
+        if not isinstance(body, dict):
+            raise ValueError("Request body must be a JSON object")
+    except Exception as exc:
+        return JSONResponse({"error": f"Invalid JSON body: {exc}"}, status_code=400)
+
+    kwargs: dict = {}
+    for param in meta["params"]:
+        val = body.get(param["name"])
+        if val is None:
+            if param["required"]:
+                return JSONResponse(
+                    {"error": f"Missing parameter: {param['name']}"}, status_code=400,
+                )
+            if param["default"] is not None:
+                kwargs[param["name"]] = param["default"]
+        else:
+            try:
+                kwargs[param["name"]] = param["python_type"](val)
+            except (ValueError, TypeError):
+                return JSONResponse(
+                    {"error": f"Invalid value for '{param['name']}': expected {param['type']}"},
+                    status_code=400,
+                )
+
+    try:
+        result = meta["fn"](**kwargs)
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500)
+
+    return JSONResponse({"tool": tool_name, "result": result})
+
+
+async def _rest_openapi_spec(request: Request) -> Response:
+    spec_path = Path(__file__).parent / "rest_api_openapi.yaml"
+    if not spec_path.exists():
+        return JSONResponse({"error": "OpenAPI spec not found"}, status_code=404)
+    return FileResponse(str(spec_path), media_type="application/yaml")
+
+
+_rest_router = Router(routes=[
+    Route("/tools",              _rest_list_tools,   methods=["GET"]),
+    Route("/tools/{tool_name}",  _rest_call_tool,    methods=["POST"]),
+    Route("/openapi.yaml",       _rest_openapi_spec, methods=["GET"]),
+])
+
+
 if __name__ == "__main__":
     if MCP_AUTH_TOKEN:
         logger.info("MCP auth enabled — Bearer token required")
     else:
         logger.warning("MCP_AUTH_TOKEN not set — auth disabled (development mode)")
 
-    # Get the Starlette ASGI app and add middleware
-    from starlette.middleware.cors import CORSMiddleware
-
-    app = mcp.streamable_http_app()
-    app.add_middleware(BearerTokenAuthMiddleware)
-    app.add_middleware(
+    combined = Starlette(routes=[
+        Mount("/v1", app=_rest_router),
+        Mount("/",   app=mcp.streamable_http_app()),
+    ])
+    combined.add_middleware(BearerTokenAuthMiddleware)
+    combined.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
@@ -894,4 +1005,4 @@ if __name__ == "__main__":
 
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)  # noqa: S104
+    uvicorn.run(combined, host="0.0.0.0", port=8000)  # noqa: S104

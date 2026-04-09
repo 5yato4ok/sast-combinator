@@ -36,4 +36,4 @@ cd "$PROJECT_ROOT"
 echo "[INFO] Launching analyzers..."
 
 export PYTHONUNBUFFERED=1
-python3 /app/run_inside_builder.py
+/usr/bin/python3 /app/run_inside_builder.py

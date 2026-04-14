@@ -1,10 +1,11 @@
-import os
-import json
 import argparse
+import json
+import os
+import pathlib
 
 
 def load_sarif_findings(sarif_path):
-    with open(sarif_path, 'r', encoding='utf-8') as f:
+    with pathlib.Path(sarif_path).open(encoding="utf-8") as f:
         sarif = json.load(f)
 
     findings = []
@@ -31,11 +32,11 @@ def analyze_testcases(root_dir, sarif_path):
                 parent_folder = os.path.basename(os.path.dirname(file_path))
 
                 json_path = os.path.join(dirpath, f"{base_name}.json")
-                if not os.path.exists(json_path):
+                if not pathlib.Path(json_path).exists():
                     continue
 
                 try:
-                    with open(json_path, 'r', encoding='utf-8') as jf:
+                    with pathlib.Path(json_path).open(encoding="utf-8") as jf:
                         meta = json.load(jf)
                 except json.JSONDecodeError:
                     continue
@@ -48,10 +49,9 @@ def analyze_testcases(root_dir, sarif_path):
                         positive_matched += 1
                     else:
                         positive_not_matched += 1
-                else:
-                    if found_in_sarif:
-                        print(f"[MATCH] {search_pattern}")
-                        negative_matched.append(search_pattern)
+                elif found_in_sarif:
+                    print(f"[MATCH] {search_pattern}")
+                    negative_matched.append(search_pattern)
 
     print("\n--- Summary ---")
     print(f"Negative matches (positive: false and found in SARIF): {len(negative_matched)}")
@@ -63,15 +63,15 @@ def analyze_testcases(root_dir, sarif_path):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Analyze test cases and check which ones appear in the SARIF report."
+        description="Analyze test cases and check which ones appear in the SARIF report.",
     )
     parser.add_argument(
         "--root", required=True,
-        help="Path to the root directory containing test cases"
+        help="Path to the root directory containing test cases",
     )
     parser.add_argument(
         "--sarif", required=True,
-        help="Path to the SARIF file containing analyzer results"
+        help="Path to the SARIF file containing analyzer results",
     )
 
     args = parser.parse_args()

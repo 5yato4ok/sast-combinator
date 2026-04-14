@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Create Jira epics and issues from a CSV file with Russian headers:
 - "Категория"     -> Epic name
@@ -24,16 +23,19 @@ Notes:
 - Script auto-discovers custom field IDs for "Epic Link" and "Epic Name".
 - If "Epic Link" is not available (Team-managed projects), it falls back to the Agile API to add issues to an epic.
 - For Company-managed projects, "Epic Name" is required on Epic creation.
+
 """
 
 import csv
-import json
 import os
+import pathlib
 import sys
 import time
 import typing as t
+
 import requests
 from dotenv import load_dotenv
+
 load_dotenv(dotenv_path="/Users/butkevichveronika/work/sast-combinator/tools/utils/.env")
 
 BASE = os.environ.get("JIRA_BASE_URL", "").rstrip("/")
@@ -53,6 +55,7 @@ HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 FIELDS_CACHE = None
 COMPONENTS_CACHE = {}
 
+
 def _req(method: str, path: str, **kwargs):
     url = path if path.startswith("http") else f"{BASE}{path}"
     r = requests.request(method, url, auth=AUTH, headers=HEADERS, timeout=30, **kwargs)
@@ -60,22 +63,26 @@ def _req(method: str, path: str, **kwargs):
         raise requests.HTTPError(f"{r.status_code} {r.reason}: {r.text}", response=r)
     return r
 
-def fetch_all_fields() -> t.List[dict]:
+
+def fetch_all_fields() -> list[dict]:
     global FIELDS_CACHE
     if FIELDS_CACHE is None:
         FIELDS_CACHE = _req("GET", "/rest/api/3/field").json()
     return FIELDS_CACHE
 
-def find_field_id(field_name: str) -> t.Optional[str]:
+
+def find_field_id(field_name: str) -> str | None:
     for f in fetch_all_fields():
         if (f.get("name") or "").strip().lower() == field_name.strip().lower():
             return f.get("id")
     return None
 
-def jql_search(jql: str, max_results: int = 1) -> t.List[dict]:
+
+def jql_search(jql: str, max_results: int = 1) -> list[dict]:
     payload = {"jql": jql, "maxResults": max_results, "fields": ["summary", "issuetype", "components"]}
     r = _req("POST", "/rest/api/3/search", json=payload)
     return r.json().get("issues", [])
+
 
 def get_or_create_component(project_key: str, name: str) -> dict:
     if not name:
@@ -112,6 +119,7 @@ def get_or_create_component(project_key: str, name: str) -> dict:
     COMPONENTS_CACHE[key] = comp
     return comp
 
+
 def ensure_epic(project_key: str, epic_name: str) -> str:
     """Return Epic key, creating if needed. Handles 'Epic Name' field id dynamically."""
     epic_name = (epic_name or "").strip()
@@ -130,8 +138,8 @@ def ensure_epic(project_key: str, epic_name: str) -> str:
         "fields": {
             "project": {"key": project_key},
             "summary": epic_name,
-            "issuetype": {"name": "Epic"}
-        }
+            "issuetype": {"name": "Epic"},
+        },
     }
     if epic_name_field:
         payload["fields"][epic_name_field] = epic_name
@@ -143,7 +151,8 @@ def ensure_epic(project_key: str, epic_name: str) -> str:
     res = _req("POST", "/rest/api/3/issue", json=payload).json()
     return res["key"]
 
-def add_issue_to_epic(epic_key: str, issue_key: str, epic_link_field_id: t.Optional[str]) -> None:
+
+def add_issue_to_epic(epic_key: str, issue_key: str, epic_link_field_id: str | None) -> None:
     """Prefer setting Epic Link custom field; fallback to Agile 'add to epic' endpoint."""
     if not epic_key or not issue_key:
         return
@@ -161,7 +170,8 @@ def add_issue_to_epic(epic_key: str, issue_key: str, epic_link_field_id: t.Optio
         return
     _req("POST", f"/rest/agile/1.0/epic/{epic_key}/issue", json=body)
 
-def normalize_priority(val: t.Any) -> t.Optional[str]:
+
+def normalize_priority(val: t.Any) -> str | None:
     if val is None:
         return None
     s = str(val).strip()
@@ -177,35 +187,38 @@ def normalize_priority(val: t.Any) -> t.Optional[str]:
     #     "критично": "Highest", "высокий": "High", "средний": "Medium", "низкий": "Low"
     # }
     mapping = {
-        "обязательное" : "High",
+        "обязательное": "High",
         "важное": "Medium",
-        "опциональное": "Low"
+        "опциональное": "Low",
     }
     return mapping.get(s.lower(), s)
 
-def adf_paragraph(lines: list[str])->dict:
+
+def adf_paragraph(lines: list[str]) -> dict:
     content = []
     for i, line in enumerate(lines):
-        if i>0:
-            content.append({"type":"hardBreak"})
+        if i > 0:
+            content.append({"type": "hardBreak"})
         if line:
-            content.append({"type":"text","text":line})
+            content.append({"type": "text", "text": line})
     if not content:
-        content = [{"type":"text","text":""}]
-    return {"type":"paragraph","content":content}
+        content = [{"type": "text", "text": ""}]
+    return {"type": "paragraph", "content": content}
 
-def adf_from_text(text:str)->dict:
-    text = (text or "").replace("\r\n","\n").replace("\r","\n")
+
+def adf_from_text(text: str) -> dict:
+    text = (text or "").replace("\r\n", "\n").replace("\r", "\n")
     blocks = text.split("\n\n") if text else [""]
     doc = {
-        "type":"doc",
-        "version":1,
-        "content":[ adf_paragraph(block.split("\n")) for block in blocks ]
+        "type": "doc",
+        "version": 1,
+        "content": [adf_paragraph(block.split("\n")) for block in blocks],
     }
     # Ensure at least one paragraph with text node (some Jira instances are picky)
     if not doc["content"]:
-        doc["content"]=[adf_paragraph([""])]
+        doc["content"] = [adf_paragraph([""])]
     return doc
+
 
 def build_description(summary: str, description: str, subcat: str, sast: str):
     parts = []
@@ -220,10 +233,11 @@ def build_description(summary: str, description: str, subcat: str, sast: str):
         parts.append("\n".join(extras))
     return adf_from_text("\n\n".join(parts) if parts else summary)
 
+
 def create_issue(project_key: str, issue_type: str, summary: str, description: str,
-                 component_name: t.Optional[str], priority: t.Optional[str],
-                 labels: t.Optional[t.List[str]],
-                 epic_key: t.Optional[str], epic_link_field_id: t.Optional[str]) -> str:
+                 component_name: str | None, priority: str | None,
+                 labels: list[str] | None,
+                 epic_key: str | None, epic_link_field_id: str | None) -> str:
     fields = {
         "project": {"key": project_key},
         "issuetype": {"name": issue_type},
@@ -253,10 +267,11 @@ def create_issue(project_key: str, issue_type: str, summary: str, description: s
     res = _req("POST", "/rest/api/3/issue", json=payload).json()
     return res["key"]
 
+
 def main(csv_path: str) -> None:
     epic_link_field_id = find_field_id("Epic Link")  # may be None (team-managed)
     created = 0
-    with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
+    with pathlib.Path(csv_path).open(encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader, start=1):
             epic_name = (row.get("Категория") or "").strip()
@@ -269,7 +284,7 @@ def main(csv_path: str) -> None:
             if sast_val:
                 labels.append("SAST")
                 # also add the value if not boolean-like
-                if sast_val.lower() not in {"1","true","yes","да","y"}:
+                if sast_val.lower() not in {"1", "true", "yes", "да", "y"}:
                     labels.append(f"sast:{sast_val}")
 
             if not summary:
@@ -286,9 +301,10 @@ def main(csv_path: str) -> None:
 
     print(f"[OK] Created/processed {created} issues.")
 
+
 if __name__ == "__main__":
     url = f"{os.environ['JIRA_BASE_URL']}/rest/api/3/issuetype"
-    r = requests.get(url, auth=(os.environ['JIRA_EMAIL'], os.environ['JIRA_API_TOKEN']))
+    r = requests.get(url, auth=(os.environ["JIRA_EMAIL"], os.environ["JIRA_API_TOKEN"]))
     for t in r.json():
         print(t["name"])
     # if len(sys.argv) < 2:

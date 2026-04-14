@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Create/Update DefectDojo Product + AISTProject(+Versions) directly in PostgreSQL.
@@ -16,21 +15,22 @@ Create/Update DefectDojo Product + AISTProject(+Versions) directly in PostgreSQL
 """
 
 import argparse
+import hashlib
 import json
 import os
-import sys
+import pathlib
 import shutil
-import hashlib
+import sys
 from datetime import datetime
 
 import psycopg2
 from psycopg2.extras import Json, RealDictCursor
 
-
 # ---------- Константы / валидация ----------
 
 GIT_HASH = "GIT_HASH"
 FILE_HASH = "FILE_HASH"
+
 
 def _now_utc():
     return datetime.utcnow()
@@ -67,7 +67,7 @@ def ensure_sla_config(conn, name="Default") -> int:
                 7, True,
                 30, True,
                 90, True,
-                180, True
+                180, True,
             ),
         )
         return cur.fetchone()[0]
@@ -219,10 +219,11 @@ def ensure_aist_project(conn, *, product_id: int,
 
 def _sha256_of_file(path: str) -> str:
     h = hashlib.sha256()
-    with open(path, "rb") as f:
+    with pathlib.Path(path).open("rb") as f:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
 
 def _store_archive(archive_path: str, media_root: str, project_id: int) -> str:
     """
@@ -230,12 +231,12 @@ def _store_archive(archive_path: str, media_root: str, project_id: int) -> str:
       aist_versions/<project_id>/YYYY/MM/DD/<filename>
     Возвращает относительный путь (для записи в DB поле source_archive).
     """
-    if not os.path.isfile(archive_path):
+    if not pathlib.Path(archive_path).is_file():
         raise FileNotFoundError(f"archive not found: {archive_path}")
     dt = datetime.utcnow()
     rel_dir = os.path.join("aist_versions", str(project_id), f"{dt:%Y}", f"{dt:%m}", f"{dt:%d}")
     abs_dir = os.path.join(media_root, rel_dir)
-    os.makedirs(abs_dir, exist_ok=True)
+    pathlib.Path(abs_dir).mkdir(exist_ok=True, parents=True)
     filename = os.path.basename(archive_path)
     dest_abs = os.path.join(abs_dir, filename)
 
@@ -354,7 +355,7 @@ def upsert_aist_project_version(conn, *, project_id: int,
 # ---------- Orchestration ----------
 
 def load_projects(json_path: str) -> list[dict]:
-    with open(json_path, "r", encoding="utf-8") as f:
+    with pathlib.Path(json_path).open(encoding="utf-8") as f:
         data = json.load(f)
     if isinstance(data, dict) and "projects" in data and isinstance(data["projects"], list):
         return data["projects"]
@@ -447,7 +448,7 @@ def process(conn, json_path: str, product_type_name: str, sla_name: str, media_r
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Upsert DefectDojo Product + AISTProject(+Versions) directly in PostgreSQL (supports GIT_HASH/FILE_HASH)."
+        description="Upsert DefectDojo Product + AISTProject(+Versions) directly in PostgreSQL (supports GIT_HASH/FILE_HASH).",
     )
     parser.add_argument("--json", required=True, help="Path to projects.json")
 
@@ -468,7 +469,7 @@ def main():
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.json):
+    if not pathlib.Path(args.json).exists():
         print(f"projects.json not found: {args.json}", file=sys.stderr)
         sys.exit(2)
 

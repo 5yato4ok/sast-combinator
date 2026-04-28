@@ -15,15 +15,51 @@ before container launch.  If they are missing, an exception is raised.
 
 from __future__ import annotations
 
-import yaml  # type: ignore
-import os
-import logging
 import json
-from . import docker_utils
+import logging
+import os
+
+import yaml  # type: ignore
+
 from . import config_utils
+from . import docker_utils
 
 
 log = logging.getLogger(__name__)
+AGENT_BRIDGE_TYPE = "agent-bridge"
+
+
+def _message(*, level: str, code: str, text: object) -> dict[str, str]:
+    return {"level": level, "code": code, "text": str(text or "")[:2000]}
+
+
+def _build_outcome(*, analyzer: dict, output_dir: str, status: str, messages: list[dict] | None = None) -> dict:
+    name = str(analyzer.get("name") or "unknown")
+    result_file = config_utils.AnalyzersConfigHelper.get_analyzer_result_file_name(analyzer)
+    result_exists = os.path.exists(os.path.join(output_dir, result_file))
+    required_result = bool(analyzer.get("required_result", False))
+    outcome_messages = list(messages or [])
+    if status == "success" and required_result and not result_exists:
+        status = "missing_result"
+        outcome_messages.append(
+            _message(
+                level="warning",
+                code="missing_result",
+                text=f"Required analyzer result file was not produced: {result_file}",
+            ),
+        )
+    return {
+        "name": name,
+        "type": str(analyzer.get("type", "default")).lower(),
+        "status": status,
+        "degraded": status in {"failed", "missing_result"} and required_result,
+        "required_result": required_result,
+        "result_file": result_file,
+        "result_exists": result_exists,
+        "messages": outcome_messages,
+        "artifacts": analyzer.get("artifacts") or {},
+    }
+
 
 def build_image_if_needed(image_name: str, dockerfile_dir: str) -> None:
     """Ensure that a Docker image exists for the given analyzer.
@@ -105,6 +141,7 @@ def run_docker(
             pipeline_id=pipeline_id
         )
 
+
 def env_flag(name: str, default: bool = True) -> bool:
     raw = os.getenv(name)
     if raw is None:
@@ -116,6 +153,7 @@ def env_flag(name: str, default: bool = True) -> bool:
         return False
 
     return default
+
 
 def run_selected_analyzers(
     config_path: str,
@@ -159,11 +197,22 @@ def run_selected_analyzers(
     launch_info["launched_analyzers"] = analyzers_names
     launch_info["git"] = docker_utils.collect_git_metadata(project_path)
 
-    with open(os.path.join(output_dir, "launch_description.json"), "w", encoding="utf-8") as f:
-        json.dump(launch_info, f, indent=4, ensure_ascii=False)
+    analyzer_outcomes = []
 
     for analyzer in analyzers:
         name = analyzer.get("name")
+        analyzer_type = str(analyzer.get("type", "")).lower()
+
+        # Agent analyzers run on the host orchestrator because their bridge
+        # socket is not available inside the builder container.
+        if analyzer_type == AGENT_BRIDGE_TYPE:
+            log.info(
+                "Skipping agent-bridge analyzer '%s' inside builder; "
+                "the host orchestrator runs it via the bridge.",
+                name,
+            )
+            continue
+
         image = analyzer.get("image")
         dockerfile_dir = str(analyzer.get("dockerfile_path", f"/app/Dockerfiles/{name}"))
         build_image_if_needed(str(image), dockerfile_dir)
@@ -176,9 +225,22 @@ def run_selected_analyzers(
             env_vars += ["LOG_LEVEL"]
         try:
             run_docker(str(image), builder_container, args, project_path, output_dir, pipeline_id, env_vars)
+            analyzer_outcomes.append(_build_outcome(analyzer=analyzer, output_dir=output_dir, status="success"))
         except KeyboardInterrupt:
             raise
         except Exception as exc:
             log.warning(f"Error occurred during launching of {name} : {exc}.")
+            analyzer_outcomes.append(
+                _build_outcome(
+                    analyzer=analyzer,
+                    output_dir=output_dir,
+                    status="failed",
+                    messages=[_message(level="warning", code="runner_exception", text=exc)],
+                ),
+            )
+
+    launch_info["analyzer_outcomes"] = analyzer_outcomes
+    with open(os.path.join(output_dir, "launch_description.json"), "w", encoding="utf-8") as f:
+        json.dump(launch_info, f, indent=4, ensure_ascii=False)
 
     log.info("All selected analyzers completed.")

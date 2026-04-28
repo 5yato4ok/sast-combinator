@@ -219,3 +219,47 @@ analyzers:
       - COMPILE_COMMANDS_PATH
       - COMPILER_PATH
 
+  - name: claude-diff-security
+    commentary: "Agent-driven diff security review. Runs through aist-triage-bridge from the host (analyzer_runner skips this entry inside the builder container)."
+    type: agent-bridge
+    enabled: true
+    time_class: slow
+    skill_name: aist-diff-security-review
+    output_type: "Generic Findings Import"
+    result_file: "claude-diff-security_result.json"
+    required_result: true
+    truncation_file: "claude-diff-security_truncated.flag"
+    artifacts:
+      ai_response:
+        path: "claude-diff-security_ai_response.json"
+        format: "aist_ai_finding_response_v1"
+        match_key: "unique_id_from_tool"
+    language: [ "c", "cpp", "csharp", "go", "java", "javascript", "kotlin", "objc", "php", "python", "ruby", "rust", "scala", "swift", "terraform", "typescript" ]
+    env:
+      - BASE_COMMIT
+      - EXCLUDED_PATHS_JSON
+      - CLAUDE_DIFF_MAX_FILES
+      - CLAUDE_DIFF_MAX_BYTES
+
+  - name: claude-full-security
+    commentary: "Agent-driven full-project security review. Runs through aist-triage-bridge from the host (analyzer_runner skips this entry inside the builder container). Operates on the deployable revision as a whole — no diff baseline."
+    type: agent-bridge
+    enabled: true
+    time_class: slow
+    skill_name: aist-full-security-review
+    output_type: "Generic Findings Import"
+    result_file: "claude-full-security_result.json"
+    required_result: true
+    truncation_file: "claude-full-security_truncated.flag"
+    artifacts:
+      ai_response:
+        path: "claude-full-security_ai_response.json"
+        format: "aist_ai_finding_response_v1"
+        match_key: "unique_id_from_tool"
+    language: [ "c", "cpp", "csharp", "go", "java", "javascript", "kotlin", "objc", "php", "python", "ruby", "rust", "scala", "swift", "terraform", "typescript" ]
+    env:
+      - EXCLUDED_PATHS_JSON
+      - AGENT_FULL_MAX_FILES
+      - AGENT_FULL_MAX_BYTES
+      - AGENT_FULL_MAX_FILE_BYTES
+      - AGENT_FULL_MAX_FINDINGS

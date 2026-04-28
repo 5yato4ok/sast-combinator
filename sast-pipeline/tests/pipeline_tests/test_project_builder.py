@@ -179,6 +179,61 @@ def test_configure_project_run_analyses_happy_path(monkeypatch, tmp_path):
     assert result["tmp_analyzer_config_path"] == dummy_cfg_path
     # The trim_path should equal the original project_path in the launch_description file
     assert result["trim_path"] == os.path.abspath("/tmp/my_project")
+    assert result["analyzer_outcomes"] == []
+
+
+def test_configure_project_run_analyses_merges_agent_bridge_outcomes(monkeypatch, tmp_path):
+    class FixedDatetime:
+        @classmethod
+        def now(cls):
+            from datetime import datetime
+            return datetime(2020, 1, 1, 12, 34, 56)
+
+    monkeypatch.setattr(pb, "datetime", FixedDatetime)
+    script = tmp_path / "proj_config.py"
+    script.write_text("print('hello')")
+    context_dir = tmp_path / "context"
+    context_dir.mkdir()
+    dummy_cfg_path = str(tmp_path / "analyzers_out.yaml")
+    analyzer_cfg = make_dummy_analyzer_config(tmp_cfg_path=dummy_cfg_path)
+
+    monkeypatch.setattr(du, "build_image", lambda **kwargs: None)
+    monkeypatch.setattr(du, "construct_container_name", lambda image, pipeline_id: f"sast_{image}_{pipeline_id}")
+
+    def fake_run_container(*, image, pipeline_id, name=None, volumes=None, volumes_from=None, env=None, args=None):
+        for host_path, container_path in volumes.items():
+            if container_path == "/shared/output":
+                launch_file = Path(host_path) / "launch_description.json"
+                launch_file.write_text(json.dumps({
+                    "launched_analyzers": ["semgrep"],
+                    "project_path": os.path.abspath("/tmp/my_project"),
+                    "analyzer_outcomes": [{"name": "semgrep", "status": "success"}],
+                }))
+
+    monkeypatch.setattr(du, "run_container", fake_run_container)
+    monkeypatch.setattr(
+        pb.agent_bridge_runner,
+        "run_agent_bridge_analyzers",
+        lambda **kwargs: [{"name": "agent-security", "status": "missing_result", "degraded": True}],
+    )
+
+    result = pb.configure_project_run_analyses(
+        script_path=str(script),
+        output_dir=str(tmp_path / "out"),
+        languages=["py"],
+        analyzer_config=analyzer_cfg,
+        dockerfile_path="Dockerfile",
+        context_dir=str(context_dir),
+        project_path="/tmp/my_project",
+        pipeline_id="pid",
+        bridge_client=object(),
+        agent_bridge_runtime_env={"BASE_COMMIT": "abc"},
+    )
+
+    assert result["analyzer_outcomes"] == [
+        {"name": "semgrep", "status": "success"},
+        {"name": "agent-security", "status": "missing_result", "degraded": True},
+    ]
 
 
 def test_configure_project_run_analyses_missing_script(monkeypatch, tmp_path):

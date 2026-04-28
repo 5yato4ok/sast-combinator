@@ -221,7 +221,7 @@ def test_run_selected_analyzers_exclude_slow(monkeypatch, tmp_path):
     monkeypatch.setattr(
         ar,
         "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, env_vars: run_calls.append((image, builder_container, args, project_path, output_dir, env_vars)),
+        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append((image, builder_container, args, project_path, output_dir, env_vars)),
     )
     out_dir = tmp_path / "out"
     # Ensure the output directory exists prior to invocation
@@ -279,7 +279,7 @@ def test_run_selected_analyzers_specific_list(monkeypatch, tmp_path):
     monkeypatch.setattr(
         ar,
         "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, env_vars: run_calls.append(image),
+        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append(image),
     )
     out_dir = tmp_path / "out"
     out_dir.mkdir()
@@ -328,7 +328,7 @@ def test_run_selected_analyzers_skip_builder_on_non_compile_project(monkeypatch,
     monkeypatch.setattr(
         ar,
         "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, env_vars: run_calls.append(image),
+        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append(image),
     )
     out_dir = tmp_path / "out"
     out_dir.mkdir()
@@ -372,7 +372,7 @@ def test_run_selected_analyzers_no_analyzers(monkeypatch, tmp_path):
     monkeypatch.setattr(
         ar,
         "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, env_vars: run_calls.append(image),
+        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append(image),
     )
     # Exclude slow analyzers so that none remain
     out_dir = tmp_path / "out"
@@ -416,7 +416,7 @@ def test_run_selected_analyzers_log_level_injected(monkeypatch, tmp_path):
         yaml.dump(config, fh)
     captured_envs = []
 
-    def fake_run_docker(image, builder_container, args, project_path, output_dir, env_vars):
+    def fake_run_docker(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars):
         captured_envs.append(list(env_vars))
 
     # Monkeypatch build and run helpers

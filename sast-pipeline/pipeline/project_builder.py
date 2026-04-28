@@ -19,6 +19,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from . import agent_bridge_runner
 from . import docker_utils
 
 log = logging.getLogger(__name__)
@@ -42,6 +43,8 @@ def configure_project_run_analyses(
         analyzers=None,
         additional_env=None,
         network: str | None = None,
+        bridge_client=None,
+        agent_bridge_runtime_env=None,
 ):
     """
     Build the builder image and run all configured analyzers.
@@ -173,6 +176,24 @@ def configure_project_run_analyses(
 
     log.info("Builder and analysis finished. Results saved in %s", output_dir)
 
+    agent_outcomes: list[dict] = []
+
+    # agent-bridge analyzers were skipped inside the builder container because
+    # the aist-triage-bridge UDS lives on this host. Run them now so their
+    # result files land in `output_dir` before upload_results_internal reads it.
+    # The caller (AIST or any other host) must pass a constructed bridge_client;
+    # without one we silently skip the phase so standalone sast-pipeline runs
+    # (without AIST) keep working.
+    if bridge_client is not None:
+        agent_outcomes = agent_bridge_runner.run_agent_bridge_analyzers(
+            bridge_client=bridge_client,
+            config_path=tmp_analyzer_config_path,
+            pipeline_id=pipeline_id,
+            project_path=project_path,
+            output_dir=output_dir,
+            runtime_env=agent_bridge_runtime_env or {},
+        )
+
     path_to_launch_description = os.path.join(output_dir, "launch_description.json")
     if Path(path_to_launch_description).exists():
         with Path(path_to_launch_description).open(encoding="utf-8") as f:
@@ -195,8 +216,13 @@ def configure_project_run_analyses(
 
     trim_path = launch_data.get("project_path")
     launch_data = replace_in_dict(launch_data, project_path)
+    existing_outcomes = launch_data.get("analyzer_outcomes") or []
+    launch_data["analyzer_outcomes"] = [*existing_outcomes, *agent_outcomes]
     launch_data["trim_path"] = trim_path
     launch_data["output_dir"] = output_dir
     launch_data["tmp_analyzer_config_path"] = tmp_analyzer_config_path
+
+    with Path(path_to_launch_description).open("w", encoding="utf-8") as f:
+        json.dump(launch_data, f, indent=4, ensure_ascii=False)
 
     return launch_data

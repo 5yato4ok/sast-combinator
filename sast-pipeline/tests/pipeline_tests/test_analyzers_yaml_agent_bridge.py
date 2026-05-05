@@ -47,10 +47,13 @@ def test_skill_name_matches_skill_md_directory(diff_analyzer):
     assert diff_analyzer["skill_name"] == "aist-diff-security-review"
 
 
-def test_output_type_is_generic_findings_import(diff_analyzer):
-    # Maps via aist.internal_upload.resolve_scan_type to the "Generic Findings
-    # Import" scan_type that DefaultImporter parses.
-    assert diff_analyzer["output_type"] == "Generic Findings Import"
+def test_output_type_uses_dedicated_claude_scan_type(diff_analyzer):
+    # Maps via aist.internal_upload.resolve_scan_type to the "Claude Diff
+    # Security" scan_type whose parser (subclass of GenericParser) the AIST
+    # app installs in factory.PARSERS at startup. The dedicated test_type
+    # name lets canonical dedupe handle these findings as a first-class
+    # scanner instead of the generic catch-all.
+    assert diff_analyzer["output_type"] == "Claude Diff Security"
 
 
 def test_result_filename_matches_skill_contract(diff_analyzer):
@@ -94,8 +97,8 @@ def test_full_skill_name_matches_skill_md_directory(full_analyzer):
     assert full_analyzer["skill_name"] == "aist-full-security-review"
 
 
-def test_full_output_type_is_generic_findings_import(full_analyzer):
-    assert full_analyzer["output_type"] == "Generic Findings Import"
+def test_full_output_type_uses_dedicated_claude_scan_type(full_analyzer):
+    assert full_analyzer["output_type"] == "Claude Full Security"
 
 
 def test_full_result_filename_matches_skill_contract(full_analyzer):

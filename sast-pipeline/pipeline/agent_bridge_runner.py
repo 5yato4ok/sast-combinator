@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -77,6 +78,13 @@ def _write_runtime_file(
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(dict(runtime_env), indent=2), encoding="utf-8")
     tmp.replace(path)
+    # The host orchestrator runs as root; the bridge container runs as an
+    # unprivileged user (uid=1000). Make output_dir world-writable so the
+    # bridge can write result files without needing elevated privileges.
+    try:
+        os.chmod(str(path.parent), 0o777)
+    except OSError as exc:
+        log.warning("Could not chmod output_dir %s: %s", path.parent, exc)
 
 
 def _message(*, level: str, code: str, text: object) -> dict[str, str]:

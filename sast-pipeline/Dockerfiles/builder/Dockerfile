@@ -5,7 +5,8 @@ ENV PYTHONPATH=/app
 
 ARG PROJECT_CONFIG_PATH
 
-RUN apt-get update && apt-get install -y \
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y \
     git wget python3 python3-pip curl sudo jq docker.io && \
     pip3 install pyyaml python-dotenv && \
     apt-get clean

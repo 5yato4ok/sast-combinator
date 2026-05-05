@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 
-RUN apt-get update && \
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g' /etc/apt/sources.list.d/ubuntu.sources && \
+    apt-get update && \
     apt-get install -y python3-pip curl git ca-certificates && \
     pip install --no-cache-dir semgrep --break-system-packages && \
     apt-get clean && rm -rf /var/lib/apt/lists/*

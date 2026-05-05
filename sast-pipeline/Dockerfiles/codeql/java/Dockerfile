@@ -1,7 +1,8 @@
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 #TODO: java version must be from project configuration
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y --no-install-recommends \
     bash ca-certificates curl git unzip jq openjdk-21-jdk \
  && rm -rf /var/lib/apt/lists/*
 

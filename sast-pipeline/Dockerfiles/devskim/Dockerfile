@@ -1,7 +1,8 @@
 FROM ubuntu:24.04
 
 # Install dependencies and .NET SDK 8.0
-RUN apt-get update && \
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirrors.txt|g' /etc/apt/sources.list.d/ubuntu.sources && \
+    apt-get update && \
     apt-get install -y wget apt-transport-https software-properties-common gnupg ca-certificates && \
     wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \

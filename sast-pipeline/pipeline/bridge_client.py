@@ -20,6 +20,7 @@ construct it with raw env values.
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 import httpx
@@ -28,7 +29,9 @@ log = logging.getLogger(__name__)
 
 DEFAULT_SOCKET_PATH = "/run/claude-bridge/bridge.sock"
 DEFAULT_ASYNC_TIMEOUT_SECONDS = 10
-DEFAULT_SYNC_TIMEOUT_SECONDS = 1860  # AIST_LOCAL_TRIAGE_TIMEOUT (1800) + 60s buffer
+# Keep in sync with AIST_LOCAL_TRIAGE_TIMEOUT in aist-triage-bridge (default 10800s = 3h).
+# The +60s buffer ensures the bridge always returns a result before the HTTP client gives up.
+DEFAULT_SYNC_TIMEOUT_SECONDS = int(os.environ.get("AIST_LOCAL_TRIAGE_TIMEOUT", "10800")) + 60
 
 _BRIDGE_BASE_URL = "http://localhost"
 _ANALYZE_PATH = "/analyze"

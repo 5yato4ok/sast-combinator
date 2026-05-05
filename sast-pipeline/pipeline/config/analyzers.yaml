@@ -225,7 +225,7 @@ analyzers:
     enabled: true
     time_class: slow
     skill_name: aist-diff-security-review
-    output_type: "Generic Findings Import"
+    output_type: "Claude Diff Security"
     result_file: "claude-diff-security_result.json"
     required_result: true
     truncation_file: "claude-diff-security_truncated.flag"
@@ -247,7 +247,7 @@ analyzers:
     enabled: true
     time_class: slow
     skill_name: aist-full-security-review
-    output_type: "Generic Findings Import"
+    output_type: "Claude Full Security"
     result_file: "claude-full-security_result.json"
     required_result: true
     truncation_file: "claude-full-security_truncated.flag"

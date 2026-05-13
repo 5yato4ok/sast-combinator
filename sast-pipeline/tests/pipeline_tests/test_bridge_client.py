@@ -79,6 +79,10 @@ def test_analyze_sync_posts_full_payload_and_returns_body():
         "source_path": "/tmp/proj",
         "callback_url": "",
         "extra_args": "output_path=/tmp/out runtime_filename=runtime.json",
+        # No auth_env passed at construction → empty subprocess_env in body.
+        # The field is generic and bridge-side defaults to {} when missing,
+        # so this is forward-compat with older bridges that pre-date Task 4.
+        "subprocess_env": {},
     }
 
 
@@ -219,3 +223,108 @@ def test_sync_timeout_default_is_safe():
     # Bridge enforces TRIAGE_TIMEOUT (1800s) internally; the client's HTTP
     # timeout MUST be larger so we don't read-time-out before the bridge does.
     assert DEFAULT_SYNC_TIMEOUT_SECONDS > 1800
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# auth_env passthrough (Task 5)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_analyze_sync_forwards_auth_env_as_subprocess_env():
+    """A generic ``auth_env`` kwarg at construction time must surface in the
+    POST body under the bridge's generic ``subprocess_env`` field.
+
+    Invariant I2 — neither parameter name contains "claude" / "oauth" /
+    "anthropic"; the bridge is agent-agnostic at this layer.
+    """
+    response = _make_response(payload={"status": "success", "detail": ""})
+    with patch("pipeline.bridge_client.httpx.Client") as fake_client:
+        fake_client.return_value.__enter__.return_value.post.return_value = response
+
+        client = BridgeClient(
+            socket_path="/tmp/test.sock",
+            auth_env={"CLAUDE_CODE_OAUTH_TOKEN": "oat_xxx"},
+        )
+        client.analyze_sync(skill_name="s", project_id="p", source_path="/x")
+
+    instance = fake_client.return_value.__enter__.return_value
+    call = instance.post.call_args
+    payload = call.kwargs["json"]
+    assert payload["subprocess_env"] == {"CLAUDE_CODE_OAUTH_TOKEN": "oat_xxx"}
+
+
+def test_analyze_async_forwards_auth_env_as_subprocess_env():
+    response = _make_response(payload={"accepted": True})
+    response.status_code = 202
+    with patch("pipeline.bridge_client.httpx.Client") as fake_client:
+        fake_client.return_value.__enter__.return_value.post.return_value = response
+
+        client = BridgeClient(
+            socket_path="/tmp/test.sock",
+            auth_env={"CLAUDE_CODE_OAUTH_TOKEN": "oat_yyy"},
+        )
+        client.analyze_async(
+            skill_name="aist-finding-triage",
+            project_id="p-async",
+            source_path="/x",
+            callback_url="",
+        )
+
+    instance = fake_client.return_value.__enter__.return_value
+    payload = instance.post.call_args.kwargs["json"]
+    assert payload["subprocess_env"] == {"CLAUDE_CODE_OAUTH_TOKEN": "oat_yyy"}
+
+
+def test_no_auth_env_omits_subprocess_env_or_sends_empty_dict():
+    """Without auth_env the field is an empty dict (not absent).
+
+    Either form is valid for the bridge (Pydantic Field default), but the
+    client picks one and sticks with it for test determinism. Empty dict
+    is preferred — keeps the payload shape constant across runs.
+    """
+    response = _make_response(payload={"status": "success"})
+    with patch("pipeline.bridge_client.httpx.Client") as fake_client:
+        fake_client.return_value.__enter__.return_value.post.return_value = response
+
+        client = BridgeClient(socket_path="/tmp/test.sock")
+        client.analyze_sync(skill_name="s", project_id="p", source_path="/x")
+
+    payload = (
+        fake_client.return_value.__enter__.return_value.post.call_args.kwargs["json"]
+    )
+    assert payload["subprocess_env"] == {}
+
+
+def test_auth_env_keys_logged_but_values_never_logged(caplog=None):
+    """Defence in depth — if the bridge HTTP call fails and we log the
+    failure, the token value MUST NOT appear in any log record.
+
+    The client may legitimately log the *keys* (so operators can see
+    "we tried to inject CLAUDE_CODE_OAUTH_TOKEN") but never the values.
+    """
+    import logging
+
+    records: list[str] = []
+
+    class _Sink(logging.Handler):
+        def emit(self, rec):
+            records.append(rec.getMessage())
+
+    target = logging.getLogger("pipeline.bridge_client")
+    sink = _Sink()
+    target.addHandler(sink)
+    try:
+        with patch(
+            "pipeline.bridge_client.httpx.Client",
+            side_effect=httpx.ConnectError("socket missing"),
+        ):
+            client = BridgeClient(
+                socket_path="/tmp/test.sock",
+                auth_env={"CLAUDE_CODE_OAUTH_TOKEN": "oat_TOP_SECRET_VALUE"},
+            )
+            client.analyze_sync(skill_name="s", project_id="p", source_path="/x")
+    finally:
+        target.removeHandler(sink)
+
+    for line in records:
+        assert "oat_TOP_SECRET_VALUE" not in line, f"secret leaked: {line!r}"

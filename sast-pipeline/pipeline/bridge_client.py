@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from typing import Any, Mapping
 
 import httpx
 
@@ -52,10 +52,28 @@ class BridgeClient:
         socket_path: str = DEFAULT_SOCKET_PATH,
         sync_timeout_seconds: int = DEFAULT_SYNC_TIMEOUT_SECONDS,
         async_timeout_seconds: int = DEFAULT_ASYNC_TIMEOUT_SECONDS,
+        auth_env: Mapping[str, str] | None = None,
     ) -> None:
         self._socket_path = socket_path
         self._sync_timeout = sync_timeout_seconds
         self._async_timeout = async_timeout_seconds
+        # Generic per-client env overlay surfaced to the bridge as
+        # ``subprocess_env`` in the JSON body. The bridge merges this into
+        # the spawn env of ``claude -p``. ``BridgeClient`` is agent-agnostic:
+        # the caller (typically the Django side via
+        # ``build_bridge_client_from_settings``) decides what env vars
+        # belong here (e.g. Claude OAuth token, future agents' credentials).
+        # Architectural invariant I2 — no Claude-specific names in this
+        # signature.
+        self._auth_env: dict[str, str] = dict(auth_env or {})
+        if self._auth_env:
+            # Log only key names — never values. Operators benefit from
+            # seeing which env vars are being injected (e.g. for debugging
+            # missing credentials), but the values themselves are secrets.
+            log.debug(
+                "BridgeClient configured with auth_env keys: %s",
+                sorted(self._auth_env.keys()),
+            )
 
     # ------------------------------------------------------------------ #
     # Public API                                                           #
@@ -88,6 +106,7 @@ class BridgeClient:
             callback_url=callback_url,
             extra_args=extra_args,
         )
+        payload["subprocess_env"] = dict(self._auth_env)
         try:
             with self._client(timeout=self._async_timeout) as client:
                 resp = client.post(_BRIDGE_BASE_URL + _ANALYZE_PATH, json=payload)
@@ -131,6 +150,7 @@ class BridgeClient:
             callback_url="",
             extra_args=extra_args,
         )
+        payload["subprocess_env"] = dict(self._auth_env)
         try:
             with self._client(timeout=self._sync_timeout) as client:
                 resp = client.post(_BRIDGE_BASE_URL + _ANALYZE_SYNC_PATH, json=payload)
@@ -177,7 +197,9 @@ class BridgeClient:
         source_path: str,
         callback_url: str,
         extra_args: str,
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
+        # Returns the flat request fields. Callers augment with
+        # ``subprocess_env`` (Task 5) after construction.
         return {
             "skill_name": skill_name,
             "project_id": project_id,

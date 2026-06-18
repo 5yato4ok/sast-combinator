@@ -263,3 +263,48 @@ analyzers:
       - AGENT_FULL_MAX_BYTES
       - AGENT_FULL_MAX_FILE_BYTES
       - AGENT_FULL_MAX_FINDINGS
+
+  - name: claude-intake-review
+    commentary: "Agent-driven supply-chain intake review of untrusted third-party source (e.g. an external plugin) before integration. Inverted threat model — the author is a potential adversary. Whole-revision scan; reuses the full-scan budget keys. Runs through aist-triage-bridge from the host (analyzer_runner skips this entry inside the builder container)."
+    type: agent-bridge
+    enabled: true
+    time_class: slow
+    skill_name: aist-intake-review
+    output_type: "Claude Intake Review"
+    result_file: "claude-intake-review_result.json"
+    required_result: true
+    truncation_file: "claude-intake-review_truncated.flag"
+    artifacts:
+      ai_response:
+        path: "claude-intake-review_ai_response.json"
+        format: "aist_ai_finding_response_v1"
+        match_key: "unique_id_from_tool"
+    language: [ "c", "cpp", "csharp", "go", "java", "javascript", "kotlin", "objc", "php", "python", "ruby", "rust", "scala", "swift", "terraform", "typescript" ]
+    env:
+      - EXCLUDED_PATHS_JSON
+      - AGENT_FULL_MAX_FILES
+      - AGENT_FULL_MAX_BYTES
+      - AGENT_FULL_MAX_FILE_BYTES
+      - AGENT_FULL_MAX_FINDINGS
+
+  - name: claude-intake-diff
+    commentary: "Agent-driven supply-chain intake review of an UPDATE to untrusted third-party source. Inverted threat model — reviews the git diff between the previously-accepted revision and HEAD for diff-introduced malicious behaviour. Reuses the diff-scan baseline/budget keys. Runs through aist-triage-bridge from the host (analyzer_runner skips this entry inside the builder container)."
+    type: agent-bridge
+    enabled: true
+    time_class: slow
+    skill_name: aist-intake-diff-review
+    output_type: "Claude Intake Diff"
+    result_file: "claude-intake-diff_result.json"
+    required_result: true
+    truncation_file: "claude-intake-diff_truncated.flag"
+    artifacts:
+      ai_response:
+        path: "claude-intake-diff_ai_response.json"
+        format: "aist_ai_finding_response_v1"
+        match_key: "unique_id_from_tool"
+    language: [ "c", "cpp", "csharp", "go", "java", "javascript", "kotlin", "objc", "php", "python", "ruby", "rust", "scala", "swift", "terraform", "typescript" ]
+    env:
+      - BASE_COMMIT
+      - EXCLUDED_PATHS_JSON
+      - CLAUDE_DIFF_MAX_FILES
+      - CLAUDE_DIFF_MAX_BYTES

@@ -151,3 +151,99 @@ def test_full_language_list_matches_diff(diff_analyzer, full_analyzer):
     # them aligned avoids the trap of one analyzer running on a project where
     # the other is silently skipped.
     assert sorted(full_analyzer["language"]) == sorted(diff_analyzer["language"])
+
+
+# ----------------------------------------------------------------------- #
+# claude-intake-review / claude-intake-diff: supply-chain intake review of #
+# untrusted third-party source. Same agent-bridge contract; intake-review  #
+# reuses the full-scan budget keys, intake-diff reuses the diff baseline.  #
+# ----------------------------------------------------------------------- #
+
+
+@pytest.fixture(scope="module")
+def intake_full_analyzer():
+    return _load_analyzer("claude-intake-review")
+
+
+@pytest.fixture(scope="module")
+def intake_diff_analyzer():
+    return _load_analyzer("claude-intake-diff")
+
+
+def test_intake_full_contract(intake_full_analyzer):
+    a = intake_full_analyzer
+    assert a["type"] == "agent-bridge"
+    assert a["skill_name"] == "aist-intake-review"
+    assert a["output_type"] == "Claude Intake Review"
+    assert a["result_file"] == "claude-intake-review_result.json"
+    assert a["required_result"] is True
+    assert a["truncation_file"] == "claude-intake-review_truncated.flag"
+    assert a.get("enabled", True) is True
+    assert a["time_class"] == "slow"
+    ai = a["artifacts"]["ai_response"]
+    assert ai["path"] == "claude-intake-review_ai_response.json"
+    assert ai["format"] == "aist_ai_finding_response_v1"
+    assert ai["match_key"] == "unique_id_from_tool"
+
+
+def test_intake_full_uses_full_budget_keys(intake_full_analyzer):
+    env = set(intake_full_analyzer.get("env") or [])
+    expected = {
+        "EXCLUDED_PATHS_JSON",
+        "AGENT_FULL_MAX_FILES",
+        "AGENT_FULL_MAX_BYTES",
+        "AGENT_FULL_MAX_FILE_BYTES",
+        "AGENT_FULL_MAX_FINDINGS",
+    }
+    assert not (expected - env), f"missing env vars: {sorted(expected - env)!r}"
+    # Whole-revision scan — no diff baseline.
+    assert "BASE_COMMIT" not in env
+
+
+def test_intake_diff_contract(intake_diff_analyzer):
+    a = intake_diff_analyzer
+    assert a["type"] == "agent-bridge"
+    assert a["skill_name"] == "aist-intake-diff-review"
+    assert a["output_type"] == "Claude Intake Diff"
+    assert a["result_file"] == "claude-intake-diff_result.json"
+    assert a["required_result"] is True
+    assert a["truncation_file"] == "claude-intake-diff_truncated.flag"
+    assert a.get("enabled", True) is True
+    assert a["time_class"] == "slow"
+    ai = a["artifacts"]["ai_response"]
+    assert ai["path"] == "claude-intake-diff_ai_response.json"
+    assert ai["format"] == "aist_ai_finding_response_v1"
+    assert ai["match_key"] == "unique_id_from_tool"
+
+
+def test_intake_diff_uses_diff_baseline_keys(intake_diff_analyzer):
+    env = set(intake_diff_analyzer.get("env") or [])
+    expected = {
+        "BASE_COMMIT",
+        "EXCLUDED_PATHS_JSON",
+        "CLAUDE_DIFF_MAX_FILES",
+        "CLAUDE_DIFF_MAX_BYTES",
+    }
+    assert not (expected - env), f"missing env vars: {sorted(expected - env)!r}"
+
+
+def test_intake_language_lists_match_siblings(diff_analyzer, intake_full_analyzer, intake_diff_analyzer):
+    # Intake reviews must run on the same language set as the security
+    # analyzers — otherwise a plugin in a given language is silently skipped.
+    assert sorted(intake_full_analyzer["language"]) == sorted(diff_analyzer["language"])
+    assert sorted(intake_diff_analyzer["language"]) == sorted(diff_analyzer["language"])
+
+
+def test_intake_result_filenames_distinct_from_security_analyzers():
+    # The intake artifacts must not collide with the security analyzers'
+    # files in the shared output directory.
+    names = {
+        _load_analyzer(n)["result_file"]
+        for n in (
+            "claude-diff-security",
+            "claude-full-security",
+            "claude-intake-review",
+            "claude-intake-diff",
+        )
+    }
+    assert len(names) == 4

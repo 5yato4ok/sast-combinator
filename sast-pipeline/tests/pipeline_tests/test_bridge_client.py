@@ -86,6 +86,48 @@ def test_analyze_sync_posts_full_payload_and_returns_body():
     }
 
 
+def test_analyze_sync_includes_model_when_provided():
+    response = _make_response(payload={"status": "success", "detail": ""})
+    with patch("pipeline.bridge_client.httpx.Client") as fake_client:
+        fake_client.return_value.__enter__.return_value.post.return_value = response
+        BridgeClient(socket_path="/tmp/test.sock").analyze_sync(
+            skill_name="aist-diff-security-review",
+            project_id="pipe-1",
+            source_path="/tmp/proj",
+            model="opus",
+        )
+    instance = fake_client.return_value.__enter__.return_value
+    payload = instance.post.call_args.kwargs["json"]
+    assert payload["model"] == "opus"
+
+
+def test_analyze_sync_omits_model_key_when_not_provided():
+    # Forward-compat: bridges predating the field never see an empty model key.
+    response = _make_response(payload={"status": "success", "detail": ""})
+    with patch("pipeline.bridge_client.httpx.Client") as fake_client:
+        fake_client.return_value.__enter__.return_value.post.return_value = response
+        BridgeClient(socket_path="/tmp/test.sock").analyze_sync(
+            skill_name="s", project_id="p", source_path="/tmp/proj",
+        )
+    payload = fake_client.return_value.__enter__.return_value.post.call_args.kwargs["json"]
+    assert "model" not in payload
+
+
+def test_analyze_async_includes_model_when_provided():
+    response = _make_response(payload={"status": "accepted"})
+    with patch("pipeline.bridge_client.httpx.Client") as fake_client:
+        fake_client.return_value.__enter__.return_value.post.return_value = response
+        BridgeClient(socket_path="/tmp/test.sock").analyze_async(
+            skill_name="aist-finding-triage",
+            project_id="pipe-1",
+            source_path="/tmp/proj",
+            callback_url="https://cb.example/x",
+            model="claude-opus-4-8",
+        )
+    payload = fake_client.return_value.__enter__.return_value.post.call_args.kwargs["json"]
+    assert payload["model"] == "claude-opus-4-8"
+
+
 def test_analyze_sync_returns_error_dict_on_non_200():
     response = _make_response(status_code=500, payload={"status": "error", "detail": "x"})
     with patch("pipeline.bridge_client.httpx.Client") as fake_client:

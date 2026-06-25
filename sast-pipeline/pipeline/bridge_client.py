@@ -87,6 +87,7 @@ class BridgeClient:
         source_path: str,
         callback_url: str = "",
         extra_args: str = "",
+        model: str = "",
     ) -> int:
         """Fire-and-forget POST to ``/analyze``.
 
@@ -105,6 +106,7 @@ class BridgeClient:
             source_path=source_path,
             callback_url=callback_url,
             extra_args=extra_args,
+            model=model,
         )
         payload["subprocess_env"] = dict(self._auth_env)
         try:
@@ -134,6 +136,7 @@ class BridgeClient:
         project_id: str,
         source_path: str,
         extra_args: str = "",
+        model: str = "",
     ) -> dict[str, Any]:
         """Block until ``/analyze-sync`` returns the bridge's CallbackPayload.
 
@@ -149,6 +152,7 @@ class BridgeClient:
             source_path=source_path,
             callback_url="",
             extra_args=extra_args,
+            model=model,
         )
         payload["subprocess_env"] = dict(self._auth_env)
         try:
@@ -197,16 +201,24 @@ class BridgeClient:
         source_path: str,
         callback_url: str,
         extra_args: str,
+        model: str = "",
     ) -> dict[str, Any]:
         # Returns the flat request fields. Callers augment with
         # ``subprocess_env`` (Task 5) after construction.
-        return {
+        payload: dict[str, Any] = {
             "skill_name": skill_name,
             "project_id": project_id,
             "source_path": source_path,
             "callback_url": callback_url,
             "extra_args": extra_args,
         }
+        # Only emit ``model`` when a caller actually requested one. Omitting
+        # the key for the default case keeps the wire payload unchanged for
+        # bridges that pre-date this field (they ignore unknown keys anyway)
+        # and lets the bridge fall back to its own CLAUDE_BRIDGE_MODEL default.
+        if model:
+            payload["model"] = model
+        return payload
 
     def _client(self, *, timeout: int) -> httpx.Client:
         transport = httpx.HTTPTransport(uds=self._socket_path)

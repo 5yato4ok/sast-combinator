@@ -247,12 +247,19 @@ def run_agent_bridge_analyzers(
             "runtime_filename": runtime_filename,
         })
 
+        # Optional per-analyzer model override. Each agent-bridge entry in
+        # analyzers.yaml may set ``model: <alias-or-id>`` (e.g. ``opus``) to
+        # run that skill on a specific Claude model; empty/absent lets the
+        # bridge apply its own default (CLAUDE_BRIDGE_MODEL or the CLI default).
+        model = str(analyzer.get("model") or "")
+
         try:
             response = bridge_client.analyze_sync(
                 skill_name=str(skill_name),
                 project_id=pipeline_id,
                 source_path=project_path,
                 extra_args=extra_args,
+                model=model,
             )
             if response.get("status") != "success":
                 outcomes.append(

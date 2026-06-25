@@ -225,6 +225,10 @@ analyzers:
     enabled: true
     time_class: slow
     skill_name: aist-diff-security-review
+    # Claude model for this skill: a CLI alias (opus/sonnet/haiku) or full id
+    # (e.g. claude-opus-4-8). Forwarded by the bridge as `claude -p --model`.
+    # Empty/absent → bridge default (CLAUDE_BRIDGE_MODEL or the CLI default).
+    model: opus
     output_type: "Claude Diff Security"
     result_file: "claude-diff-security_result.json"
     required_result: true
@@ -247,6 +251,7 @@ analyzers:
     enabled: true
     time_class: slow
     skill_name: aist-full-security-review
+    model: opus
     output_type: "Claude Full Security"
     result_file: "claude-full-security_result.json"
     required_result: true
@@ -270,6 +275,7 @@ analyzers:
     enabled: true
     time_class: slow
     skill_name: aist-intake-review
+    model: opus
     output_type: "Claude Intake Review"
     result_file: "claude-intake-review_result.json"
     required_result: true
@@ -293,6 +299,7 @@ analyzers:
     enabled: true
     time_class: slow
     skill_name: aist-intake-diff-review
+    model: opus
     output_type: "Claude Intake Diff"
     result_file: "claude-intake-diff_result.json"
     required_result: true

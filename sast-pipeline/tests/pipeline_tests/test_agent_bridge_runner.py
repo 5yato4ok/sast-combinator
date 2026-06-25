@@ -85,6 +85,42 @@ def test_invokes_client_writes_runtime_sidecar_and_returns_success_outcome(tmp_p
     assert outcomes[0]["result_exists"] is True
 
 
+def test_model_from_config_is_forwarded_to_bridge(tmp_path):
+    cfg = _write_config(tmp_path, [_agent(model="opus")])
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    (output_dir / "claude-diff-security_result.json").write_text("{}", encoding="utf-8")
+
+    client = _make_client()
+    abr.run_agent_bridge_analyzers(
+        bridge_client=client,
+        config_path=cfg,
+        pipeline_id="pipe-1",
+        project_path="/tmp/proj",
+        output_dir=str(output_dir),
+    )
+
+    assert client.analyze_sync.call_args.kwargs["model"] == "opus"
+
+
+def test_missing_model_in_config_forwards_empty_string(tmp_path):
+    cfg = _write_config(tmp_path, [_agent()])  # no model key
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    (output_dir / "claude-diff-security_result.json").write_text("{}", encoding="utf-8")
+
+    client = _make_client()
+    abr.run_agent_bridge_analyzers(
+        bridge_client=client,
+        config_path=cfg,
+        pipeline_id="pipe-1",
+        project_path="/tmp/proj",
+        output_dir=str(output_dir),
+    )
+
+    assert client.analyze_sync.call_args.kwargs["model"] == ""
+
+
 def test_required_result_missing_after_success_returns_missing_result_outcome(tmp_path):
     cfg = _write_config(tmp_path, [_agent()])
     output_dir = tmp_path / "out"

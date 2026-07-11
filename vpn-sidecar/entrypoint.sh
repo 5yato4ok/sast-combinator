@@ -163,7 +163,9 @@ echo "[VPN] Starting HTTP CONNECT proxy (tinyproxy) on :1080..."
 _OWN_IP="$(ip -4 addr show eth0 2>/dev/null | awk '/inet /{split($2,a,"/"); print a[1]; exit}')"
 _LISTEN_IP="${_OWN_IP:-0.0.0.0}"
 
-# AIST_ALLOWED_IP is the celeryworker's eth0 IP; injected by vpn_sidecar_context.
+# AIST_ALLOWED_IP is a comma/space separated list of client IPs allowed to use
+# the proxy.  Ephemeral pipeline sidecar passes one IP (the celeryworker); the
+# warm egress passes several (web + worker).  Injected by the Python caller.
 _ALLOWED_IP="${AIST_ALLOWED_IP:-}"
 
 {
@@ -171,9 +173,17 @@ _ALLOWED_IP="${AIST_ALLOWED_IP:-}"
   echo "Listen ${_LISTEN_IP}"
   echo "Timeout 600"
   echo "Allow 127.0.0.1"
-  [ -n "$_ALLOWED_IP" ] && echo "Allow ${_ALLOWED_IP}"
+  # One Allow line per IP in the list (split on comma/space).
+  for _ip in $(printf '%s' "$_ALLOWED_IP" | tr ',' ' '); do
+    [ -n "$_ip" ] && echo "Allow ${_ip}"
+  done
   echo "DisableViaHeader Yes"
-  echo "LogLevel Critical"
+  # Connect-level log to a FILE (not stdout, so `docker logs` stays clean and
+  # leaks no internal hostnames).  The warm-egress idle reaper reads only this
+  # file's mtime — never its content — to detect last use.  Ephemeral sidecars
+  # simply never have their reaper look at it.
+  echo "LogFile \"/tmp/tinyproxy-access.log\""
+  echo "LogLevel Connect"
 } > /tmp/tinyproxy.conf
 
 tinyproxy -c /tmp/tinyproxy.conf &

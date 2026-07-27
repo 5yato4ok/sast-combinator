@@ -1,15 +1,16 @@
-import yaml
-import os
 import copy
 import logging
+import os
 import textwrap
 from pathlib import Path
-from .docker_utils import get_pipeline_id
+
+import yaml
 
 log = logging.getLogger(__name__)
 
 
 class AnalyzersConfigHelper:
+    SAST_EXECUTION_TYPE = "sast"
     ANALYZER_ORDER = {
         "fast": 0,
         "medium": 1,
@@ -51,15 +52,44 @@ class AnalyzersConfigHelper:
             raise Exception("Analyzers list is empty")
 
         # Getting names without configurations
-        supported_analyzers = list({analyzer.get("name")
-                                    for analyzer in self.config.get("analyzers", []) if analyzer.get("enabled", True)})
+        supported_analyzers = list({
+            analyzer.get("name")
+            for analyzer in self.config.get("analyzers", [])
+            if analyzer.get("enabled", True) and self._is_sast_analyzer(analyzer)
+        })
         return supported_analyzers
 
     def get_all_images(self):
         result = set()
         for analyzer in self.analyzers:
-            result.add(analyzer.get("image"))
+            if self._is_sast_analyzer(analyzer):
+                result.add(analyzer.get("image"))
         return result
+
+    def get_execution_provider(self, execution_type):
+        normalized_type = str(execution_type).lower()
+        providers = [
+            copy.deepcopy(analyzer)
+            for analyzer in self.config.get("analyzers", [])
+            if analyzer.get("enabled", True)
+            and str(analyzer.get("execution_type", self.SAST_EXECUTION_TYPE)).lower() == normalized_type
+        ]
+        if len(providers) != 1:
+            raise ValueError(f"Expected exactly one enabled {normalized_type} execution provider")
+        return providers[0]
+
+    def get_standalone_execution_types(self):
+        return {
+            str(analyzer.get("execution_type", "")).lower()
+            for analyzer in self.config.get("analyzers", [])
+            if analyzer.get("enabled", True)
+            and analyzer.get("type") == "standalone"
+            and analyzer.get("execution_type")
+        }
+
+    @classmethod
+    def _is_sast_analyzer(cls, analyzer):
+        return str(analyzer.get("execution_type", cls.SAST_EXECUTION_TYPE)).lower() == cls.SAST_EXECUTION_TYPE
 
     @staticmethod
     def convert_languages(languages):
@@ -79,6 +109,8 @@ class AnalyzersConfigHelper:
         langs_in_order = set()
 
         for a in self.analyzers:
+            if not self._is_sast_analyzer(a):
+                continue
             lang = a.get("language")
             if isinstance(lang, str):
                 langs_in_order.add(lang)
@@ -102,9 +134,15 @@ class AnalyzersConfigHelper:
         analyzers = self.config.get("analyzers", []) if show_only_parent else self.get_analyzers()
         # Filter analyzers by requested names or enabled flag
         if analyzers_to_run:
-            analyzers = [a for a in analyzers if a.get("name") in analyzers_to_run and a.get("enabled", True)]
+            analyzers = [
+                a
+                for a in analyzers
+                if a.get("name") in analyzers_to_run
+                and a.get("enabled", True)
+                and self._is_sast_analyzer(a)
+            ]
         else:
-            analyzers = [a for a in analyzers if a.get("enabled", True)]
+            analyzers = [a for a in analyzers if a.get("enabled", True) and self._is_sast_analyzer(a)]
         write = 0
         max_time_class = self.ANALYZER_ORDER.get(max_time_class, "slow")
         for a in analyzers:
@@ -129,7 +167,7 @@ class AnalyzersConfigHelper:
                 log.info("Skipping slow analyzer '%s'", name)
                 continue
 
-            if target_languages and not any(l in analyzers_languages for l in target_languages):
+            if target_languages and not any(language in analyzers_languages for language in target_languages):
                 log.info("Skipping not applicable by language analyzer '%s'", name)
                 continue
 
@@ -275,6 +313,8 @@ class AnalyzersConfigHelper:
 
         filtered = []
         for analyzer in self.analyzers:
+            if not self._is_sast_analyzer(analyzer):
+                continue
             langs = set(analyzer.get("language", []))
             has_lang = bool(allowed_langs & langs)
             time_ok = AnalyzersConfigHelper.get_level(analyzer.get("time_class", "slow")) <= max_level

@@ -1,0 +1,786 @@
+{
+  "components": {
+    "schemas": {
+      "V2ErrorSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "INVALID_REQUEST",
+              "UNSUPPORTED_CONTRACT",
+              "UNSUPPORTED_TRIGGER_TYPE",
+              "AUTHENTICATION_FAILED",
+              "PROVIDER_CREDENTIALS_EXPIRED",
+              "POLICY_DENIED",
+              "UNKNOWN_RUN",
+              "IDEMPOTENCY_CONFLICT",
+              "CAPACITY_BUSY",
+              "CAPABILITY_REVISION_MISMATCH",
+              "RUN_NOT_TERMINAL",
+              "NO_ELIGIBLE_STAND",
+              "SOURCE_DRIFT",
+              "REPORT_MISSING",
+              "REPORT_INVALID",
+              "AUDIT_INCOMPLETE",
+              "DEADLINE_EXCEEDED",
+              "RESPONSE_TOO_LARGE",
+              "RATE_LIMITED",
+              "INTERNAL_ERROR"
+            ],
+            "type": "string"
+          },
+          "correlation_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "V2LogEventSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "event_id": {
+            "type": "integer"
+          },
+          "level": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "V2LogsResponseSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/V2LogEventSchema"
+            },
+            "type": "array"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "V2PingResponseSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "type": "string"
+          },
+          "gateway_version": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "V2RunAcceptedSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "type": "string"
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "V2RunMetadataSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "source_commits": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "V2RunRequestSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "capability_revision": {
+            "type": "string"
+          },
+          "contract_version": {
+            "type": "string"
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {},
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "target_id": {
+            "type": "string"
+          },
+          "trigger": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ref": {
+                    "type": "string"
+                  },
+                  "repository_key": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "GIT_BRANCH",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "repository_key",
+                  "type",
+                  "ref"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ref": {
+                    "type": "string"
+                  },
+                  "repository_key": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "GIT_HASH",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "repository_key",
+                  "type",
+                  "ref"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ref": {
+                    "type": "string"
+                  },
+                  "repository_key": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "const": "FILE_HASH",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "repository_key",
+                  "type",
+                  "ref"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "required": [
+          "capability_revision",
+          "contract_version",
+          "correlation_id",
+          "idempotency_key",
+          "target_id",
+          "trigger"
+        ],
+        "type": "object"
+      },
+      "V2RunStatusSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "type": "string"
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "error_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "result_ready": {
+            "type": "boolean"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "selection": {
+            "additionalProperties": {},
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "V2SelectionSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "distance": {
+            "type": "integer"
+          },
+          "relation": {
+            "type": "string"
+          },
+          "stand_id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "V2StopResponseSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "type": "string"
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "error_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "result_ready": {
+            "type": "boolean"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "selection": {
+            "additionalProperties": {},
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "stop_requested": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "V2TargetSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "autonomous_ready": {
+            "type": "boolean"
+          },
+          "capability_revision": {
+            "type": "string"
+          },
+          "contract_revision": {
+            "type": "string"
+          },
+          "defaults": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "parameter_schema": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "repository_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "schema_digest": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "V2TargetsResponseSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "type": "string"
+          },
+          "etag": {
+            "type": "string"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/V2TargetSchema"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "V2TerminalResultSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "audit": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "contract_version": {
+            "type": "string"
+          },
+          "dast_run_metadata": {
+            "$ref": "#/components/schemas/V2RunMetadataSchema"
+          },
+          "report": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "run_id": {
+            "type": "string"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/V2SelectionSchema"
+          },
+          "status": {
+            "type": "string"
+          },
+          "trigger_resolution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/V2TriggerResolutionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "V2TriggerResolutionSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "ref": {
+            "type": "string"
+          },
+          "resolved_at": {
+            "type": "string"
+          },
+          "resolved_commit": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "bearerFormat": "integrator-token",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "DAST integration gateway",
+    "version": "2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/integrations/v2/ping": {
+      "get": {
+        "operationId": "pingIntegrationV2",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2PingResponseSchema"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Authentication error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Ping V2"
+      }
+    },
+    "/integrations/v2/runs": {
+      "post": {
+        "operationId": "startRunV2",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/V2RunRequestSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2RunAcceptedSchema"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Authentication error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Start Run V2"
+      }
+    },
+    "/integrations/v2/runs/{run_id}": {
+      "get": {
+        "operationId": "getRunStatusV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2RunStatusSchema"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Authentication error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Run Status V2"
+      }
+    },
+    "/integrations/v2/runs/{run_id}/logs": {
+      "get": {
+        "operationId": "getRunLogsV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2LogsResponseSchema"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Authentication error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Run Logs V2"
+      }
+    },
+    "/integrations/v2/runs/{run_id}/results": {
+      "get": {
+        "operationId": "getRunResultsV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2TerminalResultSchema"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Authentication error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Run Results V2"
+      }
+    },
+    "/integrations/v2/runs/{run_id}/stop": {
+      "post": {
+        "operationId": "stopRunV2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2StopResponseSchema"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Authentication error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Stop Run V2"
+      }
+    },
+    "/integrations/v2/targets": {
+      "get": {
+        "operationId": "listTargetsV2",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2TargetsResponseSchema"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorSchema"
+                }
+              }
+            },
+            "description": "Authentication error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Targets V2"
+      }
+    }
+  },
+  "tags": []
+}

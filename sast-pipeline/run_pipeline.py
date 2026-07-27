@@ -17,13 +17,15 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import sys
+
+import pipeline.config_utils as config_utils
+import yaml  # type: ignore
 from dotenv import load_dotenv
-from pipeline.project_builder import configure_project_run_analyses
-#from pipeline.defectdojo_api import upload_results
+from pipeline.cli import dispatch_execution_command
 from pipeline.defect_dojo.utils import upload_results
 from pipeline.docker_utils import get_pipeline_id
-import yaml  # type: ignore
-import pipeline.config_utils as config_utils
+from pipeline.project_builder import configure_project_run_analyses
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +62,13 @@ def load_config(path: str) -> dict:
         raise RuntimeError(f"Failed to load configuration from {path}: {exc}")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if dispatch_execution_command(arguments, analyzer_config=ANALYZERS_CONFIG):
+        return
+    if arguments[:1] == ["sast"]:
+        arguments = arguments[1:]
+
     parser = argparse.ArgumentParser(
         description=(
             "Build and analyse a project using configured analyzers, "
@@ -177,7 +185,7 @@ def main() -> None:
         ),
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
 
     # Apply configuration file overrides
     if args.config:

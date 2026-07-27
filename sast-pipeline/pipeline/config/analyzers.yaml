@@ -47,27 +47,16 @@ analyzers:
     language: [ "csharp", "go", "java","javascript","kotlin","python","typescript","c", "cpp","jsx", "ruby", "scala", "swift", "rust","php","terraform", ]
 
   - name: dast
-    commentary: "External-triggered autonomous DAST run via the integration gateway on the DAST VM. Launch/import/log/stop are all the standard analyzer flow — see dast/runtime/reports/_plans/aist-dast-integration-plan.md. No-ops (writes an empty finding set) when DAST_GATEWAY_URL/DAST_INTEGRATOR_TOKEN aren't configured for the project, or when the gateway reports 409 busy."
-    type: simple
-    image: sast-dast
+    commentary: "Standalone DAST gateway execution. This common-catalog entry is dispatched only through pipeline.dast.DastExecutor and is excluded from SAST source/build/analyzer fan-in."
+    type: standalone
+    execution_type: dast
+    image: aist-dast-connector:v2
+    dockerfile_path: "/app/Dockerfiles/dast_connector"
     enabled: true
     time_class: slow
-    # Dedicated scan_type (not the generic "Generic Findings Import" bucket) so DAST findings
-    # route through canonical dedupe like the claude-* analyzers — see aist/dedupe/custom.py's
-    # SUPPORTED_SCAN_TYPES and aist/parser_overrides.py's DastReportParser/install_dast_parser.
     output_type: "DAST Autonomous Scan"
     result_file: dast_result.json
-    # All languages, like the claude-* entries — a language filter must never drop this
-    # analyzer, since DAST tests the deployed target rather than any one source language.
     language: [ "c", "cpp", "csharp", "go", "java", "javascript", "kotlin", "objc", "php", "python", "ruby", "rust", "scala", "swift", "terraform", "typescript" ]
-    env:
-      - DAST_GATEWAY_URL
-      - DAST_INTEGRATOR_TOKEN
-      - DAST_TARGET
-      - DAST_TIER
-      - DAST_DEPTH
-      - PROJECT_VERSION
-      - PIPELINE_ID
 
   - name: codechecker
     type: builder

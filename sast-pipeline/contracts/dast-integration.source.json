@@ -1,0 +1,7 @@
+{
+  "artifact": "dast-integration.openapi.json",
+  "artifact_sha256": "2d2273cd68466715317adcb007ba45002f7ca4bf21029e948a9d3c01532a6c61",
+  "provider_artifact": "contracts/dast-integration.openapi.json",
+  "provider_git_revision": "de3bb84eab76b685f43602c177e2677130c1c277",
+  "provider_repository": "dast/Claude_Project_Folder"
+}

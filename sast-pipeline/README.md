@@ -1,28 +1,31 @@
-# SAST pipeline runtime
+# Pipeline execution runtime
 
-This package prepares a source workspace, runs the selected analyzers, and
-returns their reports to AIST. Product admission, tenant authorization, finding
-review, and durable pipeline state remain in the Django control plane.
+This package provides the library and command-line execution boundary for SAST
+and standalone providers such as DAST. AIST workers load the package directly;
+it is not a long-lived service. Product admission, tenant authorization,
+capacity, recovery policy, finding review, and durable pipeline state remain in
+the Django control plane.
 
 For the reader-facing architecture, see the parent repository's
 `docs/architecture/sast-pipeline-runtime.md`.
 
 ## Execution model
 
-1. The builder container executes the project initialization script and exposes
-   the prepared source tree.
-2. Selected `simple` or `builder` analyzers run in their configured images and
-   write result files to the shared output directory.
-3. `agent-bridge` analyzers run through the platform's local AI bridge after the
-   builder stage.
-4. `standalone` providers, such as DAST, use their own executor and do not join
-   the SAST analyzer fan-out.
-5. The platform imports declared result files and persists analyzer outcomes.
+1. One provider registry selects the execution path from a caller-supplied
+   execution identity and typed input.
+2. SAST prepares a workspace through the builder, then runs selected `simple`,
+   `builder`, or `agent-bridge` analyzers and returns partitioned reports.
+3. A `standalone` provider uses its own executor. DAST creates one connector
+   container and returns a bounded outcome with a recovery checkpoint; it does
+   not join the SAST analyzer fan-out.
+4. The caller imports reports or persists the returned terminal outcome and
+   checkpoint.
 
 The canonical analyzer catalog is
 `pipeline/config/analyzers.yaml`. Each entry declares its runtime type, image,
 time class, supported languages, importer scan type, result filename, and
-required environment.
+required environment. Standalone catalog entries and command handlers must also
+match the provider registry before command-line dispatch is allowed.
 
 ## Command-line run
 

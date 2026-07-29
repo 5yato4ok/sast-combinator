@@ -16,6 +16,7 @@ from pipeline.dast.contracts import (
 )
 from pipeline.dast.executor import DastExecutionResult, DastExecutionTelemetry
 from pipeline.execution import execute_pipeline
+from pipeline.registry import ExecutionProvider, ExecutionProviderRegistry
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_PATH = PROJECT_ROOT / "pipeline/config/analyzers.yaml"
@@ -178,10 +179,19 @@ def test_dast_command_uses_canonical_dispatch_without_sast_builder(monkeypatch, 
 
 def test_common_cli_dispatches_catalog_declared_dast_command(monkeypatch):
     command = Mock()
-    monkeypatch.setitem(
-        pipeline_cli._EXECUTION_COMMANDS,
-        "dast",
-        command,
+    registry = ExecutionProviderRegistry(
+        ExecutionProvider(
+            execution_type="dast",
+            metric_label="dast",
+            operations=frozenset({"execute"}),
+            execute=Mock(),
+            command=command,
+        ),
+    )
+    monkeypatch.setattr(
+        pipeline_cli,
+        "build_execution_registry",
+        lambda **_kwargs: registry,
     )
     catalog = AnalyzersConfigHelper(CONFIG_PATH)
 

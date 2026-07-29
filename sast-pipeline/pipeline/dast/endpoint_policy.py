@@ -29,6 +29,12 @@ class DastEndpointPolicy:
     """Allow public HTTPS endpoints directly and RFC1918/ULA only through trusted VPN."""
 
     HTTPS_PORT: ClassVar[int] = 443
+    # Deliberately a short enumerated allowlist, not an open range: DAST gateway deployments
+    # commonly front their service on 8443 to avoid binding a privileged port, but each addition
+    # here is still a reviewed exception to the SSRF policy, not a general "any port" escape hatch.
+    # Kept in sync with aist/integrations/dast_endpoint_policy.py, the onboarding-time policy that
+    # this connector-side policy re-evaluates inside the network namespace at scan-launch time.
+    ALLOWED_PORTS: ClassVar[frozenset[int]] = frozenset({HTTPS_PORT, 8443})
     MAX_DNS_ANSWERS: ClassVar[int] = 32
     _TRUSTED_VPN_IPV4: ClassVar[tuple[ipaddress.IPv4Network, ...]] = (
         ipaddress.ip_network("10.0.0.0/8"),
@@ -60,8 +66,8 @@ class DastEndpointPolicy:
             port = parsed.port or self.HTTPS_PORT
         except ValueError as exc:
             raise DastEndpointPolicyError("DAST gateway port is invalid") from exc
-        if port != self.HTTPS_PORT:
-            raise DastEndpointPolicyError("DAST gateway must use HTTPS port 443")
+        if port not in self.ALLOWED_PORTS:
+            raise DastEndpointPolicyError("DAST gateway must use HTTPS on port 443 or 8443")
 
         hostname = parsed.hostname.rstrip(".").lower()
         if not hostname or "*" in hostname or "%" in hostname:

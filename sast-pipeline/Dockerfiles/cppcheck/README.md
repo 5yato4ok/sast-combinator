@@ -1,4 +1,4 @@
-# Cppcheck(v2.17.1)
+# Cppcheck 2.17.1
 
 ## Features
 
@@ -29,15 +29,12 @@ docker build -t cppcheck:2.17.1 .
 
 ## Run
 
-```bash
-docker run --rm -v "$PWD:/workspace" cppcheck:2.17.1
-```
-
-## Custom Run 
+The image entrypoint accepts source directory, output directory, and optional
+result filename:
 
 ```bash
-docker run --rm -v "$PWD:/workspace" cppcheck:2.17.1 \
-  cppcheck -j8 \
-           --output-format=sarif \
-           --output-file=result.sarif .
+docker run --rm \
+  -v "/absolute/path/to/source:/workspace:ro" \
+  -v "/absolute/path/to/output:/shared/output" \
+  cppcheck:2.17.1 /workspace /shared/output cppcheck_result.sarif
 ```

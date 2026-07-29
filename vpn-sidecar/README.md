@@ -9,10 +9,10 @@ without installing VPN software on the host machine.
 ## Why this exists
 
 Clients may host Jira, GitLab, or other systems on an internal network that is
-not reachable from the internet. Instead of maintaining a permanent VPN connection
-on the server, the platform uses a **one-execution-one-container** approach: the
-container is started, performs the operation, and is removed. If no VPN is needed,
-no container is created at all.
+not reachable from the internet. Pipeline and validation operations can use an
+execution-specific sidecar; selected integrations can also use a pre-warmed,
+scoped egress proxy for repeated HTTP operations. If no VPN route is selected,
+no VPN container is required.
 
 ---
 
@@ -93,13 +93,18 @@ at the OS level.
 vpn_sidecar_context() called
         │
         ▼
-Is VPN needed?
-(vpn_secret.ovpn_content set?)
+Was a VPN integration selected?
         │
   No ──▶ yield (None, None)  ←── caller works without VPN
         │
   Yes
         │
+        ▼
+Is usable OpenVPN configuration present?
+        │
+  No ──▶ fail the operation (no direct-route fallback)
+        │
+  Yes
         ▼
 docker build aist-vpn-sidecar:latest
 (skipped if image already present)
@@ -220,7 +225,8 @@ replies from the VPN server and `tun0` never comes up.
 | Inside Docker, own network detected | `--network <network>`, proxy via container name |
 | Inside Docker, network not detected | `-p <random_port>:1080`, proxy via `host.docker.internal` |
 | Running on host (local dev) | `-p 127.0.0.1:<random_port>:1080`, proxy via `127.0.0.1` |
-| No VPN configured for the project | Container not started; `(None, None)` returned |
+| No VPN integration selected | Container not started; `(None, None)` returned |
+| VPN selected but configuration is missing | Operation fails; direct routing is not used |
 
 ---
 

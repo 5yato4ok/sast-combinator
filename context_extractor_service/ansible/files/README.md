@@ -1,25 +1,44 @@
-## Install / Use
+# Context extractor implementation
+
+This directory contains the FastMCP server, the reusable Tree-sitter analysis
+package, and isolated regression tests.
+
+## Layout
+
+- `mcp_server.py` — authenticated MCP transport, pipeline-root resolution, path
+  guard, bounded filesystem tools, and tool registration;
+- `context_extractor/` — parsing, extraction, identifier, configuration, and
+  source-analysis logic;
+- `tests/` — fixture-based unit and MCP regression tests;
+- `Dockerfile` — production and test image.
+
+Handlers in `mcp_server.py` should remain thin. Parsing or analysis fixes belong
+in `context_extractor/`, where they can be tested without a live AIST workspace.
+Every file access must pass through the project-root guard.
+
+## CLI smoke check
+
+From the service image or an equivalent container environment:
 
 ```bash
-# example usage (local file)
-python -m context_extractor.cli --file path/to/file.cpp --line 5 --compress
+python -m context_extractor.cli \
+  --file tests/fixtures/sample.py \
+  --line 5 \
+  --compress
 ```
 
-Public API:
+## Tests
 
-```python
-from context_extractor import extract_function_from_source, compress_function_from_source
-from context_extractor import extract_function, compress_function, load_source_from_url
+Run tests in Docker from this directory:
+
+```bash
+docker build -t aist-context-extractor-mcp:test .
+docker run --rm \
+  -v "$PWD":/app \
+  -w /app \
+  aist-context-extractor-mcp:test \
+  python -m pytest tests/ -q
 ```
 
-Key modules:
-- `config.py`: language node sets & comment styles
-- `ts_utils.py`: language loading, parser creation, node helpers
-- `comments.py`: comment-only lines and inline comment masking
-- `header.py`: multi-line function header capture
-- `indent.py`: minimal dedent
-- `identifiers.py`: identifier collection & read/write/loop logic
-- `compress.py`: compacting algorithm
-- `extract.py`: full-function extraction and URL wrappers
-- `io.py`: URL/file loading
-- `cli.py`: tiny CLI for quick tests
+Tests must use their own fixtures and must not depend on live paths under
+`/tmp/aist/projects`.

@@ -1,14 +1,10 @@
-# Horusec Analyzer
+# Horusec analyzer
 
-Runs **Horusec** against the project (multi-language; Python-first). Outputs SARIF to `/shared/output/horusec.sarif`.
-
-## Quick start
+The wrapper runs Horusec against the prepared project and requests JSON output:
 
 ```bash
-docker build -t horusec-analyzer .
-docker run --rm -v "$PWD":/workspace -v "$PWD/out":/shared/output \  horusec-analyzer /analyze.sh /workspace /shared/output
+/analyze.sh /workspace /shared/output horusec_result.json
 ```
 
-## Output
-- `horusec.sarif`
-- `horusec.log`
+The default output is `horusec_result.json`, imported as `Horusec Scan`. Horusec
+uses the mounted Docker socket declared by its analyzer catalog entry.

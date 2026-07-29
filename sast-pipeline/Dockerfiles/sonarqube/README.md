@@ -15,4 +15,4 @@ docker run --rm -v "$PWD":/workspace -v "$PWD/out":/shared/output \  -e SONAR_HO
 
 ## Output
 - `sonarqube-scan.log`
-- `sonarqube.json` (issues via Web API)
+- `sonarqube_result.json` (issues returned by the Web API)

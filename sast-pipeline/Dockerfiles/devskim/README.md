@@ -54,5 +54,8 @@ docker build -t devskim-analyzer .
 ## Run
 
 ```bash
-docker run --rm -v "$PWD:/workspace" devskim-analyzer
+docker run --rm \
+  -v "/absolute/path/to/source:/workspace:ro" \
+  -v "/absolute/path/to/output:/shared/output" \
+  devskim-analyzer /workspace /shared/output devskim_result.sarif
 ```

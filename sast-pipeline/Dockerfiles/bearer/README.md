@@ -1,14 +1,12 @@
-# Bearer CLI Analyzer
+# Bearer analyzer
 
-Runs **Bearer CLI** and outputs SARIF to `/shared/output/bearer.sarif`.
-
-## Quick start
+The wrapper runs `bearer scan` in JSON mode. It accepts input directory, output
+directory, and an optional output filename:
 
 ```bash
-docker build -t bearer-analyzer .
-docker run --rm -v "$PWD":/workspace -v "$PWD/out":/shared/output \  bearer-analyzer /analyze.sh /workspace /shared/output
+/analyze.sh /workspace /shared/output bearer_result.json
 ```
 
-## Output
-- `bearer.sarif`
-- `bearer.log`
+The default output is `bearer_result.json`, imported as `Bearer CLI`. A non-zero
+Bearer exit caused by findings is preserved as analyzer output rather than
+being described as a SARIF result.

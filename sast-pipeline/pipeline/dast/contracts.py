@@ -138,7 +138,8 @@ class DastStartCommand:
     correlation_id: str
     target_id: str
     capability_revision: str
-    trigger: DastTrigger
+    # None for a target whose scenario declares no repository-trigger requirement.
+    trigger: DastTrigger | None
     parameters: dict[str, Any] | None = None
     contract_version: str = CONTRACT_VERSION
 
@@ -177,7 +178,7 @@ class DastStartCommand:
             correlation_id=_required_string(data["correlation_id"], "correlation_id"),
             target_id=_required_string(data["target_id"], "target_id"),
             capability_revision=_required_string(data["capability_revision"], "capability_revision"),
-            trigger=DastTrigger.from_wire(data["trigger"]),
+            trigger=DastTrigger.from_wire(data["trigger"]) if data.get("trigger") is not None else None,
             parameters=_mapping(data["parameters"], "parameters") if data.get("parameters") is not None else None,
         )
 
@@ -188,7 +189,7 @@ class DastStartCommand:
             "correlation_id": self.correlation_id,
             "target_id": self.target_id,
             "capability_revision": self.capability_revision,
-            "trigger": self.trigger.to_wire(),
+            "trigger": self.trigger.to_wire() if self.trigger is not None else None,
             "parameters": deepcopy(self.parameters),
         }
 

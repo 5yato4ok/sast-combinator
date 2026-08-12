@@ -40,6 +40,7 @@ class DastContractSnapshot:
                 "parameter_schema",
                 "defaults",
                 "repository_keys",
+                "launch_requirements",
                 "autonomous_ready",
             },
         ),

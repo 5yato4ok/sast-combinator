@@ -220,6 +220,9 @@
                   "ref"
                 ],
                 "type": "object"
+              },
+              {
+                "type": "null"
               }
             ]
           }
@@ -229,8 +232,7 @@
           "contract_version",
           "correlation_id",
           "idempotency_key",
-          "target_id",
-          "trigger"
+          "target_id"
         ],
         "type": "object"
       },
@@ -341,6 +343,12 @@
           },
           "id": {
             "type": "string"
+          },
+          "launch_requirements": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "parameter_schema": {
             "additionalProperties": {},

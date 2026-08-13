@@ -11,6 +11,10 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 CONTRACT_VERSION = "2.0"
+# The connector exits with this instead of 1 when it never reached the provider: a bad input file,
+# an unusable token, an unwritable output directory. The caller must not retry those -- the next
+# attempt runs against the same host state and fails identically. (sysexits.h EX_CONFIG)
+CONNECTOR_EXIT_LOCAL_SETUP = 78
 _SHA256_REVISION_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _REPOSITORY_KEY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")

@@ -16,6 +16,7 @@ from typing import Any, ClassVar
 import httpx
 
 from pipeline.dast.contracts import (
+    CONNECTOR_EXIT_LOCAL_SETUP,
     DastConnectorInput,
     DastConnectorOutcome,
     DastConnectorOutcomeState,
@@ -399,6 +400,21 @@ def _load_input(path: Path) -> DastConnectorInput:
     return DastConnectorInput.from_wire(payload)
 
 
+def _ensure_output_writable(path: Path) -> None:
+    """Fail here rather than after the provider has already accepted a run.
+
+    The output directory is how a run survives this process: without it the connector reaches the
+    provider, starts a scan, and then cannot write the checkpoint that would let anyone resume it.
+    """
+    try:
+        path.mkdir(mode=0o700, parents=True, exist_ok=True)
+        probe = path / ".writable"
+        probe.write_text("", encoding="utf-8")
+        probe.unlink()
+    except OSError as exc:
+        raise DastConnectorError("connector output directory is not writable") from exc
+
+
 def _load_token(path: Path) -> str:
     try:
         if os.stat(path).st_mode & 0o077:
@@ -425,9 +441,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     signal.signal(signal.SIGTERM, _interrupt)
+    # The handoff files are local state: they fail the same way on every attempt, so they exit
+    # with a code that tells the caller not to retry. Everything after this -- including name
+    # resolution of the gateway -- can differ on the next attempt and stays retryable.
     try:
         connector_input = _load_input(args.input)
         token = _load_token(args.token_file)
+        _ensure_output_writable(args.output)
+    except (DastContractError, DastConnectorError) as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr, flush=True)
+        return CONNECTOR_EXIT_LOCAL_SETUP
+    try:
         with DastGatewayClient(
             gateway_url=connector_input.gateway_url,
             token=token,

@@ -157,6 +157,9 @@ def configure_project_run_analyses(
 
     log.info(f"Running builder container {builder_container_name}")
     try:
+        # Not run_pipeline_container: the builder image is rebuilt every run with per-project
+        # build args above (not "build if absent"), and the Docker socket it mounts is not step
+        # data, so it cannot satisfy that helper's shared-root rule.
         docker_utils.run_container(
             image=image_name,
             name=builder_container_name,

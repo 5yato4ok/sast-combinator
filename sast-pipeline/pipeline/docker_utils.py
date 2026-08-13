@@ -13,19 +13,51 @@ from __future__ import annotations
 import subprocess
 import os
 import re
+import shutil
 import uuid
 import selectors
 import logging
-from typing import Dict, Optional, Iterable
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Dict, Iterator, Optional, Iterable, Tuple
 
 log = logging.getLogger(__name__)
+
+# Bind-mount sources are resolved by the daemon on the host, so only paths the host and this
+# container agree on can be handed to `docker run`. Compose mounts AIST_TMP_DIR at the same
+# location on both sides; everything else, including this container's own /tmp, is private.
+HOST_SHARED_ROOT = Path(os.environ.get("AIST_TMP_DIR", "/tmp/aist"))
+
+
+# The root of this package on disk. Catalog entries spell their build context as it appears
+# inside the pipeline image, where this root is mounted at /app; a caller running elsewhere --
+# the Celery worker, where /app is the platform project -- needs the same entry re-anchored here.
+PACKAGE_ROOT = Path(__file__).resolve().parent.parent
+
+
+class UnsharedWorkspaceError(ValueError):
+    """A path was passed to a container that the Docker daemon cannot read."""
+
+
+class BuildContextNotFoundError(FileNotFoundError):
+    """A catalog entry's build context does not exist under any known root."""
+
 
 def get_pipeline_id() -> str:
     return uuid.uuid4().hex[:8]
 
+_CONTAINER_NAME_UNSAFE = re.compile(r"[^A-Za-z0-9_.-]")
+
+
 def construct_container_name(image: str, pipeline_id: str) -> str:
-    # Construct container name with pipeline ID if available
-    return f"sast_{image.replace('/','_')}_{pipeline_id}"
+    """Build a container name dockerd accepts for any image a catalog may declare.
+
+    dockerd only accepts ``[a-zA-Z0-9][a-zA-Z0-9_.-]*``, so every other character in the image
+    reference is folded to '_' -- registry separators, and the ':' of a tag. The pipeline id is
+    kept verbatim because cleanup_pipeline_containers finds a pipeline's containers by it.
+    """
+    safe_image = _CONTAINER_NAME_UNSAFE.sub("_", image)
+    return f"sast_{safe_image}_{pipeline_id}"
 
 def image_exists(image_name: str) -> bool:
     """Check whether a Docker image is present locally.
@@ -140,6 +172,7 @@ def run_container(
     env: Optional[Dict[str, str]] = None,
     args: Optional[Iterable[str]] = None,
     network: Optional[str] = None,
+    user: Optional[str] = None,
 ) -> subprocess.CompletedProcess | None:
     """Run a Docker container with optional volume and environment configuration.
 
@@ -156,6 +189,7 @@ def run_container(
         (``-v host:container``).
     :param env: Mapping of environment variables to export into the container.
     :param args: Additional positional arguments to pass to the container after the image name.
+    :param user: Optional ``uid:gid`` to run as (``--user``), overriding the image's own ``USER``.
     :param check: If True, a non-zero exit code raises ``CalledProcessError``.
     """
     cmd: list[str] = ["docker", "run", "--rm"]
@@ -170,6 +204,8 @@ def run_container(
         raise Exception("Incorrect container name, lack of PIPELINE_ID")
 
     cmd += ["--name", container_name]
+    if user:
+        cmd += ["--user", user]
     if volumes_from:
         cmd += ["--volumes-from", volumes_from]
     if volumes:
@@ -187,6 +223,147 @@ def run_container(
 
     run_logged_cmd(cmd, f"[{image}] ")
 
+
+def image_runtime_user(image: str) -> Optional[Tuple[int, int]]:
+    """Return the ``(uid, gid)`` an image runs as, or None when it pins no numeric identity.
+
+    A step that hands the container files it owns has to know who will read them. Only a numeric
+    ``USER`` answers that here: a user name would have to be resolved against the image's own
+    /etc/passwd. The gid is ``-1`` -- "leave unchanged" for ``os.chown`` -- when the image names
+    only a user, because Docker then takes the group from inside the image.
+    """
+    result = subprocess.run(
+        ["docker", "image", "inspect", "--format", "{{.Config.User}}", image],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    user, _, group = result.stdout.strip().partition(":")
+    if not user.isdigit():
+        return None
+    return int(user), int(group) if group.isdigit() else -1
+
+
+def resolve_build_context(dockerfile_dir: str) -> str:
+    """Return the build context for a catalog entry.
+
+    Catalog paths are relative to this package root, because that is the one thing every caller
+    shares: inside the builder image the root is mounted at /app (`COPY pipeline/ /app/pipeline`,
+    `COPY Dockerfiles /app/Dockerfiles`), while the Celery worker has it under the platform
+    project. An absolute path is honoured as given, for a caller that supplies its own context.
+    """
+    path = Path(dockerfile_dir)
+    context = path if path.is_absolute() else Path(PACKAGE_ROOT) / path
+    if not context.is_dir():
+        detail = f"Build context '{dockerfile_dir}' does not exist (resolved to '{context}')."
+        raise BuildContextNotFoundError(detail)
+    return str(context)
+
+
+def ensure_image(
+    image: str,
+    dockerfile_dir: str,
+    *,
+    build_context: Optional[str] = None,
+    timeout: Optional[float] = None,
+) -> None:
+    """Build the image if it is not present locally.
+
+    Nothing in the runtime deployment builds analyzer or connector images: compose declares only
+    the platform's own services, so a step that does not do this cannot run at all on a fresh
+    host.
+    """
+    if image_exists(image):
+        log.debug("Image '%s' already exists; skipping build", image)
+        return
+    log.info("Building image '%s'...", image)
+    build_args: Dict[str, str] = {}
+    log_level_env = os.environ.get("LOG_LEVEL")
+    if log_level_env:
+        build_args["LOG_LEVEL"] = log_level_env
+    # Most steps ship a self-contained Dockerfile, so its directory is also the build context.
+    # A step whose Dockerfile copies from the package (the DAST connector does: `COPY pipeline/`)
+    # declares a wider context and is then built with -f, exactly as CI builds it.
+    if build_context is None:
+        context_dir = resolve_build_context(dockerfile_dir)
+        dockerfile = None
+    else:
+        context_dir = resolve_build_context(build_context)
+        dockerfile = str(Path(resolve_build_context(dockerfile_dir)) / "Dockerfile")
+    build_image(
+        image_name=image,
+        context_dir=context_dir,
+        dockerfile=dockerfile,
+        build_args=build_args,
+        timeout=timeout,
+    )
+
+
+def _require_shared_path(host_path: str) -> None:
+    resolved = Path(host_path).resolve()
+    shared_root = Path(HOST_SHARED_ROOT).resolve()
+    if resolved != shared_root and shared_root not in resolved.parents:
+        detail = (
+            f"'{host_path}' is not under the host-shared root '{shared_root}'. "
+            "The Docker daemon resolves bind-mount sources on the host, so it would mount an "
+            "empty directory instead of this content."
+        )
+        raise UnsharedWorkspaceError(detail)
+
+
+@contextmanager
+def pipeline_workspace(pipeline_id: str) -> Iterator[Path]:
+    """Allocate a per-run directory both this container and the Docker daemon can read."""
+    root = Path(HOST_SHARED_ROOT) / "runs"
+    root.mkdir(parents=True, exist_ok=True)
+    workspace = root / f"{pipeline_id}-{uuid.uuid4().hex[:8]}"
+    workspace.mkdir(mode=0o700)
+    try:
+        yield workspace
+    finally:
+        shutil.rmtree(workspace, ignore_errors=True)
+
+
+def run_pipeline_container(
+    *,
+    image: str,
+    dockerfile_dir: str,
+    pipeline_id: str,
+    build_context: Optional[str] = None,
+    volumes: Optional[Dict[str, str]] = None,
+    env: Optional[Dict[str, str]] = None,
+    args: Optional[Iterable[str]] = None,
+    network: Optional[str] = None,
+    volumes_from: Optional[str] = None,
+    user: Optional[str] = None,
+) -> subprocess.CompletedProcess | None:
+    """Run one containerized pipeline step under the contract every step shares.
+
+    The contract is what each caller used to re-implement, or skip: the image exists, the
+    container name is one dockerd accepts, and every bind-mount source is readable by the
+    daemon. Call this rather than `run_container` directly.
+
+    One deliberate exception: `project_builder` builds its image on every run with per-project
+    build args (not "build if absent") and mounts the Docker socket, which is not step data and
+    lives outside the shared root. It uses `run_container` directly and says so at that call.
+    """
+    ensure_image(image, dockerfile_dir, build_context=build_context)
+    for host_path in (volumes or {}):
+        _require_shared_path(host_path)
+    return run_container(
+        image=image,
+        pipeline_id=pipeline_id,
+        volumes=volumes,
+        env=env,
+        args=args,
+        network=network,
+        volumes_from=volumes_from,
+        user=user,
+    )
+
+
 def build_image(
     *,
     image_name: str,
@@ -194,7 +371,8 @@ def build_image(
     dockerfile: Optional[str] = None,
     build_args: Optional[Dict[str, str]] = None,
     check: bool = True,
-    default_log_level: str = "INFO"
+    default_log_level: str = "INFO",
+    timeout: Optional[float] = None,
 ) -> None:
     """Build a Docker image with optional build arguments and logging.
 
@@ -208,6 +386,8 @@ def build_image(
     :param dockerfile: Optional path to a Dockerfile. If provided, passed via ``-f``.
     :param build_args: Mapping of build argument names to values (passed via ``--build-arg``).
     :param check: If True, raise ``CalledProcessError`` for non-zero exit codes.
+    :param timeout: Optional cap in seconds. A build that hangs would otherwise hold the calling
+        worker forever; callers that run inside a Celery task pass one.
     """
     cmd: list[str] = ["docker", "build"]
     # Append build-arg flags
@@ -248,7 +428,12 @@ def build_image(
         assert proc.stdout is not None
         for line in proc.stdout:
             log_build_line(line, default_log_level)
-        returncode = proc.wait()
+        try:
+            returncode = proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+            raise
         if check and returncode != 0:
             raise subprocess.CalledProcessError(returncode, cmd)
 
@@ -304,7 +489,8 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
     """Remove all Docker containers associated with the given pipeline ID.
 
     Containers launched by :func:`run_container` include the pipeline ID in
-    their names (``sast_<pipeline_id>_...``).  This helper lists all such
+    their names (``sast_<image>_<pipeline_id>``; see
+    :func:`construct_container_name`). This helper lists all such
     containers—both running and stopped—and forcibly removes them.  It is
     intended to be called by host-level code when a pipeline is aborted or
     interrupted to ensure no orphaned containers continue running.
@@ -335,10 +521,14 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
             return
         for name in names:
             try:
+                # Stop first, remove second. A live connector writes its recovery and outcome
+                # files on shutdown, and those are what tell a resumed run whether the provider
+                # ever accepted it -- `rm -f` alone is a SIGKILL that takes that away. The
+                # removal still has to happen: containers that never started leave no `--rm`
+                # behind, and a leftover name blocks the next run under the same pipeline id.
                 run_logged_cmd(["docker", "stop", name])
-                log.info("Stopped pipeline container %s", name)
-                #run_logged_cmd(["docker", "rm", "-f", name])
-                #log.info("Removed pipeline container %s", name)
+                run_logged_cmd(["docker", "rm", "-f", name])
+                log.info("Stopped and removed pipeline container %s", name)
             except Exception as exc:
                 log.warning("Failed to stop and remove container %s: %s", name, exc)
                 continue

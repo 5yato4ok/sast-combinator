@@ -7,6 +7,7 @@ from pipeline.dast.contracts import (
 from pipeline.dast.executor import (
     DastExecutionIncomplete,
     DastExecutionInput,
+    DastExecutionLocalFailure,
     DastExecutionResult,
     DastExecutionTelemetry,
     DastExecutor,
@@ -15,6 +16,7 @@ from pipeline.dast.executor import (
 __all__ = [
     "DastExecutionInput",
     "DastExecutionIncomplete",
+    "DastExecutionLocalFailure",
     "DastExecutionResult",
     "DastExecutionTelemetry",
     "DastExecutor",

@@ -61,35 +61,6 @@ def _build_outcome(*, analyzer: dict, output_dir: str, status: str, messages: li
     }
 
 
-def build_image_if_needed(image_name: str, dockerfile_dir: str) -> None:
-    """Ensure that a Docker image exists for the given analyzer.
-
-    If the image already exists, a debug message is logged and the build
-    is skipped.  Otherwise, the image is built using the specified
-    Dockerfile directory.  The ``LOG_LEVEL`` environment variable is
-    passed as a build argument so that ``apt-get`` commands in the
-    Dockerfile can adjust their verbosity.
-    """
-    if docker_utils.image_exists(image_name):
-        log.debug("Image '%s' already exists; skipping build", image_name)
-        return
-    log.info("Building image '%s'...", image_name)
-    # Propagate LOG_LEVEL into the build stage if set
-    build_args: dict[str, str] = {}
-    log_level_env = os.environ.get("LOG_LEVEL")
-    if log_level_env:
-        build_args["LOG_LEVEL"] = log_level_env
-    # Use the shared helper to perform the build with logging
-    docker_utils.build_image(
-        image_name=image_name,
-        context_dir=dockerfile_dir,
-        dockerfile=None,
-        build_args=build_args or None,
-        check=True,
-        default_log_level="DEBUG"
-    )
-
-
 def run_docker(
     image: str,
     builder_container: str,
@@ -98,6 +69,7 @@ def run_docker(
     output_dir: str,
     pipeline_id: str,
     env_vars: list[str] | None = None,
+    dockerfile_dir: str = "",
 ) -> None:
     """Run a single analyzer container.
 
@@ -119,27 +91,25 @@ def run_docker(
                 env[var] = os.environ[var]
             else:
                 raise Exception(f"Required environment variable '{var}' is not set.")
-    if builder_container:
-        # Delegate to the shared docker_utils helper for running containers
-        docker_utils.run_container(
-            image=image,
-            volumes_from=builder_container,
-            env=env or None,
-            args=args,
-            pipeline_id=pipeline_id
-        )
-    else:
-        volumes = {
+    volumes = (
+        None
+        if builder_container
+        else {
             os.path.abspath(project_path): "/workspace",
             os.path.abspath(output_dir): "/shared/output",
         }
-        docker_utils.run_container(
-            image=image,
-            volumes=volumes,
-            env=env or None,
-            args=args,
-            pipeline_id=pipeline_id
-        )
+    )
+    # One entry point for every containerized step: it ensures the image, builds a name dockerd
+    # accepts, and refuses a mount source the daemon cannot read.
+    docker_utils.run_pipeline_container(
+        image=image,
+        dockerfile_dir=dockerfile_dir,
+        pipeline_id=pipeline_id,
+        volumes_from=builder_container or None,
+        volumes=volumes,
+        env=env or None,
+        args=args,
+    )
 
 
 def env_flag(name: str, default: bool = True) -> bool:
@@ -214,8 +184,9 @@ def run_selected_analyzers(
             continue
 
         image = analyzer.get("image")
-        dockerfile_dir = str(analyzer.get("dockerfile_path", f"/app/Dockerfiles/{name}"))
-        build_image_if_needed(str(image), dockerfile_dir)
+        # Ensuring the image is part of running a step, so it happens inside run_docker rather
+        # than here: one place decides what must be true before `docker run`.
+        dockerfile_dir = str(analyzer.get("dockerfile_path", f"Dockerfiles/{name}"))
         input_path = analyzer.get("input", project_path)
         output_file_name = config_helper.get_analyzer_result_file_name(analyzer)
 
@@ -224,7 +195,16 @@ def run_selected_analyzers(
         if log_level:
             env_vars += ["LOG_LEVEL"]
         try:
-            run_docker(str(image), builder_container, args, project_path, output_dir, pipeline_id, env_vars)
+            run_docker(
+                str(image),
+                builder_container,
+                args,
+                project_path,
+                output_dir,
+                pipeline_id,
+                env_vars,
+                dockerfile_dir=dockerfile_dir,
+            )
             analyzer_outcomes.append(_build_outcome(analyzer=analyzer, output_dir=output_dir, status="success"))
         except KeyboardInterrupt:
             raise

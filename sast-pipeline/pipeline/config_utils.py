@@ -144,7 +144,10 @@ class AnalyzersConfigHelper:
         else:
             analyzers = [a for a in analyzers if a.get("enabled", True) and self._is_sast_analyzer(a)]
         write = 0
-        max_time_class = self.ANALYZER_ORDER.get(max_time_class, "slow")
+        # The ceiling is compared against analyzer levels below, so an unset or unknown class
+        # has to fall back to the *level* of "slow", not to its name -- comparing int to str
+        # raises, and callers legitimately leave this unset to mean "no ceiling".
+        max_time_class = self.ANALYZER_ORDER.get(max_time_class, self.ANALYZER_ORDER["slow"])
         for a in analyzers:
             name = a.get("name")
             analyzer_time_class = str(a.get("time_class", "medium"))

@@ -273,10 +273,13 @@ def test_prepare_pipeline_analyzer_config(tmp_path, monkeypatch):
     with cfg_path.open("w", encoding="utf-8") as fh:
         yaml.dump(config, fh)
     helper = AH(str(cfg_path))
-    # Patch the pipeline ID to a constant for reproducibility
-    monkeypatch.setenv("PIPELINE_ID", "abcd1234")
-    # Filter to only include Python analyzers and exclude slow ones
-    filename = helper.prepare_pipeline_analyzer_config(languages=["py"], max_time_class="medium", target_analyzers=None)
+    # The pipeline id is passed in explicitly; it is no longer read from the environment.
+    filename = helper.prepare_pipeline_analyzer_config(
+        languages=["py"],
+        pipeline_id="abcd1234",
+        max_time_class="medium",
+        target_analyzers=None,
+    )
     # The returned file should end with the pipeline ID
     assert "abcd1234" in filename
     # Load the generated YAML and verify contents

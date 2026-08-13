@@ -22,11 +22,10 @@ def _write_config(tmp_path: Path, analyzers: list[dict]) -> str:
 
 def _patch_no_docker(monkeypatch):
     """Stub out every Docker side-effect so the loop is testable in-process."""
-    monkeypatch.setattr(ar, "build_image_if_needed", MagicMock())
     monkeypatch.setattr(ar, "run_docker", MagicMock())
     monkeypatch.setattr(ar.docker_utils, "image_exists", lambda name: True)
     monkeypatch.setattr(ar.docker_utils, "build_image", MagicMock())
-    monkeypatch.setattr(ar.docker_utils, "run_container", MagicMock())
+    monkeypatch.setattr(ar.docker_utils, "run_pipeline_container", MagicMock())
     monkeypatch.setattr(ar.docker_utils, "collect_git_metadata", lambda path: {})
 
 
@@ -55,7 +54,7 @@ def test_agent_bridge_is_skipped_no_docker_calls(tmp_path, monkeypatch):
         builder_container="",
     )
 
-    ar.build_image_if_needed.assert_not_called()
+    ar.docker_utils.build_image.assert_not_called()
     ar.run_docker.assert_not_called()
 
 

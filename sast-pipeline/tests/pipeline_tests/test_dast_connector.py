@@ -1,5 +1,6 @@
 import gc
 import json
+import os
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
@@ -10,8 +11,10 @@ from pipeline.dast.connector import (
     DastConnectorError,
     DastGatewayClient,
     DastGatewayError,
+    main,
 )
 from pipeline.dast.contracts import (
+    CONNECTOR_EXIT_LOCAL_SETUP,
     DastConnectorInput,
     DastRecoveryState,
     DastStartCommand,
@@ -626,3 +629,56 @@ def test_gateway_rejects_loopback_even_inside_trusted_vpn_namespace():
             resolver=lambda _hostname, _port: ("127.0.0.1",),
             client=httpx.Client(transport=httpx.MockTransport(lambda _request: _response(200, {}))),
         )
+
+
+def _handoff(tmp_path, *, payload=None):
+    token = tmp_path / "token"
+    token.write_text("public.secret", encoding="utf-8")
+    token.chmod(0o600)
+    input_path = tmp_path / "input.json"
+    if payload is not None:
+        input_path.write_text(payload, encoding="utf-8")
+    return input_path, token, tmp_path / "output"
+
+
+def test_a_mount_the_daemon_replaced_with_an_empty_directory_exits_as_local_setup(tmp_path):
+    """Docker leaves a directory where a bind source did not exist; that is not a provider outage."""
+    input_path, token, output = _handoff(tmp_path)
+    input_path.mkdir()
+
+    assert main(["--input", str(input_path), "--output", str(output), "--token-file", str(token)]) == (
+        CONNECTOR_EXIT_LOCAL_SETUP
+    )
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root ignores the mode bits this case depends on")
+def test_a_handoff_written_for_another_user_exits_as_local_setup(tmp_path):
+    input_path, token, output = _handoff(tmp_path, payload="{}")
+    input_path.chmod(0o000)
+
+    assert main(["--input", str(input_path), "--output", str(output), "--token-file", str(token)]) == (
+        CONNECTOR_EXIT_LOCAL_SETUP
+    )
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root ignores the mode bits this case depends on")
+def test_an_output_directory_it_cannot_write_exits_before_the_provider_accepts_a_run(tmp_path):
+    """Otherwise the provider starts a scan no one can ever check point or resume."""
+    payload = json.dumps(
+        DastConnectorInput(
+            gateway_url="https://dast.internal",
+            command=_command(),
+            recovery=DastRecoveryState.initial(_command()),
+        ).to_wire()
+    )
+    input_path, token, _ = _handoff(tmp_path, payload=payload)
+    output = tmp_path / "readonly" / "output"
+    output.parent.mkdir()
+    output.parent.chmod(0o500)
+
+    try:
+        assert main(["--input", str(input_path), "--output", str(output), "--token-file", str(token)]) == (
+            CONNECTOR_EXIT_LOCAL_SETUP
+        )
+    finally:
+        output.parent.chmod(0o700)

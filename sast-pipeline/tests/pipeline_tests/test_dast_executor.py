@@ -10,10 +10,21 @@ from pipeline.dast.contracts import (
     DastRecoveryState,
     DastStartCommand,
 )
-from pipeline.dast.executor import DastExecutionInput, DastExecutor
+from pipeline.dast.contracts import CONNECTOR_EXIT_LOCAL_SETUP
+from pipeline.dast.executor import DastExecutionInput, DastExecutionLocalFailure, DastExecutor
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CAPABILITY_REVISION = f"sha256:{'a' * 64}"
+UNPRIVILEGED_UID = 1000
+
+
+@pytest.fixture(autouse=True)
+def _unprivileged_writer_without_docker(monkeypatch):
+    """Default every test to the case that needs no privileges and no daemon."""
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.ensure_image", lambda *args, **kwargs: None)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.image_runtime_user", lambda image: None)
+    monkeypatch.setattr("pipeline.dast.executor.os.geteuid", lambda: UNPRIVILEGED_UID)
+    monkeypatch.setattr("pipeline.dast.executor.os.getegid", lambda: UNPRIVILEGED_UID)
 
 
 def _command():
@@ -82,7 +93,7 @@ def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret
         calls.append(kwargs)
         _write_terminal_output(execution, DastRecoveryState.initial(execution.command).for_run("run-123"))
 
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_container", run_container)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
     result = DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
 
@@ -94,6 +105,10 @@ def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret
     assert calls == [
         {
             "image": "aist-dast-connector:v2",
+            # Built from the package: the Dockerfile lives here and its context is the package
+            # root, because the image packages `pipeline.dast` itself.
+            "dockerfile_dir": "Dockerfiles/dast_connector",
+            "build_context": ".",
             "pipeline_id": "pipeline-123",
             "volumes": {
                 str(execution.workspace / "input.json"): "/run/aist/input.json:ro",
@@ -114,6 +129,7 @@ def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret
                 "--trusted-vpn",
             ],
             "network": "container:vpn-pipeline-123",
+            "user": f"{UNPRIVILEGED_UID}:{UNPRIVILEGED_UID}",
         },
     ]
     serialized_call = json.dumps(calls)
@@ -130,7 +146,7 @@ def test_executor_cleans_up_common_pipeline_containers_on_interrupt(monkeypatch,
     execution = _execution(tmp_path)
     cleaned = []
     monkeypatch.setattr(
-        "pipeline.dast.executor.docker_utils.run_container",
+        "pipeline.dast.executor.docker_utils.run_pipeline_container",
         lambda **kwargs: (_ for _ in ()).throw(KeyboardInterrupt()),
     )
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", cleaned.append)
@@ -151,7 +167,7 @@ def test_executor_returns_typed_unreachable_outcome_with_persisted_recovery(monk
         (output_dir / "recovery.json").write_text(json.dumps(recovery.to_wire()), encoding="utf-8")
         raise subprocess.CalledProcessError(1, ["docker", "run"])
 
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_container", run_container)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", cleaned.append)
 
     result = DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
@@ -166,12 +182,80 @@ def test_executor_rejects_group_readable_token_file_before_container_start(monke
     execution = _execution(tmp_path)
     execution.token_file.chmod(0o640)
     called = []
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_container", lambda **kwargs: called.append(kwargs))
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", lambda **kwargs: called.append(kwargs))
 
     with pytest.raises(ValueError, match="group or other"):
         DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
 
     assert called == []
+
+
+def test_executor_hands_the_mounted_files_to_the_image_user_and_keeps_it_unprivileged(monkeypatch, tmp_path):
+    ca_file = tmp_path / "ca.pem"
+    ca_file.write_text("certificate-material", encoding="utf-8")
+    ca_file.chmod(0o600)
+    execution = _execution(tmp_path, ca_file=ca_file)
+    chowned = []
+    calls = []
+
+    monkeypatch.setattr("pipeline.dast.executor.os.geteuid", lambda: 0)
+    monkeypatch.setattr("pipeline.dast.executor.os.getegid", lambda: 0)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.image_runtime_user", lambda image: (1001, 1001))
+    monkeypatch.setattr("pipeline.dast.executor.os.chown", lambda path, uid, gid: chowned.append((str(path), uid, gid)))
+
+    def run_container(**kwargs):
+        calls.append(kwargs)
+        _write_terminal_output(execution, DastRecoveryState.initial(execution.command).for_run("run-123"))
+
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
+
+    DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+
+    # The container keeps the unprivileged user its image declares; ownership moved to meet it.
+    assert calls[0]["user"] is None
+    assert chowned == [
+        (str(execution.workspace / "input.json"), 1001, 1001),
+        (str(execution.workspace / "output"), 1001, 1001),
+        (str(execution.token_file), 1001, 1001),
+        (str(ca_file), 1001, 1001),
+    ]
+    assert execution.token_file.stat().st_mode & 0o077 == 0
+
+
+def test_executor_runs_as_itself_when_it_cannot_hand_over_ownership(monkeypatch, tmp_path):
+    execution = _execution(tmp_path)
+    chowned = []
+    calls = []
+
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.image_runtime_user", lambda image: (1001, 1001))
+    monkeypatch.setattr("pipeline.dast.executor.os.chown", lambda path, uid, gid: chowned.append(path))
+
+    def run_container(**kwargs):
+        calls.append(kwargs)
+        _write_terminal_output(execution, DastRecoveryState.initial(execution.command).for_run("run-123"))
+
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
+
+    DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+
+    assert calls[0]["user"] == f"{UNPRIVILEGED_UID}:{UNPRIVILEGED_UID}"
+    assert chowned == []
+
+
+def test_executor_reports_a_local_setup_failure_instead_of_an_unreachable_provider(monkeypatch, tmp_path):
+    execution = _execution(tmp_path)
+    cleaned = []
+
+    def run_container(**_kwargs):
+        raise subprocess.CalledProcessError(CONNECTOR_EXIT_LOCAL_SETUP, ["docker", "run"])
+
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", cleaned.append)
+
+    with pytest.raises(DastExecutionLocalFailure):
+        DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+
+    assert cleaned == ["pipeline-123"]
 
 
 def test_dast_common_catalog_declaration_is_standalone_not_a_sast_analyzer():
@@ -191,7 +275,7 @@ def test_executor_serializes_explicit_recovery_without_source_or_analyzer_pipeli
     def run_container(**_kwargs):
         _write_terminal_output(execution, recovery)
 
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_container", run_container)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
     DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
 
@@ -217,7 +301,7 @@ def test_executor_rejects_success_without_current_telemetry_artifact(monkeypatch
         _write_terminal_output(execution, recovery)
         (execution.workspace / "output" / "telemetry.json").unlink()
 
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_container", run_container)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
     with pytest.raises(ValueError, match="telemetry.json"):
         DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)

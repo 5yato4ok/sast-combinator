@@ -19,58 +19,6 @@ import pipeline.analyzer_runner as ar
 import pytest
 
 
-def test_build_image_if_needed_skips_when_image_exists(monkeypatch):
-    """When the image already exists, ``build_image_if_needed`` should not
-    invoke the build helper on docker_utils."""
-
-    calls = []
-    # Pretend the image already exists
-    monkeypatch.setattr(ar.docker_utils, "image_exists", lambda name: True)
-    # Record any attempted build calls
-    monkeypatch.setattr(ar.docker_utils, "build_image", lambda *args, **kwargs: calls.append((args, kwargs)))
-
-    ar.build_image_if_needed("img", "/context")
-    # build_image must not have been called
-    assert calls == []
-
-
-def test_build_image_if_needed_builds_with_and_without_log_level(monkeypatch):
-    """When the image does not exist the helper should call ``build_image``
-    with appropriate arguments and include the LOG_LEVEL environment
-    variable as a build argument if present."""
-
-    captured = []
-
-    def fake_build_image(*, image_name, context_dir, dockerfile=None, build_args=None, check=True, default_log_level="DEBUG"):
-        # Capture the build invocation for later inspection
-        captured.append({
-            "image_name": image_name,
-            "context_dir": context_dir,
-            "dockerfile": dockerfile,
-            "build_args": build_args,
-            "check": check,
-            "default_log_level": default_log_level,
-        })
-
-    monkeypatch.setattr(ar.docker_utils, "image_exists", lambda name: False)
-    monkeypatch.setattr(ar.docker_utils, "build_image", fake_build_image)
-    # First call with no LOG_LEVEL set
-    monkeypatch.delenv("LOG_LEVEL", raising=False)
-    ar.build_image_if_needed("img1", "/ctx1")
-    assert captured[-1]["image_name"] == "img1"
-    assert captured[-1]["context_dir"] == "/ctx1"
-    # build_args is either None or empty when LOG_LEVEL is not defined
-    assert captured[-1]["build_args"] in (None, {})
-    # Now call with a LOG_LEVEL defined
-    captured.clear()
-    monkeypatch.setenv("LOG_LEVEL", "TRACE")
-    ar.build_image_if_needed("img2", "/ctx2")
-    assert captured[-1]["image_name"] == "img2"
-    assert captured[-1]["context_dir"] == "/ctx2"
-    # build_args should contain the propagated LOG_LEVEL
-    assert captured[-1]["build_args"] == {"LOG_LEVEL": "TRACE"}
-
-
 def test_run_docker_with_builder_container(monkeypatch):
     """Verify that ``run_docker`` invokes the Docker run helper with
     volumes inherited from a builder container and passes through
@@ -78,7 +26,7 @@ def test_run_docker_with_builder_container(monkeypatch):
 
     calls = []
 
-    def fake_run_container(*, image, volumes_from=None, volumes=None, env=None, args=None):
+    def fake_run_container(*, image, dockerfile_dir="", pipeline_id=None, volumes_from=None, volumes=None, env=None, args=None):
         calls.append({
             "image": image,
             "volumes_from": volumes_from,
@@ -87,10 +35,10 @@ def test_run_docker_with_builder_container(monkeypatch):
             "args": args,
         })
 
-    monkeypatch.setattr(ar.docker_utils, "run_container", fake_run_container)
+    monkeypatch.setattr(ar.docker_utils, "run_pipeline_container", fake_run_container)
     # Define an environment variable required by the analyzer
     monkeypatch.setenv("TOKEN", "secret")
-    ar.run_docker(image="analyzer_img", builder_container="builder-cont", args=["input", "output"], project_path="/proj", output_dir="/out", env_vars=["TOKEN"])
+    ar.run_docker(image="analyzer_img", builder_container="builder-cont", args=["input", "output"], project_path="/proj", output_dir="/out", pipeline_id="pipe1234", env_vars=["TOKEN"])
     call = calls[-1]
     assert call["image"] == "analyzer_img"
     # volumes_from should be set when a builder container is provided
@@ -110,7 +58,7 @@ def test_run_docker_without_builder_container(monkeypatch, tmp_path):
 
     calls = []
 
-    def fake_run_container(*, image, volumes_from=None, volumes=None, env=None, args=None):
+    def fake_run_container(*, image, dockerfile_dir="", pipeline_id=None, volumes_from=None, volumes=None, env=None, args=None):
         calls.append({
             "image": image,
             "volumes_from": volumes_from,
@@ -119,7 +67,7 @@ def test_run_docker_without_builder_container(monkeypatch, tmp_path):
             "args": args,
         })
 
-    monkeypatch.setattr(ar.docker_utils, "run_container", fake_run_container)
+    monkeypatch.setattr(ar.docker_utils, "run_pipeline_container", fake_run_container)
     # Setup directories
     project_dir = tmp_path / "project"
     output_dir = tmp_path / "out"
@@ -133,6 +81,7 @@ def test_run_docker_without_builder_container(monkeypatch, tmp_path):
         args=["a", "b"],
         project_path=str(project_dir),
         output_dir=str(output_dir),
+        pipeline_id="pipe1234",
         env_vars=["API_KEY"],
     )
     call = calls[-1]
@@ -153,7 +102,7 @@ def test_run_docker_missing_env_raises(monkeypatch):
     # Ensure the environment variable is not set
     monkeypatch.delenv("MISSING", raising=False)
     with pytest.raises(Exception):
-        ar.run_docker("img", "builder", ["x"], "/p", "/o", ["MISSING"])
+        ar.run_docker("img", "builder", ["x"], "/p", "/o", "pipe1234", ["MISSING"])
 
 
 @pytest.mark.parametrize(
@@ -217,17 +166,18 @@ def test_run_selected_analyzers_exclude_slow(monkeypatch, tmp_path):
         yaml.dump(config, fh)
     build_calls = []
     run_calls = []
-    monkeypatch.setattr(ar, "build_image_if_needed", lambda image_name, dockerfile_dir: build_calls.append((image_name, dockerfile_dir)))
-    monkeypatch.setattr(
-        ar,
-        "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append((image, builder_container, args, project_path, output_dir, env_vars)),
-    )
+    def fake_run_docker(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir=""):
+        # The step ensures its own image, so one call carries both facts.
+        build_calls.append((image, dockerfile_dir))
+        run_calls.append((image, builder_container, args, project_path, output_dir, env_vars))
+
+    monkeypatch.setattr(ar, "run_docker", fake_run_docker)
     out_dir = tmp_path / "out"
     # Ensure the output directory exists prior to invocation
     out_dir.mkdir()
     res = ar.run_selected_analyzers(
         config_path=str(cfg_path),
+        pipeline_id="pipe1234",
         analyzers_to_run=None,
         max_time_class="medium",
         project_path=str(tmp_path / "proj"),
@@ -275,16 +225,16 @@ def test_run_selected_analyzers_specific_list(monkeypatch, tmp_path):
         yaml.dump(config, fh)
     build_calls = []
     run_calls = []
-    monkeypatch.setattr(ar, "build_image_if_needed", lambda image_name, dockerfile_dir: build_calls.append(image_name))
-    monkeypatch.setattr(
-        ar,
-        "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append(image),
-    )
+    def fake_run_docker(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir=""):
+        build_calls.append(image)
+        run_calls.append(image)
+
+    monkeypatch.setattr(ar, "run_docker", fake_run_docker)
     out_dir = tmp_path / "out"
     out_dir.mkdir()
     ar.run_selected_analyzers(
         config_path=str(cfg_path),
+        pipeline_id="pipe1234",
         analyzers_to_run=["b"],
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),
@@ -324,18 +274,18 @@ def test_run_selected_analyzers_skip_builder_on_non_compile_project(monkeypatch,
         yaml.dump(config, fh)
     build_calls = []
     run_calls = []
-    monkeypatch.setattr(ar, "build_image_if_needed", lambda image_name, dockerfile_dir: build_calls.append(image_name))
-    monkeypatch.setattr(
-        ar,
-        "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append(image),
-    )
+    def fake_run_docker(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir=""):
+        build_calls.append(image)
+        run_calls.append(image)
+
+    monkeypatch.setattr(ar, "run_docker", fake_run_docker)
     out_dir = tmp_path / "out"
     out_dir.mkdir()
     # Set NON_COMPILE_PROJECT so that builder analyzers are skipped
     monkeypatch.setenv("NON_COMPILE_PROJECT", "1")
     ar.run_selected_analyzers(
         config_path=str(cfg_path),
+        pipeline_id="pipe1234",
         analyzers_to_run=None,
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),
@@ -368,17 +318,17 @@ def test_run_selected_analyzers_no_analyzers(monkeypatch, tmp_path):
         yaml.dump(config, fh)
     build_calls = []
     run_calls = []
-    monkeypatch.setattr(ar, "build_image_if_needed", lambda image_name, dockerfile_dir: build_calls.append(image_name))
-    monkeypatch.setattr(
-        ar,
-        "run_docker",
-        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars: run_calls.append(image),
-    )
+    def fake_run_docker(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir=""):
+        build_calls.append(image)
+        run_calls.append(image)
+
+    monkeypatch.setattr(ar, "run_docker", fake_run_docker)
     # Exclude slow analyzers so that none remain
     out_dir = tmp_path / "out"
     out_dir.mkdir()
     res = ar.run_selected_analyzers(
         config_path=str(cfg_path),
+        pipeline_id="pipe1234",
         analyzers_to_run=None,
         max_time_class="medium",
         project_path=str(tmp_path / "proj"),
@@ -416,11 +366,10 @@ def test_run_selected_analyzers_log_level_injected(monkeypatch, tmp_path):
         yaml.dump(config, fh)
     captured_envs = []
 
-    def fake_run_docker(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars):
+    def fake_run_docker(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir=""):
         captured_envs.append(list(env_vars))
 
     # Monkeypatch build and run helpers
-    monkeypatch.setattr(ar, "build_image_if_needed", lambda image_name, dockerfile_dir: None)
     monkeypatch.setattr(ar, "run_docker", fake_run_docker)
     out_dir = tmp_path / "out"
     out_dir.mkdir()
@@ -428,6 +377,7 @@ def test_run_selected_analyzers_log_level_injected(monkeypatch, tmp_path):
     monkeypatch.setenv("LOG_LEVEL", "INFO")
     ar.run_selected_analyzers(
         config_path=str(cfg_path),
+        pipeline_id="pipe1234",
         analyzers_to_run=None,
         project_path=str(tmp_path / "proj"),
         output_dir=str(out_dir),

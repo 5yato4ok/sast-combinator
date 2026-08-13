@@ -15,26 +15,17 @@ FROM runtime AS test
 
 USER root
 
-RUN pip install --no-cache-dir pytest==8.4.2 pyyaml==6.0.3
+# httpx is needed by bridge_client, which several of the copied tests import.
+RUN pip install --no-cache-dir pytest==8.4.2 pyyaml==6.0.3 httpx==0.28.1
 
-COPY pipeline/config_utils.py /app/pipeline/config_utils.py
-COPY pipeline/cli.py /app/pipeline/cli.py
-COPY pipeline/contracts.py /app/pipeline/contracts.py
-COPY pipeline/execution.py /app/pipeline/execution.py
-COPY pipeline/registry.py /app/pipeline/registry.py
-COPY pipeline/sast_execution.py /app/pipeline/sast_execution.py
-COPY pipeline/project_builder.py /app/pipeline/project_builder.py
-COPY pipeline/agent_bridge_runner.py /app/pipeline/agent_bridge_runner.py
-COPY pipeline/bridge_client.py /app/pipeline/bridge_client.py
-COPY pipeline/analyzer_runner.py /app/pipeline/analyzer_runner.py
-COPY pipeline/config/ /app/pipeline/config/
+# The whole package and the whole test tree, not a hand-picked list. Naming individual files is
+# how most of tests/pipeline_tests/ ended up outside CI: the job could run the directory and
+# still cover only what the image happened to contain. The runtime stage above stays minimal --
+# this is only the test stage.
+COPY pipeline/ /app/pipeline/
 COPY contracts/ /app/contracts/
 COPY run_pipeline.py /app/run_pipeline.py
-COPY tests/pipeline_tests/test_analyzers_yaml_dast.py /app/tests/pipeline_tests/test_analyzers_yaml_dast.py
-COPY tests/pipeline_tests/test_dast_contract_snapshot.py /app/tests/pipeline_tests/test_dast_contract_snapshot.py
-COPY tests/pipeline_tests/test_dast_connector.py /app/tests/pipeline_tests/test_dast_connector.py
-COPY tests/pipeline_tests/test_dast_executor.py /app/tests/pipeline_tests/test_dast_executor.py
-COPY tests/pipeline_tests/test_execution_registry.py /app/tests/pipeline_tests/test_execution_registry.py
+COPY tests/ /app/tests/
 
 USER 1001:1001
 

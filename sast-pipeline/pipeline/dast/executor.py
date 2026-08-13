@@ -10,6 +10,7 @@ from pathlib import Path
 
 from pipeline import docker_utils
 from pipeline.dast.contracts import (
+    CONNECTOR_EXIT_LOCAL_SETUP,
     DastConnectorInput,
     DastConnectorOutcome,
     DastConnectorOutcomeState,
@@ -112,6 +113,18 @@ class DastExecutionIncomplete(RuntimeError):
     """The connector exited before it could persist a provider run checkpoint."""
 
 
+class DastExecutionLocalFailure(RuntimeError):
+    """The connector never reached the provider; another attempt would fail identically."""
+
+
+# The connector is not a third-party tool wrapped in an image the way an analyzer is: it is this
+# package's own code (`COPY pipeline/dast/`, `python -m pipeline.dast.connector`). So the package
+# knows how to build it -- Dockerfile here, context at the package root -- instead of the analyzer
+# catalog carrying build fields that only ever describe this one entry.
+_CONNECTOR_DOCKERFILE_DIR = "Dockerfiles/dast_connector"
+_CONNECTOR_BUILD_CONTEXT = "."
+
+
 class DastExecutor:
     """Run the DAST protocol connector through the shared container lifecycle and logger."""
 
@@ -154,17 +167,35 @@ class DastExecutor:
         if execution.vpn_container_name:
             args.append("--trusted-vpn")
 
+        # The image has to exist before it can be asked who it runs as, and the answer decides
+        # how the handoff is aligned; run_pipeline_container's own ensure_image then finds it.
+        docker_utils.ensure_image(
+            self._connector_image,
+            _CONNECTOR_DOCKERFILE_DIR,
+            build_context=_CONNECTOR_BUILD_CONTEXT,
+        )
+        mounted = [input_path, output_dir, execution.token_file]
+        if execution.ca_file is not None:
+            mounted.append(execution.ca_file)
+        user = self._align_handoff_identity(mounted)
+
         try:
-            docker_utils.run_container(
+            docker_utils.run_pipeline_container(
                 image=self._connector_image,
+                dockerfile_dir=_CONNECTOR_DOCKERFILE_DIR,
+                build_context=_CONNECTOR_BUILD_CONTEXT,
                 pipeline_id=execution.pipeline_id,
                 volumes=volumes,
                 env=None,
                 args=args,
                 network=f"container:{execution.vpn_container_name}" if execution.vpn_container_name else None,
+                user=user,
             )
         except subprocess.CalledProcessError as exc:
             docker_utils.cleanup_pipeline_containers(execution.pipeline_id)
+            if exc.returncode == CONNECTOR_EXIT_LOCAL_SETUP:
+                detail = "DAST connector could not start on this host"
+                raise DastExecutionLocalFailure(detail) from exc
             recovery_path = output_dir / "recovery.json"
             if not recovery_path.is_file():
                 raise DastExecutionIncomplete("DAST connector failed before provider acceptance") from exc
@@ -200,6 +231,22 @@ class DastExecutor:
         if result.outcome.state is not DastConnectorOutcomeState.TERMINAL and result_path.exists():
             raise ValueError("non-terminal DAST connector produced an unexpected result.json")
         return result
+
+    def _align_handoff_identity(self, mounted: list[Path]) -> str | None:
+        """Give the handoff files and the container one identity, and return any ``--user``.
+
+        The token must stay unreadable to anyone but its owner, so relaxing the mode is not an
+        option: the two sides have to agree on who that owner is. When this process can hand the
+        files over it does, and the image keeps the unprivileged user it declares; otherwise the
+        container runs as this process instead.
+        """
+        image_user = docker_utils.image_runtime_user(self._connector_image)
+        if image_user is not None and os.geteuid() == 0:
+            uid, gid = image_user
+            for path in mounted:
+                os.chown(path, uid, gid)
+            return None
+        return f"{os.geteuid()}:{os.getegid()}"
 
     @staticmethod
     def _validate_secret_file(path: Path) -> None:

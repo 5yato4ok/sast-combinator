@@ -51,7 +51,6 @@ analyzers:
     type: standalone
     execution_type: dast
     image: aist-dast-connector:v2
-    dockerfile_path: "/app/Dockerfiles/dast_connector"
     enabled: true
     time_class: slow
     output_type: "DAST Autonomous Scan"
@@ -99,20 +98,20 @@ analyzers:
     configuration:
       - python:
           image: codeql-python
-          dockerfile_path: "/app/Dockerfiles/codeql/python/"
+          dockerfile_path: "Dockerfiles/codeql/python/"
           result_file: "codeql_python.sarif"
       - cpp:
           commentary: "Not working on nx_open"
           enabled: false
           type: builder
           image: codeql-c-cpp
-          dockerfile_path: "/app/Dockerfiles/codeql/cpp/"
+          dockerfile_path: "Dockerfiles/codeql/cpp/"
           result_file: "codeql_cpp.sarif"
       - c:
           inherits: cpp
       - csharp:
           image: codeql-csharp
-          dockerfile_path: "/app/Dockerfiles/codeql/csharp/"
+          dockerfile_path: "Dockerfiles/codeql/csharp/"
           result_file: "codeql_csharp.sarif"
           type: builder
           env:
@@ -122,30 +121,30 @@ analyzers:
 
       - javascript:
           image: codeql-javascript-typescript
-          dockerfile_path: "/app/Dockerfiles/codeql/javascript/"
+          dockerfile_path: "Dockerfiles/codeql/javascript/"
           result_file: "codeql_javascript.sarif"
       - typescript:
           inherits: javascript
       - java:
           commentary: "Not tested"
           image: codeql-java-kotlin
-          dockerfile_path: "/app/Dockerfiles/codeql/java/"
+          dockerfile_path: "Dockerfiles/codeql/java/"
           result_file: "codeql_java.sarif"
       - kotlin:
           inherits: java
       - go:
           image: codeql-go
-          dockerfile_path: "/app/Dockerfiles/codeql/go/"
+          dockerfile_path: "Dockerfiles/codeql/go/"
           result_file: "codeql_go.sarif"
       - ruby:
           commentary: "Not tested"
           image: codeql-ruby
-          dockerfile_path: "/app/Dockerfiles/codeql/ruby/"
+          dockerfile_path: "Dockerfiles/codeql/ruby/"
           result_file: "codeql_ruby.sarif"
       - swift:
           commentary: "Not tested"
           image: codeql-swift
-          dockerfile_path: "/app/Dockerfiles/codeql/swift/"
+          dockerfile_path: "Dockerfiles/codeql/swift/"
           result_file: "codeql_swift.sarif"
 
   - name: bearer
@@ -180,19 +179,19 @@ analyzers:
           enabled: false
           commentary: "Requires license. Small amount of security checkers"
           image: qodana-csharp
-          dockerfile_path: "/app/Dockerfiles/qodana/csharp/"
+          dockerfile_path: "Dockerfiles/qodana/csharp/"
           result_file: "qodana_csharp.sarif"
           env:
             - QODANA_TOKEN
       - python:
           commentary: "Community version. Small amount of security checkers"
           image: qodana-python
-          dockerfile_path: "/app/Dockerfiles/qodana/python/"
+          dockerfile_path: "Dockerfiles/qodana/python/"
           result_file: "qodana_python.sarif"
       - java:
           commentary: "Not tested"
           image: qodana-java-kotlin
-          dockerfile_path: "/app/Dockerfiles/qodana/java/"
+          dockerfile_path: "Dockerfiles/qodana/java/"
           result_file: "qodana_java_kotlin.sarif"
       - kotlin:
           inherits: java
@@ -225,7 +224,7 @@ analyzers:
     output_type: "Generic Findings Import"
     type: builder
     language: ["cpp"]
-    dockerfile_path: "/app/Dockerfiles/infer/cpp/"
+    dockerfile_path: "Dockerfiles/infer/cpp/"
     result_file: "infer_cpp.json"
     env:
       - COMPILE_COMMANDS_PATH

@@ -39,7 +39,6 @@ def test_dast_remains_in_common_analyzer_catalog_as_standalone_execution():
         "type": "standalone",
         "execution_type": "dast",
         "image": "aist-dast-connector:v2",
-        "dockerfile_path": "/app/Dockerfiles/dast_connector",
         "enabled": True,
         "time_class": "slow",
         "output_type": "DAST Autonomous Scan",
@@ -94,6 +93,8 @@ def test_canonical_execution_dispatch_resolves_dast_image_from_common_catalog(mo
 
     class FakeExecutor:
         def __init__(self, *, connector_image):
+            # The catalog says which image to run; how that image is built is the connector's own
+            # business, because it packages this package's code rather than a third-party tool.
             calls.append(("image", connector_image))
 
         def execute(self, execution):

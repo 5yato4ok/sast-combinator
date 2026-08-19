@@ -371,7 +371,17 @@ def test_ensure_image_builds_with_and_without_log_level(monkeypatch, tmp_path):
 
     captured = []
 
-    def fake_build_image(*, image_name, context_dir, dockerfile=None, build_args=None, check=True, default_log_level="DEBUG", timeout=None):
+    def fake_build_image(
+        *,
+        image_name,
+        context_dir,
+        dockerfile=None,
+        build_args=None,
+        labels=None,
+        check=True,
+        default_log_level="DEBUG",
+        timeout=None,
+    ):
         # Capture the build invocation for later inspection
         captured.append({
             "image_name": image_name,
@@ -446,3 +456,105 @@ def test_a_build_context_that_exists_nowhere_is_named_in_the_error(monkeypatch, 
         du.resolve_build_context("Dockerfiles/missing_analyzer")
 
     assert "missing_analyzer" in str(caught.value)
+
+
+# A stale tag is the one failure the "does the image exist" question cannot see: `:v2` names the
+# protocol revision, so the first build on a host owns the tag forever, and the packaged connector
+# then parses input files written by code it does not match.
+def test_ensure_image_rebuilds_a_tag_that_no_longer_matches_its_sources(monkeypatch, tmp_path):
+    import pipeline.docker_utils as du
+
+    captured = []
+    monkeypatch.setattr(du, "image_exists", lambda name: True)
+    monkeypatch.setattr(du, "image_label", lambda image, label: "digest-of-an-older-revision")
+    monkeypatch.setattr(du, "build_image", lambda **kwargs: captured.append(kwargs))
+
+    du.ensure_image("aist-dast-connector:v2", str(tmp_path), source_digest="digest-of-this-revision")
+
+    assert len(captured) == 1
+    # The rebuild has to record what it was built from, or the next call rebuilds it again.
+    assert captured[0]["labels"] == {du.SOURCE_DIGEST_LABEL: "digest-of-this-revision"}
+
+
+def test_ensure_image_keeps_a_tag_built_from_the_same_sources(monkeypatch, tmp_path):
+    import pipeline.docker_utils as du
+
+    monkeypatch.setattr(du, "image_exists", lambda name: True)
+    monkeypatch.setattr(du, "image_label", lambda image, label: "digest-of-this-revision")
+    monkeypatch.setattr(du, "build_image", lambda **kwargs: pytest.fail("must not rebuild"))
+
+    du.ensure_image("aist-dast-connector:v2", str(tmp_path), source_digest="digest-of-this-revision")
+
+
+def test_ensure_image_rebuilds_an_image_that_records_no_sources(monkeypatch, tmp_path):
+    """Every image built before the digest existed -- including one a deploy script built."""
+    import pipeline.docker_utils as du
+
+    captured = []
+    monkeypatch.setattr(du, "image_exists", lambda name: True)
+    monkeypatch.setattr(du, "image_label", lambda image, label: None)
+    monkeypatch.setattr(du, "build_image", lambda **kwargs: captured.append(kwargs))
+
+    du.ensure_image("aist-dast-connector:v2", str(tmp_path), source_digest="digest-of-this-revision")
+
+    assert len(captured) == 1
+
+
+def test_build_source_digest_follows_every_file_the_dockerfile_copies(monkeypatch, tmp_path):
+    """A directory is digested whole, because that is what a COPY of it takes."""
+    import pipeline.docker_utils as du
+
+    package_root = tmp_path / "sast-pipeline"
+    (package_root / "pipeline" / "dast").mkdir(parents=True)
+    (package_root / "pipeline" / "__init__.py").write_text("", encoding="utf-8")
+    contracts = package_root / "pipeline" / "dast" / "contracts.py"
+    contracts.write_text("FIELDS = {'stop_requested'}\n", encoding="utf-8")
+    monkeypatch.setattr(du, "PACKAGE_ROOT", package_root)
+    paths = ("pipeline/__init__.py", "pipeline/dast")
+
+    before = du.build_source_digest(paths)
+    contracts.write_text("FIELDS = {'stop_requested', 'harvest_only'}\n", encoding="utf-8")
+
+    assert du.build_source_digest(paths) != before
+    # Order of the declared entries is not part of the identity of a revision.
+    assert du.build_source_digest(tuple(reversed(paths))) == du.build_source_digest(paths)
+
+
+def test_build_source_digest_ignores_bytecode_caches(monkeypatch, tmp_path):
+    """__pycache__ is not in the image, and it appears whenever the worker imports the package."""
+    import pipeline.docker_utils as du
+
+    package_root = tmp_path / "sast-pipeline"
+    cache = package_root / "pipeline" / "dast" / "__pycache__"
+    cache.mkdir(parents=True)
+    (package_root / "pipeline" / "dast" / "connector.py").write_text("", encoding="utf-8")
+    monkeypatch.setattr(du, "PACKAGE_ROOT", package_root)
+
+    before = du.build_source_digest(("pipeline/dast",))
+    (cache / "connector.cpython-313.pyc").write_bytes(b"compiled")
+
+    assert du.build_source_digest(("pipeline/dast",)) == before
+
+
+def test_build_image_records_the_labels_it_is_given(monkeypatch):
+    import subprocess
+    import pipeline.docker_utils as du
+
+    commands = []
+
+    class DummyPopen:
+        def __init__(self, cmd):
+            commands.append(cmd)
+            self.stdout = iter(())
+        def __enter__(self):
+            return self
+        def __exit__(self, exc_type, exc, tb):
+            return False
+        def wait(self, timeout=None):
+            return 0
+
+    monkeypatch.setattr(subprocess, "Popen", lambda cmd, **kwargs: DummyPopen(cmd))
+
+    du.build_image(image_name="img", context_dir=".", labels={du.SOURCE_DIGEST_LABEL: "abc123"})
+
+    assert commands == [["docker", "build", "--label", f"{du.SOURCE_DIGEST_LABEL}=abc123", "-t", "img", "."]]

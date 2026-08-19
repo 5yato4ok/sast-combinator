@@ -10,6 +10,7 @@ different parts of the pipeline.
 
 from __future__ import annotations
 
+import hashlib
 import subprocess
 import os
 import re
@@ -33,6 +34,11 @@ HOST_SHARED_ROOT = Path(os.environ.get("AIST_TMP_DIR", "/tmp/aist"))
 # inside the pipeline image, where this root is mounted at /app; a caller running elsewhere --
 # the Celery worker, where /app is the platform project -- needs the same entry re-anchored here.
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent
+
+# Stamped on every image whose build inputs are files of this package, so a tag that names a
+# protocol version instead of a build ("aist-dast-connector:v2") can still be told apart from the
+# sources it was built from.
+SOURCE_DIGEST_LABEL = "com.aist.source-digest"
 
 
 class UnsharedWorkspaceError(ValueError):
@@ -246,6 +252,51 @@ def image_runtime_user(image: str) -> Optional[Tuple[int, int]]:
     return int(user), int(group) if group.isdigit() else -1
 
 
+def image_label(image: str, label: str) -> Optional[str]:
+    """Return one label of a local image, or None when the image or the label is absent."""
+    result = subprocess.run(
+        ["docker", "image", "inspect", "--format", f'{{{{index .Config.Labels "{label}"}}}}', image],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    # An image with no labels at all makes the template print Go's zero value for a nil map.
+    value = result.stdout.strip()
+    return None if value in ("", "<no value>") else value
+
+
+def build_source_digest(paths: Iterable[str]) -> str:
+    """Digest the package files an image is built from.
+
+    An image whose Dockerfile copies this package carries our own code, so "the tag exists" is not
+    "the tag matches the code that talks to it": the tag is reused across builds, and a host that
+    already has it keeps running whatever was built there first. That is how a connector image
+    stayed a protocol revision behind the caller writing its input file. Paths are relative to the
+    package root -- the same anchor build contexts use -- and directories are digested whole,
+    because that is what COPY takes.
+    """
+    digest = hashlib.sha256()
+    for relative in sorted(paths):
+        declared = Path(relative)
+        source = declared if declared.is_absolute() else PACKAGE_ROOT / declared
+        if source.is_dir():
+            files = sorted(
+                item for item in source.rglob("*")
+                if item.is_file() and "__pycache__" not in item.parts
+            )
+        else:
+            files = [source]
+        for item in files:
+            # Relative to the package root so the digest of one revision is the same in the
+            # Celery worker, in the builder image, and on the host.
+            digest.update(os.path.relpath(item, PACKAGE_ROOT).encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(item.read_bytes())
+    return digest.hexdigest()
+
+
 def resolve_build_context(dockerfile_dir: str) -> str:
     """Return the build context for a catalog entry.
 
@@ -268,16 +319,24 @@ def ensure_image(
     *,
     build_context: Optional[str] = None,
     timeout: Optional[float] = None,
+    source_digest: Optional[str] = None,
 ) -> None:
-    """Build the image if it is not present locally.
+    """Build the image if it is not present locally, or if it no longer matches its sources.
 
     Nothing in the runtime deployment builds analyzer or connector images: compose declares only
     the platform's own services, so a step that does not do this cannot run at all on a fresh
     host.
+
+    A caller whose image packages our own code passes ``source_digest`` (see
+    ``build_source_digest``). The digest is stamped on the built image, so presence of the tag is
+    no longer taken as proof that it was built from the code now asking for it -- an updated
+    checkout rebuilds instead of running the previous revision under the same tag.
     """
     if image_exists(image):
-        log.debug("Image '%s' already exists; skipping build", image)
-        return
+        if source_digest is None or image_label(image, SOURCE_DIGEST_LABEL) == source_digest:
+            log.debug("Image '%s' already exists; skipping build", image)
+            return
+        log.info("Image '%s' was built from other sources than this revision; rebuilding", image)
     log.info("Building image '%s'...", image)
     build_args: Dict[str, str] = {}
     log_level_env = os.environ.get("LOG_LEVEL")
@@ -297,6 +356,7 @@ def ensure_image(
         context_dir=context_dir,
         dockerfile=dockerfile,
         build_args=build_args,
+        labels={SOURCE_DIGEST_LABEL: source_digest} if source_digest else None,
         timeout=timeout,
     )
 
@@ -370,6 +430,7 @@ def build_image(
     context_dir: str,
     dockerfile: Optional[str] = None,
     build_args: Optional[Dict[str, str]] = None,
+    labels: Optional[Dict[str, str]] = None,
     check: bool = True,
     default_log_level: str = "INFO",
     timeout: Optional[float] = None,
@@ -385,6 +446,7 @@ def build_image(
     :param context_dir: Path to the build context (the directory containing the Dockerfile).
     :param dockerfile: Optional path to a Dockerfile. If provided, passed via ``-f``.
     :param build_args: Mapping of build argument names to values (passed via ``--build-arg``).
+    :param labels: Mapping of image labels to record on the result (passed via ``--label``).
     :param check: If True, raise ``CalledProcessError`` for non-zero exit codes.
     :param timeout: Optional cap in seconds. A build that hangs would otherwise hold the calling
         worker forever; callers that run inside a Celery task pass one.
@@ -394,6 +456,9 @@ def build_image(
     if build_args:
         for k, v in build_args.items():
             cmd += ["--build-arg", f"{k}={v}"]
+    if labels:
+        for k, v in labels.items():
+            cmd += ["--label", f"{k}={v}"]
     # Tag name
     cmd += ["-t", image_name]
     # Custom Dockerfile if provided

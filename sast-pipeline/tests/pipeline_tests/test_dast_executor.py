@@ -312,3 +312,62 @@ def test_executor_rejects_success_without_current_telemetry_artifact(monkeypatch
 
     with pytest.raises(ValueError, match="telemetry.json"):
         DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+
+
+def test_executor_rebuilds_a_connector_image_left_from_an_older_revision(monkeypatch, tmp_path):
+    """
+    The connector image packages this package, so the tag existing is not the tag matching.
+
+    `aist-dast-connector:v2` names the protocol revision. A host that built it once kept running
+    that build across code updates, and the packaged parser then rejected the input file this
+    revision writes -- "connector input fields do not match the v2 contract" -- on every attempt,
+    including the ones carrying a stop request. Rebuilding is decided by what the image was built
+    from, not by whether the daemon has something under that name.
+    """
+    import pipeline.docker_utils as du
+    from pipeline.dast import executor as dast_executor
+
+    execution = _execution(tmp_path)
+    builds = []
+    monkeypatch.setattr(dast_executor.docker_utils, "ensure_image", du.ensure_image)
+    monkeypatch.setattr(dast_executor.docker_utils, "image_exists", lambda image: True)
+    monkeypatch.setattr(
+        dast_executor.docker_utils,
+        "image_label",
+        lambda image, label: "digest-of-an-older-revision",
+    )
+    monkeypatch.setattr(dast_executor.docker_utils, "build_image", lambda **kwargs: builds.append(kwargs))
+    monkeypatch.setattr(
+        dast_executor.docker_utils,
+        "run_pipeline_container",
+        lambda **kwargs: _write_terminal_output(
+            execution,
+            DastRecoveryState.initial(execution.command).for_run("run-123"),
+        ),
+    )
+
+    DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+
+    current_digest = du.build_source_digest(dast_executor._CONNECTOR_SOURCE_PATHS)
+    assert [build["labels"] for build in builds] == [{du.SOURCE_DIGEST_LABEL: current_digest}]
+
+
+def test_connector_source_digest_covers_every_file_the_connector_image_copies():
+    """The digest is only as good as the file list: a copied file left out of it can still drift."""
+    import pipeline.docker_utils as du
+    from pipeline.dast import executor as dast_executor
+
+    dockerfile = PROJECT_ROOT / "Dockerfiles" / "dast_connector" / "Dockerfile"
+    runtime_stage = dockerfile.read_text(encoding="utf-8").split("FROM runtime AS test")[0]
+    copied = {
+        source.rstrip("/")
+        for line in runtime_stage.splitlines()
+        if line.startswith("COPY ")
+        for source in line.split()[1:-1]
+    }
+    declared = {path.rstrip("/") for path in dast_executor._CONNECTOR_SOURCE_PATHS}
+
+    assert copied <= declared
+    # The Dockerfile itself decides the runtime, so it belongs to the identity of the build too.
+    assert "Dockerfiles/dast_connector/Dockerfile" in declared
+    assert du.build_source_digest(dast_executor._CONNECTOR_SOURCE_PATHS)

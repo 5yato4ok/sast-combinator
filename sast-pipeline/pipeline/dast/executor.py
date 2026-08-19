@@ -124,6 +124,17 @@ class DastExecutionLocalFailure(RuntimeError):
 # catalog carrying build fields that only ever describe this one entry.
 _CONNECTOR_DOCKERFILE_DIR = "Dockerfiles/dast_connector"
 _CONNECTOR_BUILD_CONTEXT = "."
+# Exactly what the runtime stage of that Dockerfile copies. The image tag names the protocol
+# version, not a build, so a host that already has `:v2` would otherwise keep running the
+# connector it built first -- and reject the input file this revision writes, because a field
+# added to the v2 input contract does not exist in the packaged copy that parses it. Keep this
+# list in step with the Dockerfile's COPY lines.
+_CONNECTOR_SOURCE_PATHS = (
+    "Dockerfiles/dast_connector/Dockerfile",
+    "pipeline/__init__.py",
+    "pipeline/docker_utils.py",
+    "pipeline/dast",
+)
 
 
 class DastExecutor:
@@ -175,6 +186,7 @@ class DastExecutor:
             self._connector_image,
             _CONNECTOR_DOCKERFILE_DIR,
             build_context=_CONNECTOR_BUILD_CONTEXT,
+            source_digest=docker_utils.build_source_digest(_CONNECTOR_SOURCE_PATHS),
         )
         mounted = [input_path, output_dir, execution.token_file]
         if execution.ca_file is not None:

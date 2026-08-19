@@ -275,6 +275,8 @@ class DastConnectorInput:
     recovery: DastRecoveryState
     deadline_at: str | None = None
     stop_requested: bool = False
+    # Read the run's status once and collect a terminal result. No start, no stop.
+    harvest_only: bool = False
     contract_version: str = CONTRACT_VERSION
 
     def __post_init__(self) -> None:
@@ -288,6 +290,7 @@ class DastConnectorInput:
         if self.deadline_at is not None:
             _required_string(self.deadline_at, "deadline_at", max_length=64)
         _required_bool(self.stop_requested, "stop_requested")
+        _required_bool(self.harvest_only, "harvest_only")
 
     @classmethod
     def from_wire(cls, payload: object) -> DastConnectorInput:
@@ -301,6 +304,7 @@ class DastConnectorInput:
                 "recovery",
                 "deadline_at",
                 "stop_requested",
+                "harvest_only",
             },
             "connector input",
         )
@@ -315,6 +319,7 @@ class DastConnectorInput:
                 else _required_string(data["deadline_at"], "deadline_at", max_length=64)
             ),
             stop_requested=_required_bool(data["stop_requested"], "stop_requested"),
+            harvest_only=_required_bool(data["harvest_only"], "harvest_only"),
         )
 
     def to_wire(self) -> dict[str, Any]:
@@ -325,6 +330,7 @@ class DastConnectorInput:
             "recovery": self.recovery.to_wire(),
             "deadline_at": self.deadline_at,
             "stop_requested": self.stop_requested,
+            "harvest_only": self.harvest_only,
         }
 
 

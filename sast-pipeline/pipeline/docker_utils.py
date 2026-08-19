@@ -517,20 +517,27 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
             check=False,
         )
         names = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-        if not names:
-            return
         for name in names:
-            try:
-                # Stop first, remove second. A live connector writes its recovery and outcome
-                # files on shutdown, and those are what tell a resumed run whether the provider
-                # ever accepted it -- `rm -f` alone is a SIGKILL that takes that away. The
-                # removal still has to happen: containers that never started leave no `--rm`
-                # behind, and a leftover name blocks the next run under the same pipeline id.
-                run_logged_cmd(["docker", "stop", name])
-                run_logged_cmd(["docker", "rm", "-f", name])
-                log.info("Stopped and removed pipeline container %s", name)
-            except Exception as exc:
-                log.warning("Failed to stop and remove container %s: %s", name, exc)
-                continue
+            cleanup_container(name)
     except Exception as exc:
         log.warning("Failed to clean up pipeline containers for %s: %s", pipeline_id, exc)
+
+
+def cleanup_container(name: str) -> None:
+    """Stop and remove one container by its exact name.
+
+    Stop first, remove second: `rm -f` alone is a SIGKILL, and a live connector needs its shutdown
+    to write the recovery and outcome files a resumed run reads. Removal is still required -- a
+    leftover name blocks the next run.
+
+    Prefer this over :func:`cleanup_pipeline_containers`, whose substring match also covers
+    containers owned by somebody else, the per-execution VPN sidecar among them.
+    """
+    if not name:
+        return
+    try:
+        run_logged_cmd(["docker", "stop", name])
+        run_logged_cmd(["docker", "rm", "-f", name])
+        log.info("Stopped and removed pipeline container %s", name)
+    except Exception as exc:
+        log.warning("Failed to stop and remove container %s: %s", name, exc)

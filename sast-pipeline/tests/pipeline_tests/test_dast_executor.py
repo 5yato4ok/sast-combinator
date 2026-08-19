@@ -13,6 +13,8 @@ from pipeline.dast.contracts import (
 from pipeline.dast.contracts import CONNECTOR_EXIT_LOCAL_SETUP
 from pipeline.dast.executor import DastExecutionInput, DastExecutionLocalFailure, DastExecutor
 
+CONNECTOR_CONTAINER = "sast_aist-dast-connector_v2_pipeline-123"
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CAPABILITY_REVISION = f"sha256:{'a' * 64}"
 UNPRIVILEGED_UID = 1000
@@ -142,19 +144,23 @@ def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret
     assert "certificate-material" not in json.dumps(connector_input)
 
 
-def test_executor_cleans_up_common_pipeline_containers_on_interrupt(monkeypatch, tmp_path):
+def test_executor_cleans_up_only_its_own_connector_container_on_interrupt(monkeypatch, tmp_path):
+    """Cleaning up by pipeline-id substring also matched ``aist-vpn-<pipeline_id>``, its owner's."""
     execution = _execution(tmp_path)
     cleaned = []
+    swept = []
     monkeypatch.setattr(
         "pipeline.dast.executor.docker_utils.run_pipeline_container",
         lambda **kwargs: (_ for _ in ()).throw(KeyboardInterrupt()),
     )
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", cleaned.append)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_container", cleaned.append)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", swept.append)
 
     with pytest.raises(KeyboardInterrupt):
         DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
 
-    assert cleaned == ["pipeline-123"]
+    assert cleaned == [CONNECTOR_CONTAINER]
+    assert swept == []
 
 
 def test_executor_returns_typed_unreachable_outcome_with_persisted_recovery(monkeypatch, tmp_path):
@@ -168,14 +174,14 @@ def test_executor_returns_typed_unreachable_outcome_with_persisted_recovery(monk
         raise subprocess.CalledProcessError(1, ["docker", "run"])
 
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", cleaned.append)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_container", cleaned.append)
 
     result = DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
 
     assert result.outcome.state is DastConnectorOutcomeState.UNREACHABLE
     assert result.recovery == recovery
     assert result.terminal_result is None
-    assert cleaned == ["pipeline-123"]
+    assert cleaned == [CONNECTOR_CONTAINER]
 
 
 def test_executor_rejects_group_readable_token_file_before_container_start(monkeypatch, tmp_path):
@@ -250,12 +256,12 @@ def test_executor_reports_a_local_setup_failure_instead_of_an_unreachable_provid
         raise subprocess.CalledProcessError(CONNECTOR_EXIT_LOCAL_SETUP, ["docker", "run"])
 
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
-    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", cleaned.append)
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_container", cleaned.append)
 
     with pytest.raises(DastExecutionLocalFailure):
         DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
 
-    assert cleaned == ["pipeline-123"]
+    assert cleaned == [CONNECTOR_CONTAINER]
 
 
 def test_dast_common_catalog_declaration_is_standalone_not_a_sast_analyzer():
@@ -288,6 +294,7 @@ def test_executor_serializes_explicit_recovery_without_source_or_analyzer_pipeli
         "recovery",
         "deadline_at",
         "stop_requested",
+        "harvest_only",
     }
     assert "source" not in connector_input
     assert "analyzers" not in connector_input

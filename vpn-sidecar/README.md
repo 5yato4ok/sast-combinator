@@ -106,7 +106,7 @@ Is usable OpenVPN configuration present?
         │
   Yes
         ▼
-docker build aist-vpn-sidecar:latest
+docker build aist-vpn-sidecar:v2
 (skipped if image already present)
         │
         ▼

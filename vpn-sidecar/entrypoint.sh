@@ -21,7 +21,15 @@
 #   AIST_VPN_TLS_KEY_DIRECTION   — "0" or "1" (parsed from .ovpn by Python caller)
 #   AIST_ALLOWED_IP              — celeryworker's eth0 IP; tinyproxy Allow is
 #                                  restricted to this IP + 127.0.0.1 only
+#
+# Readiness contract: AIST_VPN_READY_MARKER is created last — after tun0, after /etc/resolv.conf
+# carries the VPN-pushed resolvers, and after tinyproxy is listening.  The platform waits for that
+# file and must not infer readiness from tun0: a container joining this namespace inherits this
+# resolv.conf, and before it is rewritten it resolves VPN-internal names against Docker's resolver.
 set -e
+
+AIST_VPN_READY_MARKER=/run/aist-vpn-ready
+rm -f "$AIST_VPN_READY_MARKER"
 
 if [ -z "${AIST_VPN_OVPN_CONTENT:-}" ]; then
   echo "[VPN][ERROR] AIST_VPN_OVPN_CONTENT is not set." >&2
@@ -187,6 +195,23 @@ _ALLOWED_IP="${AIST_ALLOWED_IP:-}"
 } > /tmp/tinyproxy.conf
 
 tinyproxy -c /tmp/tinyproxy.conf &
+
+# tinyproxy binds asynchronously, so "started" is not "listening".  st 0A is LISTEN, 0438 is 1080.
+echo "[VPN] Waiting for the proxy to listen..."
+_PROXY_TRIES=0
+until awk '$4 == "0A" && $2 ~ /:0438$/ { found = 1 } END { exit !found }' \
+  /proc/net/tcp /proc/net/tcp6 2>/dev/null || [ "$_PROXY_TRIES" -ge 50 ]; do
+  sleep 0.2
+  _PROXY_TRIES=$((_PROXY_TRIES + 1))
+done
+
+if [ "$_PROXY_TRIES" -ge 50 ]; then
+  echo "[VPN][ERROR] tinyproxy did not start listening on :1080 within 10 s." >&2
+  exit 1
+fi
+
+# DNS is in place and the proxy is listening, so the namespace is now usable by a joined container.
+: > "$AIST_VPN_READY_MARKER"
 
 echo "[VPN] Ready. HTTP CONNECT proxy (tinyproxy) on port 1080."
 

@@ -508,6 +508,8 @@ def test_deadline_requests_idempotent_stop_for_known_run_and_returns_pending(tmp
         if request.method == "POST" and request.url.path.endswith("/stop"):
             stop_calls.append(request)
             return _response(200, {**_status("stop_requested"), "stop_requested": True})
+        if request.method == "GET" and request.url.path.endswith("/run-123"):
+            return _response(200, _status("running"))
         if request.url.path.endswith("/logs"):
             assert int(request.url.params["cursor"]) == 4
             return _response(200, _logs(4))
@@ -535,7 +537,46 @@ def test_deadline_requests_idempotent_stop_for_known_run_and_returns_pending(tmp
     )
 
 
-def test_repeated_stop_observes_provider_terminal_before_returning(tmp_path):
+def test_a_run_that_already_finished_is_collected_instead_of_stopped(tmp_path):
+    """Reaching for ``/stop`` first left a finished run's result unfetched and reported as pending."""
+    recovery = DastRecoveryState.initial(_command()).for_run("run-123")
+    stop_calls = []
+
+    def handler(request):
+        if request.method == "POST" and request.url.path.endswith("/stop"):
+            stop_calls.append(request)
+            return _response(200, {**_status("stop_requested"), "stop_requested": True})
+        if request.method == "GET" and request.url.path.endswith("/run-123"):
+            return _response(200, _status("succeeded", result_ready=True))
+        if request.url.path.endswith("/logs"):
+            return _response(200, _logs(0, message="closing sequence complete"))
+        if request.url.path.endswith("/results"):
+            return _response(200, _result())
+        raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
+
+    now = datetime(2026, 7, 26, 10, 0, tzinfo=UTC)
+    connector_input = _connector_input(recovery=recovery)
+    connector_input = type(connector_input)(
+        gateway_url=connector_input.gateway_url,
+        command=connector_input.command,
+        recovery=recovery,
+        deadline_at=(now - timedelta(seconds=1)).isoformat(),
+    )
+    result = DastConnector(
+        gateway=_gateway(handler),
+        output_dir=tmp_path,
+        now=lambda: now,
+    ).run(connector_input)
+
+    assert result is not None
+    assert result.status == "succeeded"
+    assert stop_calls == []
+    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == "terminal"
+    assert json.loads((tmp_path / "result.json").read_text(encoding="utf-8"))["status"] == "succeeded"
+
+
+def test_stop_response_that_turns_terminal_is_still_collected(tmp_path):
+    """The run can finish between the status read and the stop, so both answers must be honoured."""
     recovery = DastRecoveryState.initial(_command()).for_run("run-123")
 
     def handler(request):
@@ -547,6 +588,8 @@ def test_repeated_stop_observes_provider_terminal_before_returning(tmp_path):
                     "stop_requested": True,
                 },
             )
+        if request.method == "GET" and request.url.path.endswith("/run-123"):
+            return _response(200, _status("running"))
         if request.url.path.endswith("/logs"):
             return _response(200, _logs(0, message="provider stopped"))
         if request.url.path.endswith("/results"):
@@ -565,6 +608,83 @@ def test_repeated_stop_observes_provider_terminal_before_returning(tmp_path):
     assert result is not None
     assert result.status == "stopped"
     assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == "terminal"
+
+
+def test_harvest_only_collects_a_finished_run_without_starting_or_stopping_anything(tmp_path):
+    """The last look taken before the platform gives a run up for lost."""
+    recovery = DastRecoveryState.initial(_command()).for_run("run-123").with_cursor(784)
+    forbidden = []
+
+    def handler(request):
+        if request.method == "POST":
+            forbidden.append(request)
+            raise AssertionError("harvest must neither start nor stop a run")
+        if request.url.path.endswith("/logs"):
+            return _response(200, _logs(784))
+        if request.url.path.endswith("/results"):
+            return _response(200, _result())
+        if request.url.path.endswith("/run-123"):
+            return _response(200, _status("succeeded", result_ready=True))
+        raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
+
+    connector_input = _connector_input(recovery=recovery)
+    connector_input = type(connector_input)(
+        gateway_url=connector_input.gateway_url,
+        command=connector_input.command,
+        recovery=recovery,
+        harvest_only=True,
+    )
+    result = DastConnector(gateway=_gateway(handler), output_dir=tmp_path).run(connector_input)
+
+    assert result is not None
+    assert result.status == "succeeded"
+    assert forbidden == []
+    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == "terminal"
+
+
+def test_harvest_only_reports_a_run_that_is_still_not_terminal(tmp_path):
+    recovery = DastRecoveryState.initial(_command()).for_run("run-123")
+
+    def handler(request):
+        if request.method == "POST":
+            raise AssertionError("harvest must neither start nor stop a run")
+        if request.url.path.endswith("/logs"):
+            return _response(200, _logs(0))
+        if request.url.path.endswith("/run-123"):
+            return _response(200, _status("running"))
+        raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
+
+    connector_input = _connector_input(recovery=recovery)
+    connector_input = type(connector_input)(
+        gateway_url=connector_input.gateway_url,
+        command=connector_input.command,
+        recovery=recovery,
+        harvest_only=True,
+    )
+    result = DastConnector(gateway=_gateway(handler), output_dir=tmp_path).run(connector_input)
+
+    assert result is None
+    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == "stop_pending"
+    assert not (tmp_path / "result.json").exists()
+
+
+def test_harvest_only_without_a_provider_run_contacts_nobody(tmp_path):
+    def handler(request):
+        raise AssertionError(f"gateway must not be contacted: {request.method} {request.url.path}")
+
+    connector_input = _connector_input()
+    connector_input = type(connector_input)(
+        gateway_url=connector_input.gateway_url,
+        command=connector_input.command,
+        recovery=connector_input.recovery,
+        harvest_only=True,
+    )
+    result = DastConnector(gateway=_gateway(handler), output_dir=tmp_path).run(connector_input)
+
+    assert result is None
+    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == (
+        "cancelled_before_start"
+    )
 
 
 def test_gateway_client_configures_tls_timeouts_limits_and_disables_environment(monkeypatch, tmp_path):

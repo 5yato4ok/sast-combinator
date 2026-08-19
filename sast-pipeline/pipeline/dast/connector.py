@@ -248,6 +248,9 @@ class DastConnector:
 
     def run(self, connector_input: DastConnectorInput) -> DastTerminalResult | None:
         recovery = connector_input.recovery
+        correlation_id = connector_input.command.correlation_id
+        if connector_input.harvest_only:
+            return self._harvest(recovery, correlation_id=correlation_id)
         deadline_reached = self._deadline_reached(connector_input.deadline_at)
         if connector_input.stop_requested or deadline_reached:
             reason_code = "EXECUTION_TIMEOUT" if deadline_reached else "CANCEL_REQUESTED"
@@ -259,7 +262,11 @@ class DastConnector:
                     reason_code=reason_code,
                 )
                 return None
-            return self._request_stop(recovery, reason_code=reason_code)
+            return self._stop_unless_already_terminal(
+                recovery,
+                correlation_id=correlation_id,
+                reason_code=reason_code,
+            )
         if recovery.run_id is None:
             accepted = self._gateway.start(connector_input.command)
             recovery = recovery.for_run(accepted.run_id)
@@ -268,25 +275,23 @@ class DastConnector:
         try:
             while True:
                 if self._deadline_reached(connector_input.deadline_at):
-                    return self._request_stop(recovery, reason_code="EXECUTION_TIMEOUT")
+                    return self._stop_unless_already_terminal(
+                        recovery,
+                        correlation_id=correlation_id,
+                        reason_code="EXECUTION_TIMEOUT",
+                    )
                 status = self._gateway.status(recovery.run_id)
-                if status.correlation_id != connector_input.command.correlation_id:
+                if status.correlation_id != correlation_id:
                     raise DastConnectorError("status response correlation does not match the command")
                 recovery = self._drain_logs(recovery)
                 self._write_recovery(recovery)
                 if status.status.terminal:
-                    if not status.result_ready:
-                        raise DastConnectorError("terminal DAST status has no result")
-                    result = self._gateway.result(recovery.run_id)
-                    if result.status is not status.status:
-                        raise DastConnectorError("terminal result status does not match run status")
-                    self._write_json("result.json", result.to_wire())
-                    self._write_outcome(
-                        DastConnectorOutcomeState.TERMINAL,
+                    return self._collect_terminal(
+                        status,
                         recovery,
                         reason_code=status.error_code,
+                        source="status",
                     )
-                    return result
                 self._sleep(self._poll_interval)
         except (KeyboardInterrupt, SystemExit):
             self._gateway.stop(recovery.run_id)
@@ -296,6 +301,69 @@ class DastConnector:
                 reason_code="CANCEL_REQUESTED",
             )
             return None
+
+    def _harvest(
+        self,
+        recovery: DastRecoveryState,
+        *,
+        correlation_id: str,
+    ) -> DastTerminalResult | None:
+        """Read the run's status once, collecting a terminal result. Neither starts nor stops a run.
+
+        Used when the caller has already decided to end the pipeline and only needs to know whether
+        a result exists.
+        """
+        if recovery.run_id is None:
+            self._write_recovery(recovery)
+            self._write_outcome(
+                DastConnectorOutcomeState.CANCELLED_BEFORE_START,
+                recovery,
+                reason_code="EXECUTION_TIMEOUT",
+            )
+            return None
+        status = self._gateway.status(recovery.run_id)
+        if status.correlation_id != correlation_id:
+            raise DastConnectorError("status response correlation does not match the command")
+        recovery = self._drain_logs(recovery)
+        self._write_recovery(recovery)
+        if status.status.terminal:
+            return self._collect_terminal(
+                status,
+                recovery,
+                reason_code=status.error_code,
+                source="status",
+            )
+        self._write_outcome(
+            DastConnectorOutcomeState.STOP_PENDING,
+            recovery,
+            reason_code="EXECUTION_TIMEOUT",
+        )
+        return None
+
+    def _stop_unless_already_terminal(
+        self,
+        recovery: DastRecoveryState,
+        *,
+        correlation_id: str,
+        reason_code: str,
+    ) -> DastTerminalResult | None:
+        """Collect the result if the run already finished; otherwise request a stop.
+
+        Stopping first would leave a finished run's result unfetched.
+        """
+        status = self._gateway.status(recovery.run_id)
+        if status.correlation_id != correlation_id:
+            raise DastConnectorError("status response correlation does not match the command")
+        if status.status.terminal:
+            recovery = self._drain_logs(recovery)
+            self._write_recovery(recovery)
+            return self._collect_terminal(
+                status,
+                recovery,
+                reason_code=status.error_code or reason_code,
+                source="status",
+            )
+        return self._request_stop(recovery, reason_code=reason_code)
 
     def _request_stop(
         self,
@@ -307,24 +375,40 @@ class DastConnector:
         recovery = self._drain_logs(recovery)
         self._write_recovery(recovery)
         if status.status.terminal:
-            if not status.result_ready:
-                raise DastConnectorError("terminal DAST stop status has no result")
-            result = self._gateway.result(recovery.run_id)
-            if result.status is not status.status:
-                raise DastConnectorError("terminal result status does not match stop status")
-            self._write_json("result.json", result.to_wire())
-            self._write_outcome(
-                DastConnectorOutcomeState.TERMINAL,
+            return self._collect_terminal(
+                status,
                 recovery,
                 reason_code=status.error_code or reason_code,
+                source="stop status",
             )
-            return result
         self._write_outcome(
             DastConnectorOutcomeState.STOP_PENDING,
             recovery,
             reason_code=reason_code,
         )
         return None
+
+    def _collect_terminal(
+        self,
+        status: DastRunStatus,
+        recovery: DastRecoveryState,
+        *,
+        reason_code: str | None,
+        source: str,
+    ) -> DastTerminalResult:
+        """Fetch and persist the result of a run the provider reports as terminal."""
+        if not status.result_ready:
+            raise DastConnectorError(f"terminal DAST {source} has no result")
+        result = self._gateway.result(recovery.run_id)
+        if result.status is not status.status:
+            raise DastConnectorError(f"terminal result status does not match {source}")
+        self._write_json("result.json", result.to_wire())
+        self._write_outcome(
+            DastConnectorOutcomeState.TERMINAL,
+            recovery,
+            reason_code=reason_code,
+        )
+        return result
 
     def _deadline_reached(self, deadline_at: str | None) -> bool:
         if deadline_at is None:

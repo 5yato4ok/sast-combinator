@@ -37,6 +37,7 @@ class DastExecutionInput:
     vpn_container_name: str | None = None
     deadline_at: datetime | None = None
     stop_requested: bool = False
+    harvest_only: bool = False
 
     def __post_init__(self) -> None:
         if not self.pipeline_id or not self.gateway_url.startswith("https://"):
@@ -148,6 +149,7 @@ class DastExecutor:
             recovery=execution.recovery or DastRecoveryState.initial(execution.command),
             deadline_at=execution.deadline_at.isoformat() if execution.deadline_at else None,
             stop_requested=execution.stop_requested,
+            harvest_only=execution.harvest_only,
         )
         input_path.write_text(
             json.dumps(connector_input.to_wire(), sort_keys=True, separators=(",", ":")),
@@ -192,7 +194,7 @@ class DastExecutor:
                 user=user,
             )
         except subprocess.CalledProcessError as exc:
-            docker_utils.cleanup_pipeline_containers(execution.pipeline_id)
+            self._cleanup_connector_container(execution.pipeline_id)
             if exc.returncode == CONNECTOR_EXIT_LOCAL_SETUP:
                 detail = "DAST connector could not start on this host"
                 raise DastExecutionLocalFailure(detail) from exc
@@ -210,7 +212,7 @@ class DastExecutor:
                 telemetry=DastExecutionTelemetry.empty(),
             )
         except BaseException:
-            docker_utils.cleanup_pipeline_containers(execution.pipeline_id)
+            self._cleanup_connector_container(execution.pipeline_id)
             raise
 
         result_path = output_dir / "result.json"
@@ -231,6 +233,17 @@ class DastExecutor:
         if result.outcome.state is not DastConnectorOutcomeState.TERMINAL and result_path.exists():
             raise ValueError("non-terminal DAST connector produced an unexpected result.json")
         return result
+
+    def _cleanup_connector_container(self, pipeline_id: str) -> None:
+        """Remove the connector container this executor started, and nothing else.
+
+        `docker run --rm` covers ordinary exits; this catches what an interrupted `docker run`
+        leaves behind, whose name would block the next attempt. Scoped to one exact name because a
+        pipeline-id match also covers the VPN sidecar, which belongs to the caller's context.
+        """
+        docker_utils.cleanup_container(
+            docker_utils.construct_container_name(self._connector_image, pipeline_id),
+        )
 
     def _align_handoff_identity(self, mounted: list[Path]) -> str | None:
         """Give the handoff files and the container one identity, and return any ``--user``.

@@ -29,6 +29,15 @@ from pipeline.dast.contracts import (
     DastTerminalResult,
 )
 from pipeline.dast.endpoint_policy import DastEndpointPolicy, DastEndpointPolicyError
+from pipeline.dast.resilience import (
+    IMPATIENT,
+    WATCH,
+    RetryBudget,
+    RetryClock,
+    RetryNotice,
+    RetryPlan,
+    describe_cause,
+)
 
 
 class DastGatewayError(RuntimeError):
@@ -42,9 +51,23 @@ class DastConnectorError(RuntimeError):
     """The remote protocol could not be completed safely."""
 
 
+def _report_retry(notice: RetryNotice) -> None:
+    """Say that a blip is being waited out, on the stream the pipeline log already collects.
+
+    Absorbing an outage silently would trade one bad log ("unreachable", instantly) for another
+    (nothing at all for minutes). The operator sees the cause and when patience runs out.
+    """
+    print(
+        f"[WARNING] DAST gateway did not answer ({notice.cause}); "
+        f"retry {notice.attempt} in {notice.delay_seconds:.1f}s, "
+        f"giving up in {notice.remaining_seconds:.0f}s",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 class DastGatewayClient:
     START_PATH: ClassVar[str] = "/integrations/v2/runs"
-    MAX_ATTEMPTS: ClassVar[int] = 3
     MAX_CONTROL_RESPONSE_BYTES: ClassVar[int] = 1024 * 1024
     MAX_RESULT_BYTES: ClassVar[int] = 16 * 1024 * 1024
     RETRYABLE_STATUS_CODES: ClassVar[frozenset[int]] = frozenset({429, 502, 503, 504})
@@ -59,16 +82,28 @@ class DastGatewayClient:
         resolver: Callable[[str, int], Iterable[str]] | None = None,
         client: httpx.Client | None = None,
         sleep: Callable[[float], None] = time.sleep,
+        monotonic: Callable[[], float] = time.monotonic,
+        plan: RetryPlan = WATCH,
+        may_retry: Callable[[], bool] | None = None,
+        on_retry: Callable[[RetryNotice], None] | None = None,
     ):
         if gateway_url.endswith("/"):
             raise DastConnectorError("gateway_url must be a normalized HTTPS URL")
         if not token:
             raise DastConnectorError("DAST token is empty")
         try:
-            DastEndpointPolicy(trusted_vpn=trusted_vpn, resolver=resolver).validate(gateway_url)
+            endpoint = DastEndpointPolicy(trusted_vpn=trusted_vpn, resolver=resolver).validate(gateway_url)
         except DastEndpointPolicyError as exc:
             raise DastConnectorError(str(exc)) from exc
         self._sleep = sleep
+        self._monotonic = monotonic
+        self._plan = plan
+        self._may_retry = may_retry
+        self._on_retry = on_retry if on_retry is not None else _report_retry
+        # Every message this class raises names the gateway generically, because a pipeline log is
+        # tenant-readable and the deployment's internal hostname is not for it. A rendered cause
+        # comes from a library and observes no such rule, so it is filtered on the way out.
+        self._redact = (gateway_url, endpoint.hostname)
         self._owns_client = client is None
         headers = {
             "Accept": "application/json",
@@ -102,7 +137,7 @@ class DastGatewayClient:
             self.START_PATH,
             expected_status=202,
             json_body=command.to_wire(),
-            retry_allowed=True,
+            budget=self._plan.handshake,
             response_limit=self.MAX_CONTROL_RESPONSE_BYTES,
         )
         accepted = DastStartAccepted.from_wire(payload)
@@ -115,7 +150,7 @@ class DastGatewayClient:
             "GET",
             f"{self.START_PATH}/{run_id}",
             expected_status=200,
-            retry_allowed=True,
+            budget=self._plan.in_flight,
             response_limit=self.MAX_CONTROL_RESPONSE_BYTES,
         )
         status = DastRunStatus.from_wire(payload)
@@ -129,7 +164,7 @@ class DastGatewayClient:
             f"{self.START_PATH}/{run_id}/logs",
             expected_status=200,
             params={"cursor": cursor, "limit": DastLogPage.MAX_EVENTS},
-            retry_allowed=True,
+            budget=self._plan.in_flight,
             response_limit=self.MAX_CONTROL_RESPONSE_BYTES,
         )
         return DastLogPage.from_wire(payload, requested_cursor=cursor)
@@ -139,7 +174,7 @@ class DastGatewayClient:
             "GET",
             f"{self.START_PATH}/{run_id}/results",
             expected_status=200,
-            retry_allowed=True,
+            budget=self._plan.in_flight,
             response_limit=self.MAX_RESULT_BYTES,
         )
         result = DastTerminalResult.from_wire(payload)
@@ -152,7 +187,7 @@ class DastGatewayClient:
             "POST",
             f"{self.START_PATH}/{run_id}/stop",
             expected_status=200,
-            retry_allowed=True,
+            budget=self._plan.teardown,
             response_limit=self.MAX_CONTROL_RESPONSE_BYTES,
         )
         if not isinstance(payload, dict) or "stop_requested" not in payload:
@@ -171,22 +206,32 @@ class DastGatewayClient:
         path: str,
         *,
         expected_status: int,
-        retry_allowed: bool,
+        budget: RetryBudget,
         response_limit: int,
         json_body: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
     ) -> Any:
-        for attempt in range(1, self.MAX_ATTEMPTS + 1):
+        clock = RetryClock(
+            budget,
+            sleep=self._sleep,
+            monotonic=self._monotonic,
+            may_retry=self._may_retry,
+            on_retry=self._on_retry,
+        )
+        while True:
             try:
                 with self._client.stream(method, path, json=json_body, params=params) as response:
                     if 300 <= response.status_code < 400:
                         raise DastConnectorError("DAST gateway redirects are forbidden")
                     payload = self._read_bounded_json(response, limit=response_limit)
             except (httpx.ConnectError, httpx.ReadError, httpx.TimeoutException) as exc:
-                if retry_allowed and attempt < self.MAX_ATTEMPTS:
-                    self._bounded_backoff(attempt)
+                cause = describe_cause(exc, redact=self._redact)
+                if clock.wait(cause=cause):
                     continue
-                raise DastConnectorError("DAST gateway is unreachable") from exc
+                raise DastConnectorError(
+                    f"DAST gateway is unreachable after {clock.retries + 1} attempt(s) "
+                    f"over {clock.elapsed_seconds:.0f}s: {cause}",
+                ) from exc
 
             if response.status_code == expected_status:
                 return payload
@@ -195,15 +240,12 @@ class DastGatewayClient:
                 error = DastErrorEnvelope.from_wire(payload)
             except DastContractError as exc:
                 raise DastConnectorError("DAST gateway returned an invalid error envelope") from exc
+            # A contract error is not a blip: it fails the same way on every attempt, so only the
+            # provider's own "try again" and the status codes that mean it get a retry.
             retryable = error.retryable or response.status_code in self.RETRYABLE_STATUS_CODES
-            if retry_allowed and retryable and attempt < self.MAX_ATTEMPTS:
-                self._bounded_backoff(attempt)
+            if retryable and clock.wait(cause=f"{error.code} (HTTP {response.status_code})"):
                 continue
             raise DastGatewayError(error, status_code=response.status_code)
-        raise AssertionError("bounded retry loop exhausted without returning")
-
-    def _bounded_backoff(self, attempt: int) -> None:
-        self._sleep(min(0.25 * (2 ** (attempt - 1)), 1.0))
 
     @staticmethod
     def _read_bounded_json(response: httpx.Response, *, limit: int) -> Any:
@@ -411,15 +453,7 @@ class DastConnector:
         return result
 
     def _deadline_reached(self, deadline_at: str | None) -> bool:
-        if deadline_at is None:
-            return False
-        try:
-            deadline = datetime.fromisoformat(deadline_at.replace("Z", "+00:00"))
-        except ValueError as exc:
-            raise DastConnectorError("DAST execution deadline is invalid") from exc
-        if deadline.tzinfo is None:
-            raise DastConnectorError("DAST execution deadline must include a timezone")
-        return self._now() >= deadline
+        return _deadline_passed(_parse_deadline(deadline_at), self._now())
 
     def _drain_logs(self, recovery: DastRecoveryState) -> DastRecoveryState:
         while True:
@@ -474,6 +508,23 @@ class DastConnector:
         temporary_path.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":")), encoding="utf-8")
         temporary_path.chmod(0o600)
         temporary_path.replace(final_path)
+
+
+def _parse_deadline(deadline_at: str | None) -> datetime | None:
+    """Read the execution ceiling from the input contract. ``None`` means uncapped."""
+    if deadline_at is None:
+        return None
+    try:
+        deadline = datetime.fromisoformat(deadline_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise DastConnectorError("DAST execution deadline is invalid") from exc
+    if deadline.tzinfo is None:
+        raise DastConnectorError("DAST execution deadline must include a timezone")
+    return deadline
+
+
+def _deadline_passed(deadline: datetime | None, now: datetime) -> bool:
+    return deadline is not None and now >= deadline
 
 
 def _load_input(path: Path) -> DastConnectorInput:
@@ -535,12 +586,20 @@ def main(argv: list[str] | None = None) -> int:
     except (DastContractError, DastConnectorError) as exc:
         print(f"[ERROR] {exc}", file=sys.stderr, flush=True)
         return CONNECTOR_EXIT_LOCAL_SETUP
+    # Waiting out a blip is right while a run is being watched and wrong on the way out: a
+    # harvest runs as the caller abandons the pipeline, and a cancellation has somebody waiting
+    # for it. One invocation is only ever one of the three, so the plan is decided here, once.
+    plan = IMPATIENT if connector_input.harvest_only or connector_input.stop_requested else WATCH
     try:
+        deadline = _parse_deadline(connector_input.deadline_at)
         with DastGatewayClient(
             gateway_url=connector_input.gateway_url,
             token=token,
             ca_file=args.ca_file,
             trusted_vpn=args.trusted_vpn,
+            plan=plan,
+            # No amount of patience outlives the run's own ceiling.
+            may_retry=lambda: not _deadline_passed(deadline, datetime.now(UTC)),
         ) as gateway:
             DastConnector(gateway=gateway, output_dir=args.output).run(connector_input)
     except (DastContractError, DastConnectorError, DastGatewayError) as exc:

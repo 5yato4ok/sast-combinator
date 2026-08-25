@@ -558,3 +558,100 @@ def test_build_image_records_the_labels_it_is_given(monkeypatch):
     du.build_image(image_name="img", context_dir=".", labels={du.SOURCE_DIGEST_LABEL: "abc123"})
 
     assert commands == [["docker", "build", "--label", f"{du.SOURCE_DIGEST_LABEL}=abc123", "-t", "img", "."]]
+
+
+def test_cleaning_up_a_container_that_already_exited_says_nothing_alarming(monkeypatch, caplog):
+    """
+    `docker run --rm` removes the container itself, so absence is the ordinary case.
+
+    Warning about it printed two lines per clean connector exit -- "No such container" and
+    "Failed to stop and remove container" -- straight into the tenant-readable pipeline log,
+    which reads exactly like the platform killing a run that was still working.
+    """
+    import logging
+    import subprocess
+
+    import pipeline.docker_utils as du
+
+    calls = []
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: type("R", (), {"stdout": ""})(),
+    )
+    monkeypatch.setattr(du, "run_logged_cmd", lambda cmd, log_addition="": calls.append(cmd))
+
+    with caplog.at_level(logging.INFO, logger=du.log.name):
+        du.cleanup_container("sast_aist-dast-connector_v2_deadbeef")
+
+    assert calls == []
+    assert caplog.records == []
+
+
+def test_cleaning_up_a_live_container_still_stops_it_before_removing_it(monkeypatch):
+    """A live connector needs its shutdown to write the files a resumed run reads."""
+    import subprocess
+
+    import pipeline.docker_utils as du
+
+    calls = []
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: type("R", (), {"stdout": "sast_connector_deadbeef\n"})(),
+    )
+    monkeypatch.setattr(du, "run_logged_cmd", lambda cmd, log_addition="": calls.append(cmd))
+
+    du.cleanup_container("sast_connector_deadbeef")
+
+    assert calls == [
+        ["docker", "stop", "sast_connector_deadbeef"],
+        ["docker", "rm", "-f", "sast_connector_deadbeef"],
+    ]
+
+
+def test_a_container_that_vanishes_mid_cleanup_is_not_reported_as_a_failure(monkeypatch, caplog):
+    """The check and the stop are two commands; a `--rm` removal can land between them."""
+    import logging
+    import subprocess
+
+    import pipeline.docker_utils as du
+
+    listings = ["sast_connector_deadbeef\n", ""]
+
+    def fake_run(*_args, **_kwargs):
+        return type("R", (), {"stdout": listings.pop(0) if listings else ""})()
+
+    def fail(cmd, log_addition=""):
+        raise subprocess.CalledProcessError(1, cmd)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(du, "run_logged_cmd", fail)
+
+    with caplog.at_level(logging.INFO, logger=du.log.name):
+        du.cleanup_container("sast_connector_deadbeef")
+
+    assert [record.levelname for record in caplog.records] == []
+
+
+def test_a_container_that_refuses_to_go_away_is_still_reported(monkeypatch, caplog):
+    """A name left behind blocks the next run under the same pipeline id -- that one must be loud."""
+    import logging
+    import subprocess
+
+    import pipeline.docker_utils as du
+
+    def fail(cmd, log_addition=""):
+        raise subprocess.CalledProcessError(1, cmd)
+
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda *args, **kwargs: type("R", (), {"stdout": "stubborn\n"})(),
+    )
+    monkeypatch.setattr(du, "run_logged_cmd", fail)
+
+    with caplog.at_level(logging.INFO, logger=du.log.name):
+        du.cleanup_container("stubborn")
+
+    assert [record.levelname for record in caplog.records] == ["WARNING"]

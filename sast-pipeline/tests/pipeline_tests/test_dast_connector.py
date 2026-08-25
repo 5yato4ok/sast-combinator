@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
+import pipeline.dast.connector as connector_module
 from pipeline.dast.connector import (
     DastConnector,
     DastConnectorError,
@@ -19,6 +20,7 @@ from pipeline.dast.contracts import (
     DastRecoveryState,
     DastStartCommand,
 )
+from pipeline.dast.resilience import HANDSHAKE, IMPATIENT, IN_FLIGHT, WATCH
 
 CAPABILITY_REVISION = f"sha256:{'a' * 64}"
 
@@ -104,14 +106,34 @@ def _response(status_code, payload):
     return httpx.Response(status_code, json=payload, headers={"Content-Type": "application/json"})
 
 
-def _gateway(handler, *, sleeps=None):
+class _Clock:
+    """A clock that moves only when the client sleeps: real budgets, no real waiting."""
+
+    def __init__(self):
+        self.now = 0.0
+        self.sleeps: list[float] = []
+
+    def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.now += seconds
+
+    def monotonic(self) -> float:
+        return self.now
+
+
+def _gateway(handler, *, clock=None, plan=WATCH, may_retry=None, on_retry=None):
     client = httpx.Client(base_url="https://dast.internal", transport=httpx.MockTransport(handler))
+    clock = clock if clock is not None else _Clock()
     return DastGatewayClient(
         gateway_url="https://dast.internal",
         token="public.secret",
         client=client,
         resolver=lambda _hostname, _port: ("8.8.8.8",),
-        sleep=(sleeps.append if sleeps is not None else lambda _seconds: None),
+        sleep=clock.sleep,
+        monotonic=clock.monotonic,
+        plan=plan,
+        may_retry=may_retry,
+        on_retry=on_retry,
     )
 
 
@@ -390,22 +412,26 @@ def test_oversized_or_untrusted_log_content_is_not_emitted(tmp_path, capsys):
 
 
 @pytest.mark.parametrize(
-    ("status_code", "code", "retryable", "expected_attempts"),
+    ("status_code", "code", "retryable"),
     [
-        (401, "AUTHENTICATION_FAILED", False, 1),
-        (400, "INVALID_REQUEST", False, 1),
-        (403, "POLICY_DENIED", False, 1),
-        (409, "CAPACITY_BUSY", True, 3),
+        (401, "AUTHENTICATION_FAILED", False),
+        (400, "INVALID_REQUEST", False),
+        (403, "POLICY_DENIED", False),
+        (409, "CAPACITY_BUSY", True),
     ],
 )
 def test_start_preserves_typed_gateway_errors_and_only_retries_retryable_failures(
     status_code,
     code,
     retryable,
-    expected_attempts,
 ):
+    """A rejection that will be repeated verbatim is not something to be patient about.
+
+    Only the provider's own "retryable" earns a wait, and it earns the short one: no run exists
+    yet, so the caller's queue is a cheaper place to wait than this process is.
+    """
     attempts = []
-    sleeps = []
+    clock = _Clock()
 
     def handler(request):
         attempts.append(request)
@@ -420,12 +446,17 @@ def test_start_preserves_typed_gateway_errors_and_only_retries_retryable_failure
         )
 
     with pytest.raises(DastGatewayError) as exc_info:
-        _gateway(handler, sleeps=sleeps).start(_command())
+        _gateway(handler, clock=clock).start(_command())
 
     assert exc_info.value.error.code == code
     assert exc_info.value.error.retryable is retryable
-    assert len(attempts) == expected_attempts
-    assert len(sleeps) == expected_attempts - 1
+    if not retryable:
+        assert len(attempts) == 1
+        assert clock.sleeps == []
+    else:
+        assert len(attempts) > 1
+        assert sum(clock.sleeps) == pytest.approx(HANDSHAKE.window_seconds)
+        assert sum(clock.sleeps) < IN_FLIGHT.window_seconds
 
 
 def test_connector_rejects_invalid_terminal_payload_before_writing_result(tmp_path):
@@ -802,3 +833,150 @@ def test_an_output_directory_it_cannot_write_exits_before_the_provider_accepts_a
         )
     finally:
         output.parent.chmod(0o700)
+
+
+def test_a_gateway_blip_while_polling_is_waited_out_instead_of_ending_the_watch(tmp_path):
+    """
+    The incident this behaviour exists for.
+
+    A watch that had been running for over an hour ended because the tunnel to the gateway
+    dropped for about two minutes: three instant failures spent the whole retry allowance in
+    under two seconds, the container died, the sidecar was torn down and the platform had to
+    resume the run from its checkpoint. The scan itself never stopped -- only the watch did.
+    """
+    status_calls = {"count": 0}
+    clock = _Clock()
+
+    def handler(request):
+        if request.method == "POST":
+            return _response(202, _accepted())
+        if request.url.path.endswith("/logs"):
+            return _response(200, _logs(0))
+        if request.url.path.endswith("/results"):
+            return _response(200, _result())
+        status_calls["count"] += 1
+        if status_calls["count"] in (2, 3):
+            raise httpx.ConnectError("connection to dast.internal:443 refused", request=request)
+        if status_calls["count"] == 1:
+            return _response(200, _status("running"))
+        return _response(200, _status("succeeded", result_ready=True))
+
+    result = DastConnector(
+        gateway=_gateway(handler, clock=clock),
+        output_dir=tmp_path,
+        poll_interval=0,
+        sleep=lambda _seconds: None,
+    ).run(_connector_input())
+
+    assert result is not None
+    assert (tmp_path / "result.json").exists()
+    # Two waits, and the watch carried on: no exception, no lost run, no resumed attempt.
+    assert clock.sleeps == [1.0, 2.0]
+
+
+def test_patience_is_per_call_so_a_link_that_keeps_flapping_never_runs_out(tmp_path):
+    """A link that recovers repeatedly is a working link, however often it drops.
+
+    Each answered call restores the full allowance, so the total waiting across a long watch is
+    free to exceed any single window -- what must not happen is giving up on a provider that is
+    still answering.
+    """
+    outage = {"failures_left": 9}
+    rounds = {"answered": 0}
+    clock = _Clock()
+
+    def handler(request):
+        if request.method == "POST":
+            return _response(202, _accepted())
+        if request.url.path.endswith("/logs"):
+            return _response(200, _logs(0))
+        if request.url.path.endswith("/results"):
+            return _response(200, _result())
+        if outage["failures_left"] > 0:
+            outage["failures_left"] -= 1
+            raise httpx.ConnectError("tunnel flapping", request=request)
+        rounds["answered"] += 1
+        if rounds["answered"] < 5:
+            outage["failures_left"] = 9
+            return _response(200, _status("running"))
+        return _response(200, _status("succeeded", result_ready=True))
+
+    result = DastConnector(
+        gateway=_gateway(handler, clock=clock),
+        output_dir=tmp_path,
+        poll_interval=0,
+        sleep=lambda _seconds: None,
+    ).run(_connector_input())
+
+    assert result is not None
+    assert rounds["answered"] == 5
+    assert sum(clock.sleeps) > IN_FLIGHT.window_seconds
+
+
+def test_giving_up_names_the_transport_failure_and_not_the_gateway_it_reached_for():
+    """
+    Every one of these failures used to print the same line.
+
+    "unreachable" cannot tell a refused connection from a name that will not resolve from a read
+    that timed out, and the three need different repairs -- the last outage had to be classified
+    from container exit timings instead. The deployment's own address stays out of it: the
+    pipeline log is tenant-readable.
+    """
+    def handler(request):
+        raise httpx.ConnectError("connection to dast.internal:443 refused", request=request)
+
+    with pytest.raises(DastConnectorError) as exc_info:
+        _gateway(handler).start(_command())
+
+    message = str(exc_info.value)
+    assert "unreachable" in message
+    assert "ConnectError" in message
+    assert "refused" in message
+    assert "dast.internal" not in message
+
+
+def test_no_patience_outlives_the_runs_own_ceiling():
+    clock = _Clock()
+
+    def handler(request):
+        raise httpx.ConnectError("tunnel down", request=request)
+
+    with pytest.raises(DastConnectorError, match="unreachable"):
+        _gateway(handler, clock=clock, may_retry=lambda: False).status("run-123")
+
+    assert clock.sleeps == []
+
+
+def test_a_harvest_or_a_cancellation_does_not_inherit_the_watching_patience(monkeypatch, tmp_path):
+    """Both run while somebody is waiting: a harvest is the last look before a run is abandoned,
+    and a cancellation has an operator behind it. Only a live watch is worth minutes."""
+    plans = []
+
+    class _RecordingClient:
+        def __init__(self, **kwargs):
+            plans.append(kwargs["plan"])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_exc_info):
+            return None
+
+    monkeypatch.setattr(connector_module, "DastGatewayClient", _RecordingClient)
+    monkeypatch.setattr(connector_module.DastConnector, "run", lambda self, _connector_input: None)
+
+    for index, invocation in enumerate(({}, {"harvest_only": True}, {"stop_requested": True})):
+        case = tmp_path / f"case{index}"
+        case.mkdir()
+        payload = json.dumps(
+            DastConnectorInput(
+                gateway_url="https://dast.internal",
+                command=_command(),
+                recovery=DastRecoveryState.initial(_command()),
+                **invocation,
+            ).to_wire(),
+        )
+        input_path, token, output = _handoff(case, payload=payload)
+        assert main(["--input", str(input_path), "--output", str(output), "--token-file", str(token)]) == 0
+
+    assert plans == [WATCH, IMPATIENT, IMPATIENT]

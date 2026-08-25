@@ -588,6 +588,25 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
         log.warning("Failed to clean up pipeline containers for %s: %s", pipeline_id, exc)
 
 
+def container_exists(name: str) -> bool:
+    """Whether a container of exactly this name is present, running or exited."""
+    if not name:
+        return False
+    try:
+        result = subprocess.run(
+            ["docker", "ps", "-a", "--filter", f"name={name}", "--format", "{{.Names}}"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except Exception as exc:
+        # Not knowing is not the same as knowing it is gone: let the caller act as if it exists.
+        log.warning("Could not determine whether container %s exists: %s", name, exc)
+        return True
+    # `--filter name=` matches as a substring, so the exact name is confirmed here.
+    return name in {line.strip() for line in result.stdout.splitlines()}
+
+
 def cleanup_container(name: str) -> None:
     """Stop and remove one container by its exact name.
 
@@ -595,14 +614,25 @@ def cleanup_container(name: str) -> None:
     to write the recovery and outcome files a resumed run reads. Removal is still required -- a
     leftover name blocks the next run.
 
+    A container that has already exited under `docker run --rm` is the ordinary case, not a
+    failure: warning about it made every clean connector exit print two alarming lines that read
+    like the platform killing a live run. Absence is checked before, and re-checked after a
+    failure, because the container can also vanish between the two.
+
     Prefer this over :func:`cleanup_pipeline_containers`, whose substring match also covers
     containers owned by somebody else, the per-execution VPN sidecar among them.
     """
     if not name:
+        return
+    if not container_exists(name):
+        log.debug("Container %s is already gone; nothing to clean up", name)
         return
     try:
         run_logged_cmd(["docker", "stop", name])
         run_logged_cmd(["docker", "rm", "-f", name])
         log.info("Stopped and removed pipeline container %s", name)
     except Exception as exc:
+        if not container_exists(name):
+            log.debug("Container %s went away while it was being cleaned up", name)
+            return
         log.warning("Failed to stop and remove container %s: %s", name, exc)

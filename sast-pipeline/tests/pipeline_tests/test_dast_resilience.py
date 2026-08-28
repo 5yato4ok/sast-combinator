@@ -28,14 +28,13 @@ class _Clock:
         return self.now
 
 
-def _spend(budget: RetryBudget, *, may_retry=None, notices=None) -> _Clock:
+def _spend(budget: RetryBudget, *, notices=None) -> _Clock:
     """Fail instantly, over and over, until the clock refuses -- the shape of the real outage."""
     clock = _Clock()
     retry = RetryClock(
         budget,
         sleep=clock.sleep,
         monotonic=clock.monotonic,
-        may_retry=may_retry,
         on_retry=None if notices is None else notices.append,
     )
     while retry.wait(cause="ConnectError: [Errno 111] Connection refused"):
@@ -78,20 +77,6 @@ def test_starting_a_run_is_not_worth_the_patience_of_watching_one():
 
 def test_a_call_that_must_not_be_repeated_never_waits():
     assert _spend(NO_RETRY).sleeps == []
-
-
-def test_an_execution_ceiling_ends_the_wait_without_spending_the_window():
-    """No amount of patience outlives the run's own deadline."""
-    clock = _spend(IN_FLIGHT, may_retry=lambda: False)
-
-    assert clock.sleeps == []
-
-
-def test_a_ceiling_reached_mid_outage_stops_the_next_wait():
-    allowed = [True, True, False]
-    clock = _spend(IN_FLIGHT, may_retry=lambda: allowed.pop(0) if allowed else False)
-
-    assert clock.sleeps == [1.0, 2.0]
 
 
 def test_every_wait_is_announced_before_it_starts():

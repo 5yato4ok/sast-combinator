@@ -1,7 +1,7 @@
 import gc
 import json
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import httpx
@@ -121,7 +121,7 @@ class _Clock:
         return self.now
 
 
-def _gateway(handler, *, clock=None, plan=WATCH, may_retry=None, on_retry=None):
+def _gateway(handler, *, clock=None, plan=WATCH, on_retry=None):
     client = httpx.Client(base_url="https://dast.internal", transport=httpx.MockTransport(handler))
     clock = clock if clock is not None else _Clock()
     return DastGatewayClient(
@@ -132,7 +132,6 @@ def _gateway(handler, *, clock=None, plan=WATCH, may_retry=None, on_retry=None):
         sleep=clock.sleep,
         monotonic=clock.monotonic,
         plan=plan,
-        may_retry=may_retry,
         on_retry=on_retry,
     )
 
@@ -530,44 +529,6 @@ def test_cancel_before_start_never_creates_a_provider_run(tmp_path):
     )
 
 
-def test_deadline_requests_idempotent_stop_for_known_run_and_returns_pending(tmp_path):
-    stop_calls = []
-    recovery = DastRecoveryState.initial(_command()).for_run("run-123").with_cursor(4)
-    now = datetime(2026, 7, 26, 10, 0, tzinfo=UTC)
-
-    def handler(request):
-        if request.method == "POST" and request.url.path.endswith("/stop"):
-            stop_calls.append(request)
-            return _response(200, {**_status("stop_requested"), "stop_requested": True})
-        if request.method == "GET" and request.url.path.endswith("/run-123"):
-            return _response(200, _status("running"))
-        if request.url.path.endswith("/logs"):
-            assert int(request.url.params["cursor"]) == 4
-            return _response(200, _logs(4))
-        raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
-
-    connector_input = _connector_input(recovery=recovery)
-    connector_input = type(connector_input)(
-        gateway_url=connector_input.gateway_url,
-        command=connector_input.command,
-        recovery=recovery,
-        deadline_at=(now - timedelta(seconds=1)).isoformat(),
-    )
-    result = DastConnector(
-        gateway=_gateway(handler),
-        output_dir=tmp_path,
-        now=lambda: now,
-    ).run(connector_input)
-
-    assert result is None
-    assert len(stop_calls) == 1
-    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8")) == _outcome(
-        "stop_pending",
-        recovery,
-        reason_code="EXECUTION_TIMEOUT",
-    )
-
-
 def test_a_run_that_already_finished_is_collected_instead_of_stopped(tmp_path):
     """Reaching for ``/stop`` first left a finished run's result unfetched and reported as pending."""
     recovery = DastRecoveryState.initial(_command()).for_run("run-123")
@@ -585,18 +546,16 @@ def test_a_run_that_already_finished_is_collected_instead_of_stopped(tmp_path):
             return _response(200, _result())
         raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
 
-    now = datetime(2026, 7, 26, 10, 0, tzinfo=UTC)
     connector_input = _connector_input(recovery=recovery)
     connector_input = type(connector_input)(
         gateway_url=connector_input.gateway_url,
         command=connector_input.command,
         recovery=recovery,
-        deadline_at=(now - timedelta(seconds=1)).isoformat(),
+        stop_requested=True,
     )
     result = DastConnector(
         gateway=_gateway(handler),
         output_dir=tmp_path,
-        now=lambda: now,
     ).run(connector_input)
 
     assert result is not None
@@ -639,83 +598,6 @@ def test_stop_response_that_turns_terminal_is_still_collected(tmp_path):
     assert result is not None
     assert result.status == "stopped"
     assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == "terminal"
-
-
-def test_harvest_only_collects_a_finished_run_without_starting_or_stopping_anything(tmp_path):
-    """The last look taken before the platform gives a run up for lost."""
-    recovery = DastRecoveryState.initial(_command()).for_run("run-123").with_cursor(784)
-    forbidden = []
-
-    def handler(request):
-        if request.method == "POST":
-            forbidden.append(request)
-            raise AssertionError("harvest must neither start nor stop a run")
-        if request.url.path.endswith("/logs"):
-            return _response(200, _logs(784))
-        if request.url.path.endswith("/results"):
-            return _response(200, _result())
-        if request.url.path.endswith("/run-123"):
-            return _response(200, _status("succeeded", result_ready=True))
-        raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
-
-    connector_input = _connector_input(recovery=recovery)
-    connector_input = type(connector_input)(
-        gateway_url=connector_input.gateway_url,
-        command=connector_input.command,
-        recovery=recovery,
-        harvest_only=True,
-    )
-    result = DastConnector(gateway=_gateway(handler), output_dir=tmp_path).run(connector_input)
-
-    assert result is not None
-    assert result.status == "succeeded"
-    assert forbidden == []
-    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == "terminal"
-
-
-def test_harvest_only_reports_a_run_that_is_still_not_terminal(tmp_path):
-    recovery = DastRecoveryState.initial(_command()).for_run("run-123")
-
-    def handler(request):
-        if request.method == "POST":
-            raise AssertionError("harvest must neither start nor stop a run")
-        if request.url.path.endswith("/logs"):
-            return _response(200, _logs(0))
-        if request.url.path.endswith("/run-123"):
-            return _response(200, _status("running"))
-        raise AssertionError(f"unexpected request: {request.method} {request.url.path}")
-
-    connector_input = _connector_input(recovery=recovery)
-    connector_input = type(connector_input)(
-        gateway_url=connector_input.gateway_url,
-        command=connector_input.command,
-        recovery=recovery,
-        harvest_only=True,
-    )
-    result = DastConnector(gateway=_gateway(handler), output_dir=tmp_path).run(connector_input)
-
-    assert result is None
-    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == "stop_pending"
-    assert not (tmp_path / "result.json").exists()
-
-
-def test_harvest_only_without_a_provider_run_contacts_nobody(tmp_path):
-    def handler(request):
-        raise AssertionError(f"gateway must not be contacted: {request.method} {request.url.path}")
-
-    connector_input = _connector_input()
-    connector_input = type(connector_input)(
-        gateway_url=connector_input.gateway_url,
-        command=connector_input.command,
-        recovery=connector_input.recovery,
-        harvest_only=True,
-    )
-    result = DastConnector(gateway=_gateway(handler), output_dir=tmp_path).run(connector_input)
-
-    assert result is None
-    assert json.loads((tmp_path / "outcome.json").read_text(encoding="utf-8"))["state"] == (
-        "cancelled_before_start"
-    )
 
 
 def test_gateway_client_configures_tls_timeouts_limits_and_disables_environment(monkeypatch, tmp_path):
@@ -935,21 +817,8 @@ def test_giving_up_names_the_transport_failure_and_not_the_gateway_it_reached_fo
     assert "dast.internal" not in message
 
 
-def test_no_patience_outlives_the_runs_own_ceiling():
-    clock = _Clock()
-
-    def handler(request):
-        raise httpx.ConnectError("tunnel down", request=request)
-
-    with pytest.raises(DastConnectorError, match="unreachable"):
-        _gateway(handler, clock=clock, may_retry=lambda: False).status("run-123")
-
-    assert clock.sleeps == []
-
-
-def test_a_harvest_or_a_cancellation_does_not_inherit_the_watching_patience(monkeypatch, tmp_path):
-    """Both run while somebody is waiting: a harvest is the last look before a run is abandoned,
-    and a cancellation has an operator behind it. Only a live watch is worth minutes."""
+def test_a_cancellation_does_not_inherit_the_watching_patience(monkeypatch, tmp_path):
+    """A cancellation has an operator behind it; only a live watch is worth minutes."""
     plans = []
 
     class _RecordingClient:
@@ -965,7 +834,7 @@ def test_a_harvest_or_a_cancellation_does_not_inherit_the_watching_patience(monk
     monkeypatch.setattr(connector_module, "DastGatewayClient", _RecordingClient)
     monkeypatch.setattr(connector_module.DastConnector, "run", lambda self, _connector_input: None)
 
-    for index, invocation in enumerate(({}, {"harvest_only": True}, {"stop_requested": True})):
+    for index, invocation in enumerate(({}, {"stop_requested": True})):
         case = tmp_path / f"case{index}"
         case.mkdir()
         payload = json.dumps(
@@ -979,4 +848,4 @@ def test_a_harvest_or_a_cancellation_does_not_inherit_the_watching_patience(monk
         input_path, token, output = _handoff(case, payload=payload)
         assert main(["--input", str(input_path), "--output", str(output), "--token-file", str(token)]) == 0
 
-    assert plans == [WATCH, IMPATIENT, IMPATIENT]
+    assert plans == [WATCH, IMPATIENT]

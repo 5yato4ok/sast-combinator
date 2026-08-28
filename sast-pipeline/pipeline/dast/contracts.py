@@ -31,12 +31,20 @@ class DastRunState(StrEnum):
     RUNNING = "running"
     STOP_REQUESTED = "stop_requested"
     SUCCEEDED = "succeeded"
+    COMPLETED_WITH_DEGRADATION = "completed_with_degradation"
+    FAILED_WITH_PARTIAL_RESULTS = "failed_with_partial_results"
     FAILED = "failed"
     STOPPED = "stopped"
 
     @property
     def terminal(self) -> bool:
-        return self in {self.SUCCEEDED, self.FAILED, self.STOPPED}
+        return self in {
+            self.SUCCEEDED,
+            self.COMPLETED_WITH_DEGRADATION,
+            self.FAILED_WITH_PARTIAL_RESULTS,
+            self.FAILED,
+            self.STOPPED,
+        }
 
 
 class DastConnectorOutcomeState(StrEnum):
@@ -273,10 +281,7 @@ class DastConnectorInput:
     gateway_url: str
     command: DastStartCommand
     recovery: DastRecoveryState
-    deadline_at: str | None = None
     stop_requested: bool = False
-    # Read the run's status once and collect a terminal result. No start, no stop.
-    harvest_only: bool = False
     contract_version: str = CONTRACT_VERSION
 
     def __post_init__(self) -> None:
@@ -287,10 +292,7 @@ class DastConnectorInput:
             raise DastContractError("recovery correlation does not match start command")
         if self.recovery.idempotency_key != self.command.idempotency_key:
             raise DastContractError("recovery idempotency key does not match start command")
-        if self.deadline_at is not None:
-            _required_string(self.deadline_at, "deadline_at", max_length=64)
         _required_bool(self.stop_requested, "stop_requested")
-        _required_bool(self.harvest_only, "harvest_only")
 
     @classmethod
     def from_wire(cls, payload: object) -> DastConnectorInput:
@@ -302,9 +304,7 @@ class DastConnectorInput:
                 "gateway_url",
                 "command",
                 "recovery",
-                "deadline_at",
                 "stop_requested",
-                "harvest_only",
             },
             "connector input",
         )
@@ -313,13 +313,7 @@ class DastConnectorInput:
             gateway_url=_required_string(data["gateway_url"], "gateway_url", max_length=2048),
             command=DastStartCommand.from_wire(data["command"]),
             recovery=DastRecoveryState.from_wire(data["recovery"]),
-            deadline_at=(
-                None
-                if data["deadline_at"] is None
-                else _required_string(data["deadline_at"], "deadline_at", max_length=64)
-            ),
             stop_requested=_required_bool(data["stop_requested"], "stop_requested"),
-            harvest_only=_required_bool(data["harvest_only"], "harvest_only"),
         )
 
     def to_wire(self) -> dict[str, Any]:
@@ -328,9 +322,7 @@ class DastConnectorInput:
             "gateway_url": self.gateway_url,
             "command": self.command.to_wire(),
             "recovery": self.recovery.to_wire(),
-            "deadline_at": self.deadline_at,
             "stop_requested": self.stop_requested,
-            "harvest_only": self.harvest_only,
         }
 
 
@@ -496,12 +488,42 @@ class DastLogPage:
 
 
 @dataclass(frozen=True, slots=True)
+class DastTransportMetadata:
+    """Typed source claim plus opaque, JSON-safe transport extensions."""
+
+    source_commits: dict[str, str]
+    extensions: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_wire(cls, payload: object) -> DastTransportMetadata:
+        metadata = _mapping(payload, "dast_run_metadata")
+        if "source_commits" not in metadata:
+            raise DastContractError("dast_run_metadata.source_commits is required")
+        source_commits = _mapping(metadata["source_commits"], "source_commits")
+        for repository_key, commit in source_commits.items():
+            if (
+                not isinstance(repository_key, str)
+                or not _REPOSITORY_KEY_RE.fullmatch(repository_key)
+                or not isinstance(commit, str)
+                or not _COMMIT_RE.fullmatch(commit)
+            ):
+                raise DastContractError("source_commits is invalid")
+        return cls(
+            source_commits=deepcopy(source_commits),
+            extensions=deepcopy({key: value for key, value in metadata.items() if key != "source_commits"}),
+        )
+
+    def to_wire(self) -> dict[str, Any]:
+        return {**deepcopy(self.extensions), "source_commits": deepcopy(self.source_commits)}
+
+
+@dataclass(frozen=True, slots=True)
 class DastTerminalResult:
     run_id: str
     status: DastRunState
     selection: dict[str, Any]
     trigger_resolution: dict[str, Any] | None
-    source_commits: dict[str, str]
+    dast_run_metadata: DastTransportMetadata
     report: dict[str, Any]
     audit: dict[str, Any] = field(default_factory=dict)
     contract_version: str = CONTRACT_VERSION
@@ -526,16 +548,7 @@ class DastTerminalResult:
         status = _run_state(data["status"])
         if not status.terminal:
             raise DastContractError("terminal result has a non-terminal status")
-        metadata = _mapping(data["dast_run_metadata"], "dast_run_metadata")
-        _exact_fields(metadata, {"source_commits"}, "dast_run_metadata")
-        source_commits = _mapping(metadata["source_commits"], "source_commits")
-        for repository_key, commit in source_commits.items():
-            if (
-                not _REPOSITORY_KEY_RE.fullmatch(repository_key)
-                or not isinstance(commit, str)
-                or not _COMMIT_RE.fullmatch(commit)
-            ):
-                raise DastContractError("source_commits is invalid")
+        metadata = DastTransportMetadata.from_wire(data["dast_run_metadata"])
         trigger_resolution = data["trigger_resolution"]
         if trigger_resolution is not None:
             trigger_resolution = _mapping(trigger_resolution, "trigger_resolution")
@@ -545,7 +558,7 @@ class DastTerminalResult:
             status=status,
             selection=deepcopy(_mapping(data["selection"], "selection")),
             trigger_resolution=deepcopy(trigger_resolution),
-            source_commits=deepcopy(source_commits),
+            dast_run_metadata=metadata,
             report=deepcopy(_mapping(data["report"], "report")),
             audit=deepcopy(_mapping(data["audit"], "audit")),
         )
@@ -554,6 +567,10 @@ class DastTerminalResult:
     def from_file(cls, path: Path) -> DastTerminalResult:
         return cls.from_wire(json.loads(path.read_text(encoding="utf-8")))
 
+    @property
+    def source_commits(self) -> dict[str, str]:
+        return deepcopy(self.dast_run_metadata.source_commits)
+
     def to_wire(self) -> dict[str, Any]:
         return {
             "contract_version": self.contract_version,
@@ -561,7 +578,7 @@ class DastTerminalResult:
             "status": self.status.value,
             "selection": deepcopy(self.selection),
             "trigger_resolution": deepcopy(self.trigger_resolution),
-            "dast_run_metadata": {"source_commits": deepcopy(self.source_commits)},
+            "dast_run_metadata": self.dast_run_metadata.to_wire(),
             "report": deepcopy(self.report),
             "audit": deepcopy(self.audit),
         }

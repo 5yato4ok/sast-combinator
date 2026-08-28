@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime
 from pathlib import Path
 
 from pipeline.config_utils import AnalyzersConfigHelper
@@ -31,7 +30,6 @@ def run(argv: list[str], *, analyzer_config: AnalyzersConfigHelper) -> DastExecu
     parser.add_argument("--ca-file", type=Path)
     parser.add_argument("--recovery-file", type=Path)
     parser.add_argument("--vpn-container")
-    parser.add_argument("--deadline-at")
     parser.add_argument("--stop-requested", action="store_true")
     args = parser.parse_args(argv)
 
@@ -48,7 +46,6 @@ def run(argv: list[str], *, analyzer_config: AnalyzersConfigHelper) -> DastExecu
             recovery=recovery,
             ca_file=args.ca_file,
             vpn_container_name=args.vpn_container,
-            deadline_at=datetime.fromisoformat(args.deadline_at) if args.deadline_at else None,
             stop_requested=args.stop_requested,
         ),
         analyzer_config=analyzer_config,

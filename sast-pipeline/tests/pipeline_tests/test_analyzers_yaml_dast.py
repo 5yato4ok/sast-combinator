@@ -13,6 +13,7 @@ from pipeline.dast.contracts import (
     DastRecoveryState,
     DastRunState,
     DastTerminalResult,
+    DastTransportMetadata,
 )
 from pipeline.dast.executor import DastExecutionResult, DastExecutionTelemetry
 from pipeline.execution import execute_pipeline
@@ -132,7 +133,7 @@ def test_dast_command_uses_canonical_dispatch_without_sast_builder(monkeypatch, 
         status=DastRunState.SUCCEEDED,
         selection={"stand_id": "qa", "relation": "exact", "distance": 0},
         trigger_resolution=None,
-        source_commits={"backend": "b" * 40},
+        dast_run_metadata=DastTransportMetadata(source_commits={"backend": "b" * 40}),
         report={"findings": []},
     )
     recovery = DastRecoveryState(

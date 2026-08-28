@@ -113,13 +113,11 @@ class RetryClock:
         *,
         sleep: Callable[[float], None] = time.sleep,
         monotonic: Callable[[], float] = time.monotonic,
-        may_retry: Callable[[], bool] | None = None,
         on_retry: Callable[[RetryNotice], None] | None = None,
     ):
         self._budget = budget
         self._sleep = sleep
         self._monotonic = monotonic
-        self._may_retry = may_retry
         self._on_retry = on_retry
         self._started = monotonic()
         self._attempts = 0
@@ -142,8 +140,6 @@ class RetryClock:
         """
         remaining = self._budget.window_seconds - self.elapsed_seconds
         if remaining <= 0:
-            return False
-        if self._may_retry is not None and not self._may_retry():
             return False
         # Never sleep past the end of the window: the last wait is trimmed so the final attempt
         # happens at the edge of the budget instead of beyond it.

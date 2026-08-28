@@ -292,9 +292,7 @@ def test_executor_serializes_explicit_recovery_without_source_or_analyzer_pipeli
         "gateway_url",
         "command",
         "recovery",
-        "deadline_at",
         "stop_requested",
-        "harvest_only",
     }
     assert "source" not in connector_input
     assert "analyzers" not in connector_input
@@ -327,9 +325,15 @@ def test_executor_rebuilds_a_connector_image_left_from_an_older_revision(monkeyp
     import pipeline.docker_utils as du
     from pipeline.dast import executor as dast_executor
 
+    # The autouse fixture replaces this exact module attribute. Undo it before capturing the real
+    # implementation; otherwise `du.ensure_image` is the fixture's no-op and this test proves nothing.
+    monkeypatch.undo()
     execution = _execution(tmp_path)
     builds = []
     monkeypatch.setattr(dast_executor.docker_utils, "ensure_image", du.ensure_image)
+    monkeypatch.setattr(dast_executor.docker_utils, "image_runtime_user", lambda image: None)
+    monkeypatch.setattr(dast_executor.os, "geteuid", lambda: UNPRIVILEGED_UID)
+    monkeypatch.setattr(dast_executor.os, "getegid", lambda: UNPRIVILEGED_UID)
     monkeypatch.setattr(dast_executor.docker_utils, "image_exists", lambda image: True)
     monkeypatch.setattr(
         dast_executor.docker_utils,

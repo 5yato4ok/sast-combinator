@@ -6,7 +6,6 @@ without invoking Docker itself.  The ``subprocess`` and internal
 helpers are monkeypatched so that no external commands are executed.
 """
 
-import os
 import re
 import types
 
@@ -513,7 +512,7 @@ def test_build_source_digest_follows_every_file_the_dockerfile_copies(monkeypatc
     paths = ("pipeline/__init__.py", "pipeline/dast")
 
     before = du.build_source_digest(paths)
-    contracts.write_text("FIELDS = {'stop_requested', 'harvest_only'}\n", encoding="utf-8")
+    contracts.write_text("FIELDS = {'stop_requested'}\n", encoding="utf-8")
 
     assert du.build_source_digest(paths) != before
     # Order of the declared entries is not part of the identity of a revision.

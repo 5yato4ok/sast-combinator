@@ -5,7 +5,6 @@ import math
 import os
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 
 from pipeline import docker_utils
@@ -35,9 +34,7 @@ class DastExecutionInput:
     recovery: DastRecoveryState | None = None
     ca_file: Path | None = None
     vpn_container_name: str | None = None
-    deadline_at: datetime | None = None
     stop_requested: bool = False
-    harvest_only: bool = False
 
     def __post_init__(self) -> None:
         if not self.pipeline_id or not self.gateway_url.startswith("https://"):
@@ -158,9 +155,7 @@ class DastExecutor:
             gateway_url=execution.gateway_url.rstrip("/"),
             command=execution.command,
             recovery=execution.recovery or DastRecoveryState.initial(execution.command),
-            deadline_at=execution.deadline_at.isoformat() if execution.deadline_at else None,
             stop_requested=execution.stop_requested,
-            harvest_only=execution.harvest_only,
         )
         input_path.write_text(
             json.dumps(connector_input.to_wire(), sort_keys=True, separators=(",", ":")),

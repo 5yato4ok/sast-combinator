@@ -22,7 +22,6 @@
               "REPORT_MISSING",
               "REPORT_INVALID",
               "AUDIT_INCOMPLETE",
-              "DEADLINE_EXCEEDED",
               "RESPONSE_TOO_LARGE",
               "RATE_LIMITED",
               "INTERNAL_ERROR"
@@ -120,7 +119,7 @@
         "type": "object"
       },
       "V2RunMetadataSchema": {
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "source_commits": {
             "additionalProperties": {
@@ -129,6 +128,9 @@
             "type": "object"
           }
         },
+        "required": [
+          "source_commits"
+        ],
         "type": "object"
       },
       "V2RunRequestSchema": {
@@ -265,21 +267,17 @@
             ]
           },
           "status": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "V2SelectionSchema": {
-        "additionalProperties": false,
-        "properties": {
-          "distance": {
-            "type": "integer"
-          },
-          "relation": {
-            "type": "string"
-          },
-          "stand_id": {
+            "enum": [
+              "accepted",
+              "selecting",
+              "running",
+              "stop_requested",
+              "succeeded",
+              "completed_with_degradation",
+              "failed_with_partial_results",
+              "failed",
+              "stopped"
+            ],
             "type": "string"
           }
         },
@@ -314,6 +312,17 @@
             ]
           },
           "status": {
+            "enum": [
+              "accepted",
+              "selecting",
+              "running",
+              "stop_requested",
+              "succeeded",
+              "completed_with_degradation",
+              "failed_with_partial_results",
+              "failed",
+              "stopped"
+            ],
             "type": "string"
           },
           "stop_requested": {
@@ -405,9 +414,17 @@
             "type": "string"
           },
           "selection": {
-            "$ref": "#/components/schemas/V2SelectionSchema"
+            "additionalProperties": {},
+            "type": "object"
           },
           "status": {
+            "enum": [
+              "succeeded",
+              "completed_with_degradation",
+              "failed_with_partial_results",
+              "failed",
+              "stopped"
+            ],
             "type": "string"
           },
           "trigger_resolution": {

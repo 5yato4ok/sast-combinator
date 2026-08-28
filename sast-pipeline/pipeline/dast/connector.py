@@ -66,6 +66,19 @@ def _report_retry(notice: RetryNotice) -> None:
     )
 
 
+def _json_object_without_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise DastConnectorError(f"DAST gateway response contains duplicate field: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_json_constant(value: str) -> None:
+    raise DastConnectorError(f"DAST gateway response contains invalid JSON constant: {value}")
+
+
 class DastGatewayClient:
     START_PATH: ClassVar[str] = "/integrations/v2/runs"
     MAX_CONTROL_RESPONSE_BYTES: ClassVar[int] = 1024 * 1024
@@ -84,7 +97,6 @@ class DastGatewayClient:
         sleep: Callable[[float], None] = time.sleep,
         monotonic: Callable[[], float] = time.monotonic,
         plan: RetryPlan = WATCH,
-        may_retry: Callable[[], bool] | None = None,
         on_retry: Callable[[RetryNotice], None] | None = None,
     ):
         if gateway_url.endswith("/"):
@@ -98,7 +110,6 @@ class DastGatewayClient:
         self._sleep = sleep
         self._monotonic = monotonic
         self._plan = plan
-        self._may_retry = may_retry
         self._on_retry = on_retry if on_retry is not None else _report_retry
         # Every message this class raises names the gateway generically, because a pipeline log is
         # tenant-readable and the deployment's internal hostname is not for it. A rendered cause
@@ -215,7 +226,6 @@ class DastGatewayClient:
             budget,
             sleep=self._sleep,
             monotonic=self._monotonic,
-            may_retry=self._may_retry,
             on_retry=self._on_retry,
         )
         while True:
@@ -265,7 +275,11 @@ class DastGatewayClient:
             if len(body) > limit:
                 raise DastConnectorError("DAST gateway response exceeds its size limit")
         try:
-            return json.loads(body)
+            return json.loads(
+                body,
+                object_pairs_hook=_json_object_without_duplicates,
+                parse_constant=_reject_json_constant,
+            )
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise DastConnectorError("DAST gateway response contains invalid JSON") from exc
 
@@ -291,11 +305,8 @@ class DastConnector:
     def run(self, connector_input: DastConnectorInput) -> DastTerminalResult | None:
         recovery = connector_input.recovery
         correlation_id = connector_input.command.correlation_id
-        if connector_input.harvest_only:
-            return self._harvest(recovery, correlation_id=correlation_id)
-        deadline_reached = self._deadline_reached(connector_input.deadline_at)
-        if connector_input.stop_requested or deadline_reached:
-            reason_code = "EXECUTION_TIMEOUT" if deadline_reached else "CANCEL_REQUESTED"
+        if connector_input.stop_requested:
+            reason_code = "CANCEL_REQUESTED"
             if recovery.run_id is None:
                 self._write_recovery(recovery)
                 self._write_outcome(
@@ -316,12 +327,6 @@ class DastConnector:
 
         try:
             while True:
-                if self._deadline_reached(connector_input.deadline_at):
-                    return self._stop_unless_already_terminal(
-                        recovery,
-                        correlation_id=correlation_id,
-                        reason_code="EXECUTION_TIMEOUT",
-                    )
                 status = self._gateway.status(recovery.run_id)
                 if status.correlation_id != correlation_id:
                     raise DastConnectorError("status response correlation does not match the command")
@@ -343,44 +348,6 @@ class DastConnector:
                 reason_code="CANCEL_REQUESTED",
             )
             return None
-
-    def _harvest(
-        self,
-        recovery: DastRecoveryState,
-        *,
-        correlation_id: str,
-    ) -> DastTerminalResult | None:
-        """Read the run's status once, collecting a terminal result. Neither starts nor stops a run.
-
-        Used when the caller has already decided to end the pipeline and only needs to know whether
-        a result exists.
-        """
-        if recovery.run_id is None:
-            self._write_recovery(recovery)
-            self._write_outcome(
-                DastConnectorOutcomeState.CANCELLED_BEFORE_START,
-                recovery,
-                reason_code="EXECUTION_TIMEOUT",
-            )
-            return None
-        status = self._gateway.status(recovery.run_id)
-        if status.correlation_id != correlation_id:
-            raise DastConnectorError("status response correlation does not match the command")
-        recovery = self._drain_logs(recovery)
-        self._write_recovery(recovery)
-        if status.status.terminal:
-            return self._collect_terminal(
-                status,
-                recovery,
-                reason_code=status.error_code,
-                source="status",
-            )
-        self._write_outcome(
-            DastConnectorOutcomeState.STOP_PENDING,
-            recovery,
-            reason_code="EXECUTION_TIMEOUT",
-        )
-        return None
 
     def _stop_unless_already_terminal(
         self,
@@ -452,9 +419,6 @@ class DastConnector:
         )
         return result
 
-    def _deadline_reached(self, deadline_at: str | None) -> bool:
-        return _deadline_passed(_parse_deadline(deadline_at), self._now())
-
     def _drain_logs(self, recovery: DastRecoveryState) -> DastRecoveryState:
         while True:
             page = self._gateway.logs(recovery.run_id, cursor=recovery.log_cursor)
@@ -510,26 +474,13 @@ class DastConnector:
         temporary_path.replace(final_path)
 
 
-def _parse_deadline(deadline_at: str | None) -> datetime | None:
-    """Read the execution ceiling from the input contract. ``None`` means uncapped."""
-    if deadline_at is None:
-        return None
-    try:
-        deadline = datetime.fromisoformat(deadline_at.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise DastConnectorError("DAST execution deadline is invalid") from exc
-    if deadline.tzinfo is None:
-        raise DastConnectorError("DAST execution deadline must include a timezone")
-    return deadline
-
-
-def _deadline_passed(deadline: datetime | None, now: datetime) -> bool:
-    return deadline is not None and now >= deadline
-
-
 def _load_input(path: Path) -> DastConnectorInput:
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_json_object_without_duplicates,
+            parse_constant=_reject_json_constant,
+        )
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise DastConnectorError("connector input is unreadable") from exc
     return DastConnectorInput.from_wire(payload)
@@ -586,20 +537,16 @@ def main(argv: list[str] | None = None) -> int:
     except (DastContractError, DastConnectorError) as exc:
         print(f"[ERROR] {exc}", file=sys.stderr, flush=True)
         return CONNECTOR_EXIT_LOCAL_SETUP
-    # Waiting out a blip is right while a run is being watched and wrong on the way out: a
-    # harvest runs as the caller abandons the pipeline, and a cancellation has somebody waiting
-    # for it. One invocation is only ever one of the three, so the plan is decided here, once.
-    plan = IMPATIENT if connector_input.harvest_only or connector_input.stop_requested else WATCH
+    # A cancellation has somebody waiting for it; a watcher should instead absorb ordinary
+    # transport blips. This retry budget never decides the provider run's business lifecycle.
+    plan = IMPATIENT if connector_input.stop_requested else WATCH
     try:
-        deadline = _parse_deadline(connector_input.deadline_at)
         with DastGatewayClient(
             gateway_url=connector_input.gateway_url,
             token=token,
             ca_file=args.ca_file,
             trusted_vpn=args.trusted_vpn,
             plan=plan,
-            # No amount of patience outlives the run's own ceiling.
-            may_retry=lambda: not _deadline_passed(deadline, datetime.now(UTC)),
         ) as gateway:
             DastConnector(gateway=gateway, output_dir=args.output).run(connector_input)
     except (DastContractError, DastConnectorError, DastGatewayError) as exc:

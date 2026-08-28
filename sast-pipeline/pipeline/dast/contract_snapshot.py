@@ -91,7 +91,6 @@ class DastContractSnapshot:
             "REPORT_MISSING",
             "REPORT_INVALID",
             "AUDIT_INCOMPLETE",
-            "DEADLINE_EXCEEDED",
             "RESPONSE_TOO_LARGE",
             "RATE_LIMITED",
             "INTERNAL_ERROR",
@@ -157,6 +156,26 @@ class DastContractSnapshot:
         error_codes = set(schemas.get("V2ErrorSchema", {}).get("properties", {}).get("code", {}).get("enum", []))
         if not cls.REQUIRED_ERROR_CODES.issubset(error_codes):
             message = "DAST typed error-code set is incomplete"
+            raise DastContractCompatibilityError(message)
+
+        metadata_schema = schemas.get("V2RunMetadataSchema", {})
+        source_schema = metadata_schema.get("properties", {}).get("source_commits", {})
+        if (
+            metadata_schema.get("additionalProperties") is not True
+            or "source_commits" not in metadata_schema.get("required", [])
+            or source_schema.get("type") != "object"
+            or source_schema.get("additionalProperties", {}).get("type") != "string"
+        ):
+            message = "DAST terminal metadata lost its typed required source claim or extension point"
+            raise DastContractCompatibilityError(message)
+        terminal_statuses = set(
+            schemas.get("V2TerminalResultSchema", {})
+            .get("properties", {}).get("status", {}).get("enum", [])
+        )
+        if terminal_statuses != {
+            "succeeded", "completed_with_degradation", "failed_with_partial_results", "failed", "stopped",
+        }:
+            message = "DAST terminal status set changed"
             raise DastContractCompatibilityError(message)
 
     @classmethod

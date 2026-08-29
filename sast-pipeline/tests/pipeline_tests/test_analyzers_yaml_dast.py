@@ -93,10 +93,10 @@ def test_canonical_execution_dispatch_resolves_dast_image_from_common_catalog(mo
     calls = []
 
     class FakeExecutor:
-        def __init__(self, *, connector_image):
+        def __init__(self, *, connector_image, result_file):
             # The catalog says which image to run; how that image is built is the connector's own
             # business, because it packages this package's code rather than a third-party tool.
-            calls.append(("image", connector_image))
+            calls.append(("catalog", connector_image, result_file))
 
         def execute(self, execution):
             calls.append(("execution", execution))
@@ -108,7 +108,10 @@ def test_canonical_execution_dispatch_resolves_dast_image_from_common_catalog(mo
     result = execute_pipeline("dast", execution, analyzer_config=AnalyzersConfigHelper(CONFIG_PATH))
 
     assert result == "typed-result"
-    assert calls == [("image", "aist-dast-connector:v2"), ("execution", execution)]
+    assert calls == [
+        ("catalog", "aist-dast-connector:v2", "dast_result.json"),
+        ("execution", execution),
+    ]
 
 
 def test_dast_command_uses_canonical_dispatch_without_sast_builder(monkeypatch, tmp_path, capsys):
@@ -166,6 +169,8 @@ def test_dast_command_uses_canonical_dispatch_without_sast_builder(monkeypatch, 
             str(command_file),
             "--workspace",
             str(tmp_path / "workspace"),
+            "--output-dir",
+            str(tmp_path / "output"),
             "--token-file",
             str(token_file),
         ],

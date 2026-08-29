@@ -7,6 +7,7 @@ import json
 import os
 import signal
 import sys
+import tempfile
 import time
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
@@ -38,6 +39,32 @@ from pipeline.dast.resilience import (
     RetryPlan,
     describe_cause,
 )
+
+
+def write_json_atomically(output_dir: Path, filename: str, payload: dict[str, Any]) -> Path:
+    """Durably replace one JSON handoff without exposing a partially written file."""
+    output_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=output_dir,
+            prefix=f".{filename}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            json.dump(payload, temporary, sort_keys=True, separators=(",", ":"))
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        temporary_path.chmod(0o600)
+        final_path = output_dir / filename
+        temporary_path.replace(final_path)
+        return final_path
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 class DastGatewayError(RuntimeError):
@@ -411,7 +438,7 @@ class DastConnector:
         result = self._gateway.result(recovery.run_id)
         if result.status is not status.status:
             raise DastConnectorError(f"terminal result status does not match {source}")
-        self._write_json("result.json", result.to_wire())
+        write_json_atomically(self._output_dir, "result.json", result.to_wire())
         self._write_outcome(
             DastConnectorOutcomeState.TERMINAL,
             recovery,
@@ -443,7 +470,7 @@ class DastConnector:
                 return recovery
 
     def _write_recovery(self, recovery: DastRecoveryState) -> None:
-        self._write_json("recovery.json", recovery.to_wire())
+        write_json_atomically(self._output_dir, "recovery.json", recovery.to_wire())
 
     def _write_outcome(
         self,
@@ -452,7 +479,8 @@ class DastConnector:
         *,
         reason_code: str | None = None,
     ) -> None:
-        self._write_json(
+        write_json_atomically(
+            self._output_dir,
             "telemetry.json",
             {
                 "version": 1,
@@ -460,18 +488,11 @@ class DastConnector:
                 "max_log_lag_seconds": self._max_log_lag_seconds,
             },
         )
-        self._write_json(
+        write_json_atomically(
+            self._output_dir,
             "outcome.json",
             DastConnectorOutcome(state=state, recovery=recovery, reason_code=reason_code).to_wire(),
         )
-
-    def _write_json(self, filename: str, payload: dict[str, Any]) -> None:
-        self._output_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
-        temporary_path = self._output_dir / f".{filename}.tmp"
-        final_path = self._output_dir / filename
-        temporary_path.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":")), encoding="utf-8")
-        temporary_path.chmod(0o600)
-        temporary_path.replace(final_path)
 
 
 def _load_input(path: Path) -> DastConnectorInput:

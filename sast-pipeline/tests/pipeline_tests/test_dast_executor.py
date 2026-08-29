@@ -51,7 +51,16 @@ def _terminal_result():
         "selection": {"stand_id": "qa", "relation": "exact", "distance": 0},
         "trigger_resolution": None,
         "dast_run_metadata": {"source_commits": {"backend": "b" * 40}},
-        "report": {"findings": []},
+        "report": {
+            "name": "DAST",
+            "type": "DAST Autonomous Scan",
+            "findings": [],
+            "dast_run_metadata": {
+                "run_id": "run-123",
+                "target": "cloud-backend",
+                "source_commits": {"backend": "b" * 40},
+            },
+        },
         "audit": {},
     }
 
@@ -77,11 +86,16 @@ def _execution(tmp_path, **overrides):
         "gateway_url": "https://dast.internal",
         "command": _command(),
         "workspace": tmp_path / "execution",
+        "output_dir": tmp_path / "durable-output",
         "token_file": token_file,
         "vpn_container_name": "vpn-pipeline-123",
     }
     values.update(overrides)
     return DastExecutionInput(**values)
+
+
+def _executor():
+    return DastExecutor(connector_image="aist-dast-connector:v2", result_file="dast_result.json")
 
 
 def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret_env(monkeypatch, tmp_path):
@@ -97,13 +111,17 @@ def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret
 
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
-    result = DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+    result = _executor().execute(execution)
 
     assert result.terminal_result.status == "succeeded"
     assert result.outcome.state is DastConnectorOutcomeState.TERMINAL
     assert result.recovery.run_id == "run-123"
     assert result.telemetry.logs_delivered == 3
     assert result.telemetry.max_log_lag_seconds == 1.25
+    assert result.report_path.parent.parent == execution.output_dir
+    assert result.report_path.name == "dast_result.json"
+    assert json.loads(result.report_path.read_text(encoding="utf-8")) == _terminal_result()["report"]
+    assert list(execution.output_dir.glob(".*.tmp")) == []
     assert calls == [
         {
             "image": "aist-dast-connector:v2",
@@ -157,7 +175,7 @@ def test_executor_cleans_up_only_its_own_connector_container_on_interrupt(monkey
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_pipeline_containers", swept.append)
 
     with pytest.raises(KeyboardInterrupt):
-        DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+        _executor().execute(execution)
 
     assert cleaned == [CONNECTOR_CONTAINER]
     assert swept == []
@@ -176,7 +194,7 @@ def test_executor_returns_typed_unreachable_outcome_with_persisted_recovery(monk
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_container", cleaned.append)
 
-    result = DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+    result = _executor().execute(execution)
 
     assert result.outcome.state is DastConnectorOutcomeState.UNREACHABLE
     assert result.recovery == recovery
@@ -191,7 +209,7 @@ def test_executor_rejects_group_readable_token_file_before_container_start(monke
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", lambda **kwargs: called.append(kwargs))
 
     with pytest.raises(ValueError, match="group or other"):
-        DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+        _executor().execute(execution)
 
     assert called == []
 
@@ -215,7 +233,7 @@ def test_executor_hands_the_mounted_files_to_the_image_user_and_keeps_it_unprivi
 
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
-    DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+    _executor().execute(execution)
 
     # The container keeps the unprivileged user its image declares; ownership moved to meet it.
     assert calls[0]["user"] is None
@@ -242,7 +260,7 @@ def test_executor_runs_as_itself_when_it_cannot_hand_over_ownership(monkeypatch,
 
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
-    DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+    _executor().execute(execution)
 
     assert calls[0]["user"] == f"{UNPRIVILEGED_UID}:{UNPRIVILEGED_UID}"
     assert chowned == []
@@ -259,7 +277,7 @@ def test_executor_reports_a_local_setup_failure_instead_of_an_unreachable_provid
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.cleanup_container", cleaned.append)
 
     with pytest.raises(DastExecutionLocalFailure):
-        DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+        _executor().execute(execution)
 
     assert cleaned == [CONNECTOR_CONTAINER]
 
@@ -283,7 +301,7 @@ def test_executor_serializes_explicit_recovery_without_source_or_analyzer_pipeli
 
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
-    DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+    _executor().execute(execution)
 
     connector_input = json.loads((execution.workspace / "input.json").read_text(encoding="utf-8"))
     assert connector_input["recovery"] == recovery.to_wire()
@@ -309,7 +327,7 @@ def test_executor_rejects_success_without_current_telemetry_artifact(monkeypatch
     monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
 
     with pytest.raises(ValueError, match="telemetry.json"):
-        DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+        _executor().execute(execution)
 
 
 def test_executor_rebuilds_a_connector_image_left_from_an_older_revision(monkeypatch, tmp_path):
@@ -350,7 +368,7 @@ def test_executor_rebuilds_a_connector_image_left_from_an_older_revision(monkeyp
         ),
     )
 
-    DastExecutor(connector_image="aist-dast-connector:v2").execute(execution)
+    _executor().execute(execution)
 
     current_digest = du.build_source_digest(dast_executor._CONNECTOR_SOURCE_PATHS)
     assert [build["labels"] for build in builds] == [{du.SOURCE_DIGEST_LABEL: current_digest}]

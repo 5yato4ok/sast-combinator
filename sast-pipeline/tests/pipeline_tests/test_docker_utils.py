@@ -327,20 +327,6 @@ def test_run_pipeline_container_refuses_a_path_the_daemon_cannot_read(monkeypatc
         )
 
 
-def test_pipeline_workspace_is_created_under_the_shared_root(monkeypatch, tmp_path):
-    import pipeline.docker_utils as du
-
-    monkeypatch.setattr(du, "HOST_SHARED_ROOT", tmp_path / "shared")
-
-    with du.pipeline_workspace("pipe1234") as workspace:
-        assert workspace.is_dir()
-        assert str(workspace).startswith(str(tmp_path / "shared"))
-        marker = workspace / "input.json"
-        marker.write_text("{}", encoding="utf-8")
-
-    assert not workspace.exists()
-
-
 # Image-ensuring lives here, next to the run helper that depends on it: a step cannot run an
 # image that nothing builds, and the runtime deployment declares none of them.
 def test_ensure_image_skips_when_image_exists(monkeypatch, tmp_path):
@@ -512,7 +498,7 @@ def test_build_source_digest_follows_every_file_the_dockerfile_copies(monkeypatc
     paths = ("pipeline/__init__.py", "pipeline/dast")
 
     before = du.build_source_digest(paths)
-    contracts.write_text("FIELDS = {'stop_requested'}\n", encoding="utf-8")
+    contracts.write_text("FIELDS = {'stop_requested', 'output_dir'}\n", encoding="utf-8")
 
     assert du.build_source_digest(paths) != before
     # Order of the declared entries is not part of the identity of a revision.

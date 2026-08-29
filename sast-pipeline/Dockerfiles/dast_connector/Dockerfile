@@ -24,6 +24,7 @@ RUN pip install --no-cache-dir pytest==8.4.2 pyyaml==6.0.3 httpx==0.28.1
 # this is only the test stage.
 COPY pipeline/ /app/pipeline/
 COPY contracts/ /app/contracts/
+COPY Dockerfiles/dast_connector/Dockerfile /app/Dockerfiles/dast_connector/Dockerfile
 COPY run_pipeline.py /app/run_pipeline.py
 COPY tests/ /app/tests/
 

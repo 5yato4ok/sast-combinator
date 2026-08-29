@@ -17,6 +17,8 @@ from pipeline.dast.contracts import (
     DastStartCommand,
     DastTerminalResult,
 )
+from pipeline.dast.connector import write_json_atomically
+from pipeline.project_builder import prepare_run_output_dir
 
 _CONNECTOR_INPUT = "/run/aist/input.json"
 _CONNECTOR_OUTPUT = "/run/aist/output"
@@ -30,6 +32,7 @@ class DastExecutionInput:
     gateway_url: str
     command: DastStartCommand
     workspace: Path
+    output_dir: Path
     token_file: Path = field(repr=False)
     recovery: DastRecoveryState | None = None
     ca_file: Path | None = None
@@ -40,6 +43,7 @@ class DastExecutionInput:
         if not self.pipeline_id or not self.gateway_url.startswith("https://"):
             raise ValueError("DAST execution identity and HTTPS gateway URL are required")
         object.__setattr__(self, "workspace", Path(self.workspace).resolve())
+        object.__setattr__(self, "output_dir", Path(self.output_dir).resolve())
         object.__setattr__(self, "token_file", Path(self.token_file).resolve())
         if self.ca_file is not None:
             object.__setattr__(self, "ca_file", Path(self.ca_file).resolve())
@@ -84,6 +88,7 @@ class DastExecutionResult:
     terminal_result: DastTerminalResult | None
     recovery: DastRecoveryState
     telemetry: DastExecutionTelemetry
+    report_path: Path | None = None
 
     @classmethod
     def from_files(
@@ -137,10 +142,11 @@ _CONNECTOR_SOURCE_PATHS = (
 class DastExecutor:
     """Run the DAST protocol connector through the shared container lifecycle and logger."""
 
-    def __init__(self, *, connector_image: str):
-        if not connector_image:
-            raise ValueError("DAST connector image is required")
+    def __init__(self, *, connector_image: str, result_file: str):
+        if not connector_image or not result_file or Path(result_file).name != result_file:
+            raise ValueError("DAST connector image and result file are required")
         self._connector_image = connector_image
+        self._result_file = result_file
 
     def execute(self, execution: DastExecutionInput) -> DastExecutionResult:
         self._validate_secret_file(execution.token_file)
@@ -239,6 +245,19 @@ class DastExecutor:
             raise ValueError("terminal DAST connector did not produce result.json")
         if result.outcome.state is not DastConnectorOutcomeState.TERMINAL and result_path.exists():
             raise ValueError("non-terminal DAST connector produced an unexpected result.json")
+        if result.terminal_result is not None:
+            report_path = write_json_atomically(
+                prepare_run_output_dir(execution.output_dir),
+                self._result_file,
+                result.terminal_result.report,
+            )
+            result = DastExecutionResult(
+                outcome=result.outcome,
+                terminal_result=result.terminal_result,
+                recovery=result.recovery,
+                telemetry=result.telemetry,
+                report_path=report_path,
+            )
         return result
 
     def _cleanup_connector_container(self, pipeline_id: str) -> None:

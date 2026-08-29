@@ -26,6 +26,7 @@ def run(argv: list[str], *, analyzer_config: AnalyzersConfigHelper) -> DastExecu
     parser.add_argument("--gateway-url", required=True)
     parser.add_argument("--command-file", type=Path, required=True)
     parser.add_argument("--workspace", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--token-file", type=Path, required=True)
     parser.add_argument("--ca-file", type=Path)
     parser.add_argument("--recovery-file", type=Path)
@@ -42,6 +43,7 @@ def run(argv: list[str], *, analyzer_config: AnalyzersConfigHelper) -> DastExecu
             gateway_url=args.gateway_url.rstrip("/"),
             command=command,
             workspace=args.workspace,
+            output_dir=args.output_dir,
             token_file=args.token_file,
             recovery=recovery,
             ca_file=args.ca_file,

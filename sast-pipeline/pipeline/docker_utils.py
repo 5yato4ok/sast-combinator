@@ -14,13 +14,11 @@ import hashlib
 import subprocess
 import os
 import re
-import shutil
 import uuid
 import selectors
 import logging
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterator, Optional, Iterable, Tuple
+from typing import Dict, Optional, Iterable, Tuple
 
 log = logging.getLogger(__name__)
 
@@ -371,19 +369,6 @@ def _require_shared_path(host_path: str) -> None:
             "empty directory instead of this content."
         )
         raise UnsharedWorkspaceError(detail)
-
-
-@contextmanager
-def pipeline_workspace(pipeline_id: str) -> Iterator[Path]:
-    """Allocate a per-run directory both this container and the Docker daemon can read."""
-    root = Path(HOST_SHARED_ROOT) / "runs"
-    root.mkdir(parents=True, exist_ok=True)
-    workspace = root / f"{pipeline_id}-{uuid.uuid4().hex[:8]}"
-    workspace.mkdir(mode=0o700)
-    try:
-        yield workspace
-    finally:
-        shutil.rmtree(workspace, ignore_errors=True)
 
 
 def run_pipeline_container(

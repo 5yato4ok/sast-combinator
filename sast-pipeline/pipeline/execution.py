@@ -24,7 +24,8 @@ def _dast_handler(catalog: AnalyzersConfigHelper):
         if not isinstance(connector_image, str) or not connector_image:
             detail = "The DAST catalog provider must declare a connector image"
             raise ValueError(detail)
-        return DastExecutor(connector_image=connector_image).execute(execution)
+        result_file = catalog.get_analyzer_result_file_name(provider)
+        return DastExecutor(connector_image=connector_image, result_file=result_file).execute(execution)
 
     return execute
 

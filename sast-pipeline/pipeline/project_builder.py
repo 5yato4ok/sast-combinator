@@ -25,6 +25,13 @@ from . import docker_utils
 log = logging.getLogger(__name__)
 
 
+def prepare_run_output_dir(output_dir: str | Path) -> Path:
+    """Create the timestamped directory shared by every pipeline result producer."""
+    run_output_dir = Path(output_dir) / datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_output_dir.mkdir(exist_ok=True, parents=True)
+    return run_output_dir
+
+
 def configure_project_run_analyses(
         script_path: str,
         output_dir: str,
@@ -61,9 +68,7 @@ def configure_project_run_analyses(
     if analyzers is None:
         analyzers = []
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = f"{output_dir}/{timestamp}"
-    Path(output_dir).mkdir(exist_ok=True, parents=True)
+    output_dir = str(prepare_run_output_dir(output_dir))
 
     log.info("Building builder image: %s", image_name)
 

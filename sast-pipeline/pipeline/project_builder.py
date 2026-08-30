@@ -16,20 +16,13 @@ import logging
 import os
 import shutil
 import subprocess
-from datetime import datetime
 from pathlib import Path
 
 from . import agent_bridge_runner
 from . import docker_utils
+from .run_output import prepare_run_output_dir
 
 log = logging.getLogger(__name__)
-
-
-def prepare_run_output_dir(output_dir: str | Path) -> Path:
-    """Create the timestamped directory shared by every pipeline result producer."""
-    run_output_dir = Path(output_dir) / datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_output_dir.mkdir(exist_ok=True, parents=True)
-    return run_output_dir
 
 
 def configure_project_run_analyses(

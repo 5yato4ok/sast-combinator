@@ -17,8 +17,7 @@ from pipeline.dast.contracts import (
     DastStartCommand,
     DastTerminalResult,
 )
-from pipeline.dast.connector import write_json_atomically
-from pipeline.project_builder import prepare_run_output_dir
+from pipeline.run_output import prepare_run_output_dir, write_json_atomically
 
 _CONNECTOR_INPUT = "/run/aist/input.json"
 _CONNECTOR_OUTPUT = "/run/aist/output"
@@ -135,6 +134,7 @@ _CONNECTOR_SOURCE_PATHS = (
     "Dockerfiles/dast_connector/Dockerfile",
     "pipeline/__init__.py",
     "pipeline/docker_utils.py",
+    "pipeline/run_output.py",
     "pipeline/dast",
 )
 

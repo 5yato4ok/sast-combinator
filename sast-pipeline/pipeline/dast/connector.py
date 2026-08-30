@@ -7,7 +7,6 @@ import json
 import os
 import signal
 import sys
-import tempfile
 import time
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
@@ -39,32 +38,7 @@ from pipeline.dast.resilience import (
     RetryPlan,
     describe_cause,
 )
-
-
-def write_json_atomically(output_dir: Path, filename: str, payload: dict[str, Any]) -> Path:
-    """Durably replace one JSON handoff without exposing a partially written file."""
-    output_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
-    temporary_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=output_dir,
-            prefix=f".{filename}.",
-            suffix=".tmp",
-            delete=False,
-        ) as temporary:
-            temporary_path = Path(temporary.name)
-            json.dump(payload, temporary, sort_keys=True, separators=(",", ":"))
-            temporary.flush()
-            os.fsync(temporary.fileno())
-        temporary_path.chmod(0o600)
-        final_path = output_dir / filename
-        temporary_path.replace(final_path)
-        return final_path
-    finally:
-        if temporary_path is not None:
-            temporary_path.unlink(missing_ok=True)
+from pipeline.run_output import write_json_atomically
 
 
 class DastGatewayError(RuntimeError):

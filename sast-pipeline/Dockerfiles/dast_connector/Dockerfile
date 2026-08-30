@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN pip install --no-cache-dir httpx==0.28.1
 
-COPY pipeline/__init__.py pipeline/docker_utils.py /app/pipeline/
+COPY pipeline/__init__.py pipeline/docker_utils.py pipeline/run_output.py /app/pipeline/
 COPY pipeline/dast/ /app/pipeline/dast/
 
 USER 1001:1001

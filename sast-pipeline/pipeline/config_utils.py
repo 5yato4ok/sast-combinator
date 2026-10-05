@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 import textwrap
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
@@ -33,6 +34,36 @@ class AnalyzersConfigHelper:
             self.config.get("analyzers", []),
             allowed_langs=self.languages or None
         )
+
+    # Image names a build, the catalog name names the analyzer; the fallback follows the
+    # catalog's own convention, where "sast-semgrep" is "semgrep".
+    IMAGE_TOKEN_PREFIXES = ("sast-", "aist-")
+
+    @classmethod
+    def image_fallback_token(cls, image) -> str:
+        """The source token an image reference alone yields, without registry, tag or digest."""
+        repository = str(image).rsplit("/", 1)[-1]
+        repository = repository.split("@", 1)[0].split(":", 1)[0]
+        for prefix in cls.IMAGE_TOKEN_PREFIXES:
+            if repository.startswith(prefix):
+                return repository[len(prefix):] or repository
+        return repository
+
+    def source_token(self, image) -> str:
+        """This catalog's name for ``image``, or the token its reference yields.
+
+        Reads the raw config, not the language-expanded list, so a standalone entry resolves.
+        """
+        for analyzer in self.config.get("analyzers", []):
+            if analyzer.get("image") == image and analyzer.get("name"):
+                return str(analyzer["name"])
+        return self.image_fallback_token(image)
+
+    @classmethod
+    def source_token_for_image(cls, image) -> str:
+        """``source_token`` against the default catalog. Never raises."""
+        helper = _default_catalog()
+        return helper.source_token(image) if helper else cls.image_fallback_token(image)
 
     @staticmethod
     def get_analyzer_result_file_name(analyzer):
@@ -447,6 +478,16 @@ class AnalyzersConfigHelper:
             stats_lines.append(f"  - {lang}: {s['enabled']}/{s['total']} enabled")
 
         return "\n".join(md_lines + stats_lines)
+
+@lru_cache(maxsize=1)
+def _default_catalog():
+    """The packaged catalog, loaded once, or None when it cannot be read."""
+    try:
+        return AnalyzersConfigHelper()
+    except Exception:
+        log.warning("Analyzer catalog unavailable; source tokens fall back to the image reference")
+        return None
+
 
 if __name__ == "__main__":
     helper = AnalyzersConfigHelper("config/analyzers.yaml")

@@ -6,6 +6,7 @@ without invoking Docker itself.  The ``subprocess`` and internal
 helpers are monkeypatched so that no external commands are executed.
 """
 
+import logging
 import re
 import types
 
@@ -126,8 +127,8 @@ def test_run_container_constructs_command(monkeypatch):
     assert any("KEY=VAL" in part for part in cmd)
     # Volumes mapping is passed with -v
     assert "-v" in cmd
-    # The log addition prefixes log lines with the image name
-    assert log_addition.startswith("[myimg]")
+    # Log lines are tagged with the analyzer's catalog name, never with the image tag.
+    assert log_addition == "[myimg]"
 
 
 def test_run_container_overrides_the_image_user_only_when_asked(monkeypatch):
@@ -640,3 +641,92 @@ def test_a_container_that_refuses_to_go_away_is_still_reported(monkeypatch, capl
         du.cleanup_container("stubborn")
 
     assert [record.levelname for record in caplog.records] == ["WARNING"]
+
+
+def _captured(caplog, line, *, stream="stdout", log_addition="[dast]"):
+    import pipeline.docker_utils as du
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger=du.log.name):
+        du._log_container_line(line, stream=stream, log_addition=log_addition)
+    record, = caplog.records
+    return record.levelno, record.getMessage()
+
+
+def test_a_step_declares_the_phase_and_job_of_its_line(caplog):
+    """The scope a container names becomes a column, so phase and job leave the message."""
+    level, message = _captured(caplog, "[INFO][p1/provision-accounts] job start: attempt=1")
+    assert level == logging.INFO
+    assert message == "[dast][p1/provision-accounts] job start: attempt=1"
+
+
+def test_a_line_without_a_scope_carries_the_source_alone(caplog):
+    level, message = _captured(caplog, "[ERROR] run failed: reason=stage_failed")
+    assert level == logging.ERROR
+    assert message == "[dast] run failed: reason=stage_failed"
+
+
+def test_a_level_quoted_inside_the_message_is_message_text(caplog):
+    """Regression: reading the trailing level token truncated everything the step had said."""
+    level, message = _captured(caplog, "[INFO][p8/audit] next action: requeue, not [ERROR] handling")
+    assert level == logging.INFO
+    assert message == "[dast][p8/audit] next action: requeue, not [ERROR] handling"
+
+
+def test_a_bracket_after_a_space_is_message_text_not_a_scope(caplog):
+    level, message = _captured(caplog, "[ERROR] issue-2f81 [contract_defect/audit]: fix the request")
+    assert level == logging.ERROR
+    assert message == "[dast] issue-2f81 [contract_defect/audit]: fix the request"
+
+
+def test_every_level_spelling_a_step_may_emit_is_honoured(caplog):
+    for token, expected in (
+        ("DEBUG", logging.DEBUG),
+        ("INFO", logging.INFO),
+        ("WARN", logging.WARNING),
+        ("WARNING", logging.WARNING),
+        ("ERR", logging.ERROR),
+        ("ERROR", logging.ERROR),
+        ("CRIT", logging.CRITICAL),
+        ("CRITICAL", logging.CRITICAL),
+    ):
+        level, _ = _captured(caplog, f"[{token}] something happened")
+        assert level == expected, token
+
+
+def test_tool_output_with_no_level_is_tagged_and_left_alone(caplog):
+    """Analyzer stdout is not ours to parse; stderr is the only signal of trouble."""
+    level, message = _captured(caplog, "semgrep: scanning 412 files")
+    assert level == logging.INFO
+    assert message == "[dast] semgrep: scanning 412 files"
+
+    level, message = _captured(caplog, "cppcheck: out of memory", stream="stderr")
+    assert level == logging.WARNING
+    assert message == "[dast] cppcheck: out of memory"
+
+
+def test_a_caller_that_names_no_source_emits_the_bare_line(caplog):
+    level, message = _captured(caplog, "[INFO] stopping", log_addition="")
+    assert level == logging.INFO
+    assert message == "stopping"
+
+
+def test_a_step_that_prints_its_own_timestamp_keeps_its_level(caplog):
+    """The builder logs ``%(asctime)s [%(levelname)s] %(message)s`` from inside the container."""
+    level, message = _captured(
+        caplog,
+        "2026-10-04 12:00:00,123 [ERROR] cmake configure failed",
+        log_addition="[builder]",
+    )
+    assert level == logging.ERROR
+    assert message == "[builder] cmake configure failed"
+
+
+def test_an_analyzer_shell_script_line_reads_as_it_always_did(caplog):
+    """Every analyze.sh emits ``echo "[INFO] ..."`` and declares no scope."""
+    level, message = _captured(caplog, "[INFO] Running Semgrep Code analysis...", log_addition="[semgrep]")
+    assert level == logging.INFO
+    assert message == "[semgrep] Running Semgrep Code analysis..."
+
+    level, message = _captured(caplog, "[WARN] retire.js returned non-zero", log_addition="[retirejs]")
+    assert level == logging.WARNING
+    assert message == "[retirejs] retire.js returned non-zero"

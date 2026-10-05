@@ -318,3 +318,32 @@ def test_pretty_print_table_and_stats(capsys, tmp_path):
     # Stats should include totals and per‑language metrics
     assert "Total analyzers" in table
     assert "py" in table and "js" in table
+
+
+def test_packaged_catalog_names_the_source_of_each_analyzer_log_line():
+    """An operator greps a downloaded log by analyzer name, not by image reference.
+
+    The names come from the shipped ``analyzers.yaml``: the token has to survive the image
+    tag moving, and ``dast`` is a standalone entry excluded from the language-expanded list.
+    """
+    assert AH.source_token_for_image("aist-dast-connector:v2") == "dast"
+    assert AH.source_token_for_image("sast-semgrep") == "semgrep"
+
+
+def test_an_image_outside_the_catalog_still_yields_a_readable_token():
+    assert AH.image_fallback_token("registry.example.com:5000/team/sast-foo:v9") == "foo"
+    assert AH.image_fallback_token("aist-builder") == "builder"
+    assert AH.image_fallback_token("busybox@sha256:abc123") == "busybox"
+    assert AH.image_fallback_token("plain") == "plain"
+
+
+def test_a_catalog_entry_wins_over_the_image_reference(tmp_path):
+    config = tmp_path / "analyzers.yaml"
+    config.write_text(
+        yaml.safe_dump({"analyzers": [{"name": "dast", "image": "aist-dast-connector:v2"}]}),
+        encoding="utf-8",
+    )
+    helper = AH(str(config))
+    assert helper.source_token("aist-dast-connector:v2") == "dast"
+    # Fallback would have said "dast-connector".
+    assert helper.image_fallback_token("aist-dast-connector:v2") == "dast-connector"

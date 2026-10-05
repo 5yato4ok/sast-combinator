@@ -20,6 +20,8 @@ import logging
 from pathlib import Path
 from typing import Dict, Optional, Iterable, Tuple
 
+from pipeline.config_utils import AnalyzersConfigHelper
+
 log = logging.getLogger(__name__)
 
 # Bind-mount sources are resolved by the daemon on the host, so only paths the host and this
@@ -78,35 +80,59 @@ def image_exists(image_name: str) -> bool:
     return result.stdout.strip() != ""
 
 
-_LEVEL_TOKEN_RE = re.compile(r'\[(DEBUG|INFO|WARNING|WARN|ERROR|ERR|CRITICAL|CRIT)\]', re.IGNORECASE)
+# A container declares the level of a line and may name the phase and job it is working on
+# immediately after it: ``[INFO][p1/provision-accounts] job start``. Both tokens are
+# optional, and anything a step prints ahead of the level -- the builder prefixes its own
+# timestamp -- is dropped with it.
+_LEVEL_ALIASES = {"ERR": "ERROR", "CRIT": "CRITICAL"}
 
-def _log_container_line(line: str, stream: str = "stdout", log_addition:str = "") -> None:
+
+def _level_number(token: str) -> Optional[int]:
+    """The logging level ``token`` names, or None when it names none."""
+    level = logging.getLevelName(_LEVEL_ALIASES.get(token.upper(), token.upper()))
+    return level if isinstance(level, int) else None
+
+
+def _take_bracketed(text: str) -> Tuple[Optional[str], str]:
+    """Split a leading ``[token]`` off ``text``; (None, text) when it opens with none."""
+    if not text.startswith("["):
+        return None, text
+    token, closed, rest = text[1:].partition("]")
+    return (token, rest) if closed else (None, text)
+
+
+def _split_declared_level(text: str) -> Tuple[Optional[int], str]:
+    """Find the level a step declared and return it with the rest of the line.
+
+    The FIRST bracketed level wins: reading the last one let a message quoting a level in
+    its own text be cut off at the quote.
+    """
+    opening = text.find("[")
+    while opening != -1:
+        token, rest = _take_bracketed(text[opening:])
+        if token is not None:
+            level = _level_number(token)
+            if level is not None:
+                return level, rest
+        opening = text.find("[", opening + 1)
+    return None, text
+
+
+def _log_container_line(line: str, stream: str = "stdout", log_addition: str = "") -> None:
+    """Re-log one line of container output under the source token of its step."""
     text = line.rstrip("\r\n")
+    level, rest = _split_declared_level(text)
 
-    last = None
-    for last in _LEVEL_TOKEN_RE.finditer(text):
-        pass
-
-    if last:
-        level = last.group(1).upper()
-        msg = log_addition + text[last.end():].lstrip()
-
-        if level in ("WARN", "WARNING"):
-            log.warning(msg); return
-        if level in ("ERR", "ERROR"):
-            log.error(msg); return
-        if level in ("CRIT", "CRITICAL"):
-            log.critical(msg); return
-        if level == "DEBUG":
-            log.debug(msg); return
-        # INFO by default
-        log.info(msg); return
-
-    # fallback: if there is no [LEVEL] — stderr -> WARNING, stdout -> INFO
-    if stream == "stderr":
-        log.warning(log_addition + text)
+    if level is None:
+        scope, body = None, text
+        level = logging.WARNING if stream == "stderr" else logging.INFO
     else:
-        log.info(log_addition + text)
+        scope, body = _take_bracketed(rest)
+        body = body.lstrip()
+
+    prefix = log_addition + (f"[{scope}]" if scope else "")
+    log.log(level, f"{prefix} {body}" if prefix else body)
+
 
 def run_logged_cmd(cmd, log_addition=""):
     import codecs
@@ -225,7 +251,7 @@ def run_container(
     if args:
         cmd += list(args)
 
-    run_logged_cmd(cmd, f"[{image}] ")
+    run_logged_cmd(cmd, f"[{AnalyzersConfigHelper.source_token_for_image(image)}]")
 
 
 def image_runtime_user(image: str) -> Optional[Tuple[int, int]]:

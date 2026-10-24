@@ -1,5 +1,6 @@
 import json
 import subprocess
+import threading
 from pathlib import Path
 
 import pytest
@@ -393,3 +394,79 @@ def test_connector_source_digest_covers_every_file_the_connector_image_copies():
     # The Dockerfile itself decides the runtime, so it belongs to the identity of the build too.
     assert "Dockerfiles/dast_connector/Dockerfile" in declared
     assert du.build_source_digest(dast_executor._CONNECTOR_SOURCE_PATHS)
+
+
+def test_executor_reports_the_run_identity_while_the_container_is_still_running(monkeypatch, tmp_path):
+    """
+    A caller learns the run's identity from a run in flight, not when the execution returns.
+
+    The connector writes its recovery state as soon as the provider accepts the run. Anything that
+    addresses the run by id -- the platform's own durable state, and the queue surface built on it --
+    has nothing to address until that reaches the caller, so this reports it while the container is
+    still up rather than at the end.
+    """
+    execution = None
+    reported = []
+    seen = threading.Event()
+
+    def on_progress(recovery):
+        reported.append((recovery.run_id, recovery.log_cursor))
+        seen.set()
+
+    execution = _execution(tmp_path, on_progress=on_progress)
+    accepted = DastRecoveryState.initial(execution.command).for_run("run-123")
+
+    def run_container(**_kwargs):
+        # What the connector does on acceptance: the state is on disk long before it exits.
+        output_dir = execution.workspace / "output"
+        (output_dir / "recovery.json").write_text(json.dumps(accepted.to_wire()), encoding="utf-8")
+        assert seen.wait(timeout=10), "the run identity was not reported while the container ran"
+        _write_terminal_output(execution, accepted)
+
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
+
+    result = _executor().execute(execution)
+
+    assert reported[0] == ("run-123", 0)
+    assert result.recovery.run_id == "run-123"
+
+
+def test_a_progress_report_that_fails_does_not_disturb_the_run(monkeypatch, tmp_path):
+    """Reporting is observation: a caller that cannot record what it was told loses the report only."""
+    attempted = threading.Event()
+
+    def on_progress(_recovery):
+        attempted.set()
+        message = "the caller could not record this"
+        raise RuntimeError(message)
+
+    execution = _execution(tmp_path, on_progress=on_progress)
+    accepted = DastRecoveryState.initial(execution.command).for_run("run-123")
+
+    def run_container(**_kwargs):
+        output_dir = execution.workspace / "output"
+        (output_dir / "recovery.json").write_text(json.dumps(accepted.to_wire()), encoding="utf-8")
+        assert attempted.wait(timeout=10)
+        _write_terminal_output(execution, accepted)
+
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
+
+    result = _executor().execute(execution)
+
+    assert result.terminal_result.status == "succeeded"
+    assert result.recovery.run_id == "run-123"
+
+
+def test_an_execution_without_a_progress_report_runs_unchanged(monkeypatch, tmp_path):
+    """The report is optional: nothing watches, and nothing is started, when no caller asked."""
+    execution = _execution(tmp_path)
+    accepted = DastRecoveryState.initial(execution.command).for_run("run-123")
+    threads_before = threading.active_count()
+
+    def run_container(**_kwargs):
+        assert threading.active_count() == threads_before
+        _write_terminal_output(execution, accepted)
+
+    monkeypatch.setattr("pipeline.dast.executor.docker_utils.run_pipeline_container", run_container)
+
+    assert _executor().execute(execution).recovery.run_id == "run-123"

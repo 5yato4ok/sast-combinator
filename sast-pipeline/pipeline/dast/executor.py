@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import os
 import subprocess
+import threading
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pipeline import docker_utils
 from pipeline.dast.contracts import (
@@ -18,6 +22,16 @@ from pipeline.dast.contracts import (
     DastTerminalResult,
 )
 from pipeline.run_output import prepare_run_output_dir, write_json_atomically
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+logger = logging.getLogger(__name__)
+
+#: How often this side looks at what the connector has written while its container runs. The
+#: connector rewrites its recovery state once per gateway poll, so reading faster only costs
+#: file reads and tells the caller nothing new.
+_PROGRESS_POLL_SECONDS = 2.0
 
 _CONNECTOR_INPUT = "/run/aist/input.json"
 _CONNECTOR_OUTPUT = "/run/aist/output"
@@ -37,6 +51,11 @@ class DastExecutionInput:
     ca_file: Path | None = None
     vpn_container_name: str | None = None
     stop_requested: bool = False
+    #: Called with the connector's own recovery state while the run is still going: once the
+    #: provider has accepted it, and again whenever the connector advances. A caller that keeps
+    #: durable state uses this to learn the run's identity before the container exits, instead of
+    #: waiting for the whole execution to return. Failures inside it never reach the run.
+    on_progress: Callable[[DastRecoveryState], None] | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         if not self.pipeline_id or not self.gateway_url.startswith("https://"):
@@ -148,6 +167,60 @@ class DastExecutor:
         self._connector_image = connector_image
         self._result_file = result_file
 
+    @contextmanager
+    def _reporting_progress(self, recovery_path: Path, on_progress):
+        """
+        Report the connector's recovery state upward while its container is still running.
+
+        The connector writes that state as soon as the provider accepts the run and again on every
+        poll. Reading it here is what lets the caller learn the run's identity before the container
+        exits; where the file lives and how often it is read stay inside this package.
+        """
+        if on_progress is None:
+            yield
+            return
+        stop = threading.Event()
+        watcher = threading.Thread(
+            target=self._watch_recovery,
+            args=(recovery_path, on_progress, stop),
+            name=f"dast-progress-{recovery_path.parent.parent.name}",
+            daemon=True,
+        )
+        watcher.start()
+        try:
+            yield
+        finally:
+            stop.set()
+            watcher.join(timeout=_PROGRESS_POLL_SECONDS * 2)
+
+    @staticmethod
+    def _watch_recovery(recovery_path: Path, on_progress, stop: threading.Event) -> None:
+        reported: tuple[str | None, int] | None = None
+        while True:
+            recovery = DastExecutor._read_recovery(recovery_path)
+            if recovery is not None and (recovery.run_id, recovery.log_cursor) != reported:
+                reported = (recovery.run_id, recovery.log_cursor)
+                try:
+                    on_progress(recovery)
+                except Exception:
+                    # Reporting is observation. A caller that cannot record what it was told must
+                    # not take the run down with it.
+                    logger.exception("DAST progress report failed for %s", recovery_path)
+            if stop.wait(_PROGRESS_POLL_SECONDS):
+                return
+
+    @staticmethod
+    def _read_recovery(recovery_path: Path) -> DastRecoveryState | None:
+        """The connector's recovery state, or nothing if it has not written a readable one yet."""
+        try:
+            if not recovery_path.is_file():
+                return None
+            return DastRecoveryState.from_file(recovery_path)
+        except Exception:
+            # The file is replaced atomically, so this is a malformed or half-provisioned run
+            # rather than a torn read. Either way it is not something to report.
+            return None
+
     def execute(self, execution: DastExecutionInput) -> DastExecutionResult:
         self._validate_secret_file(execution.token_file)
         if execution.ca_file is not None and not execution.ca_file.is_file():
@@ -195,17 +268,18 @@ class DastExecutor:
         user = self._align_handoff_identity(mounted)
 
         try:
-            docker_utils.run_pipeline_container(
-                image=self._connector_image,
-                dockerfile_dir=_CONNECTOR_DOCKERFILE_DIR,
-                build_context=_CONNECTOR_BUILD_CONTEXT,
-                pipeline_id=execution.pipeline_id,
-                volumes=volumes,
-                env=None,
-                args=args,
-                network=f"container:{execution.vpn_container_name}" if execution.vpn_container_name else None,
-                user=user,
-            )
+            with self._reporting_progress(output_dir / "recovery.json", execution.on_progress):
+                docker_utils.run_pipeline_container(
+                    image=self._connector_image,
+                    dockerfile_dir=_CONNECTOR_DOCKERFILE_DIR,
+                    build_context=_CONNECTOR_BUILD_CONTEXT,
+                    pipeline_id=execution.pipeline_id,
+                    volumes=volumes,
+                    env=None,
+                    args=args,
+                    network=f"container:{execution.vpn_container_name}" if execution.vpn_container_name else None,
+                    user=user,
+                )
         except subprocess.CalledProcessError as exc:
             self._cleanup_connector_container(execution.pipeline_id)
             if exc.returncode == CONNECTOR_EXIT_LOCAL_SETUP:

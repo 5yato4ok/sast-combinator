@@ -386,3 +386,104 @@ def test_run_selected_analyzers_log_level_injected(monkeypatch, tmp_path):
     )
     # ``LOG_LEVEL`` should appear in env_vars list passed to run_docker
     assert captured_envs and "LOG_LEVEL" in captured_envs[0]
+
+
+def _single_analyzer_config(tmp_path, name, image):
+    config = {
+        "analyzers": [
+            {
+                "name": name,
+                "image": image,
+                "enabled": True,
+                "time_class": "fast",
+                "type": "default",
+            },
+        ]
+    }
+    cfg_path = tmp_path / "analyzers.yaml"
+    with cfg_path.open("w", encoding="utf-8") as fh:
+        yaml.dump(config, fh)
+    return cfg_path
+
+
+def _run(tmp_path, cfg_path):
+    out_dir = tmp_path / "out"
+    out_dir.mkdir(exist_ok=True)
+    ar.run_selected_analyzers(
+        config_path=str(cfg_path),
+        pipeline_id="pipe1234",
+        analyzers_to_run=None,
+        max_time_class="medium",
+        project_path=str(tmp_path / "proj"),
+        output_dir=str(out_dir),
+        builder_container="builder",
+        log_level=None,
+    )
+    with open(out_dir / "launch_description.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def test_launch_description_records_which_build_of_the_analyzer_ran(monkeypatch, tmp_path):
+    """A rebuilt image changes the scanner silently; the run has to say which build it used."""
+    cfg_path = _single_analyzer_config(tmp_path, "semgrep", "sast-semgrep")
+    monkeypatch.setattr(ar.docker_utils, "image_id", lambda image: "sha256:feedface")
+    monkeypatch.setattr(ar.docker_utils, "image_label", lambda image, label: "semgrep 1.183.0")
+    monkeypatch.setattr(
+        ar,
+        "run_docker",
+        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir="": None,
+    )
+
+    versions = _run(tmp_path, cfg_path)["analyzer_versions"]
+    assert versions == [
+        {
+            "analyzer": "semgrep",
+            "image": "sast-semgrep",
+            "image_id": "sha256:feedface",
+            "tool_version": "semgrep 1.183.0",
+        },
+    ]
+
+
+def test_a_failed_analyzer_still_reports_which_build_it_ran(monkeypatch, tmp_path):
+    """The run that produced no report is exactly the one whose version you need to know."""
+    cfg_path = _single_analyzer_config(tmp_path, "snyk", "sast-snyk")
+    monkeypatch.setattr(ar.docker_utils, "image_id", lambda image: None)
+    monkeypatch.setattr(ar.docker_utils, "image_label", lambda image, label: "snyk 1.1308.3")
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("SNYK_TOKEN is not set")
+
+    monkeypatch.setattr(ar, "run_docker", boom)
+
+    launch = _run(tmp_path, cfg_path)
+    assert launch["analyzer_outcomes"][0]["status"] == "failed"
+    # An unreadable image id is left out instead of being recorded as a known blank.
+    assert launch["analyzer_versions"] == [
+        {"analyzer": "snyk", "image": "sast-snyk", "tool_version": "snyk 1.1308.3"},
+    ]
+
+
+def test_an_analyzer_nothing_could_be_read_about_is_not_recorded_as_a_version(monkeypatch, tmp_path):
+    """A record with no identifying field is noise, not a version."""
+    cfg_path = _single_analyzer_config(tmp_path, "legacy", "")
+    monkeypatch.setattr(ar.docker_utils, "image_id", lambda image: None)
+    monkeypatch.setattr(ar.docker_utils, "image_label", lambda image, label: None)
+    monkeypatch.setattr(
+        ar,
+        "run_docker",
+        lambda image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir="": None,
+    )
+
+    assert _run(tmp_path, cfg_path)["analyzer_versions"] == []
+
+
+def test_reading_an_image_field_never_fails_the_run_it_describes(monkeypatch):
+    """Docker missing or the image absent must degrade to 'unknown', not raise."""
+    def no_docker(*args, **kwargs):
+        raise OSError("docker: command not found")
+
+    monkeypatch.setattr(ar.docker_utils.subprocess, "run", no_docker)
+    assert ar.docker_utils.image_id("sast-semgrep") is None
+    assert ar.docker_utils.image_label("sast-semgrep", "aist.tool.version") is None
+    assert ar.docker_utils.image_id("") is None

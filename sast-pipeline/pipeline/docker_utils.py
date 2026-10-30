@@ -39,6 +39,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 # protocol version instead of a build ("aist-dast-connector:v2") can still be told apart from the
 # sources it was built from.
 SOURCE_DIGEST_LABEL = "com.aist.source-digest"
+TOOL_VERSION_LABEL = "aist.tool.version"
 
 
 class UnsharedWorkspaceError(ValueError):
@@ -276,19 +277,38 @@ def image_runtime_user(image: str) -> Optional[Tuple[int, int]]:
     return int(user), int(group) if group.isdigit() else -1
 
 
-def image_label(image: str, label: str) -> Optional[str]:
-    """Return one label of a local image, or None when the image or the label is absent."""
-    result = subprocess.run(
-        ["docker", "image", "inspect", "--format", f'{{{{index .Config.Labels "{label}"}}}}', image],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def _inspect_format(image: str, go_template: str) -> Optional[str]:
+    """Read one formatted field of a local image, or None when it cannot be read.
+
+    Never raises: an absent image, an absent field and an absent Docker binary are all "unknown"
+    to every caller here, and a caller that needs the image will fail on its own terms later.
+    """
+    if not image:
+        return None
+    try:
+        result = subprocess.run(
+            ["docker", "image", "inspect", "--format", go_template, image],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return None
     if result.returncode != 0:
         return None
-    # An image with no labels at all makes the template print Go's zero value for a nil map.
+    # A field the image does not carry makes the template print Go's zero value.
     value = result.stdout.strip()
     return None if value in ("", "<no value>") else value
+
+
+def image_label(image: str, label: str) -> Optional[str]:
+    """Return one label of a local image, or None when the image or the label is absent."""
+    return _inspect_format(image, f'{{{{index .Config.Labels "{label}"}}}}')
+
+
+def image_id(image: str) -> Optional[str]:
+    """Return the resolved id of a local image, which separates two builds of one tag."""
+    return _inspect_format(image, "{{.Id}}")
 
 
 def build_source_digest(paths: Iterable[str]) -> str:

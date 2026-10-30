@@ -70,3 +70,41 @@ class ExecutionOutcome:
             "detail_code": self.detail_code,
             "state": self.state,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class AnalyzerBuild:
+
+    """Which build of one analyzer produced a run's findings.
+
+    A rebuilt image changes the scanner silently, so a finding delta between two runs cannot
+    be attributed without this. ``image_id`` separates two builds of the same tag;
+    ``tool_version`` is the pinned scanner version the Dockerfile stamped on the image.
+    """
+
+    analyzer: str
+    image: str
+    image_id: str = ""
+    tool_version: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.analyzer.strip():
+            detail = "Analyzer name must not be blank"
+            raise ValueError(detail)
+
+    @property
+    def is_identified(self) -> bool:
+        """False when the image answered for nothing: the record is then noise, not a version."""
+        return bool(self.image or self.image_id or self.tool_version)
+
+    def to_wire(self) -> dict[str, str]:
+        # A field the image could not answer for is left out rather than recorded as a known blank.
+        wire = {"analyzer": self.analyzer}
+        for key, value in (
+            ("image", self.image),
+            ("image_id", self.image_id),
+            ("tool_version", self.tool_version),
+        ):
+            if value:
+                wire[key] = value
+        return wire

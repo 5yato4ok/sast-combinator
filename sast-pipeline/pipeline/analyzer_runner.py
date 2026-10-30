@@ -23,6 +23,7 @@ import yaml  # type: ignore
 
 from . import config_utils
 from . import docker_utils
+from .contracts import AnalyzerBuild
 
 
 log = logging.getLogger(__name__)
@@ -59,6 +60,16 @@ def _build_outcome(*, analyzer: dict, output_dir: str, status: str, messages: li
         "messages": outcome_messages,
         "artifacts": analyzer.get("artifacts") or {},
     }
+
+
+def _analyzer_build(*, analyzer: dict, image: str) -> AnalyzerBuild:
+    """Identify the build of one analyzer, so a finding delta between runs can be attributed."""
+    return AnalyzerBuild(
+        analyzer=str(analyzer.get("name") or "unknown"),
+        image=image,
+        image_id=docker_utils.image_id(image) or "",
+        tool_version=docker_utils.image_label(image, docker_utils.TOOL_VERSION_LABEL) or "",
+    )
 
 
 def run_docker(
@@ -168,6 +179,7 @@ def run_selected_analyzers(
     launch_info["git"] = docker_utils.collect_git_metadata(project_path)
 
     analyzer_outcomes = []
+    analyzer_builds: list[AnalyzerBuild] = []
 
     for analyzer in analyzers:
         name = analyzer.get("name")
@@ -194,6 +206,7 @@ def run_selected_analyzers(
         env_vars = analyzer.get("env", []) or []
         if log_level:
             env_vars += ["LOG_LEVEL"]
+        analyzer_builds.append(_analyzer_build(analyzer=analyzer, image=str(image or "")))
         try:
             run_docker(
                 str(image),
@@ -220,6 +233,9 @@ def run_selected_analyzers(
             )
 
     launch_info["analyzer_outcomes"] = analyzer_outcomes
+    launch_info["analyzer_versions"] = [
+        build.to_wire() for build in analyzer_builds if build.is_identified
+    ]
     with open(os.path.join(output_dir, "launch_description.json"), "w", encoding="utf-8") as f:
         json.dump(launch_info, f, indent=4, ensure_ascii=False)
 

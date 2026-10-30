@@ -14,7 +14,7 @@ RUN curl -L -o /tmp/kotlin.zip \
  && ln -sf /opt/kotlinc/bin/kotlin /usr/local/bin/kotlin
 
 # Install CodeQL CLI
-ARG CODEQL_VERSION=2.18.4
+ARG CODEQL_VERSION=2.27.3
 RUN mkdir -p /opt/codeql && \
         curl -fsSL "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip" -o /tmp/codeql.zip && \
         unzip -q /tmp/codeql.zip -d /opt && \
@@ -22,7 +22,10 @@ RUN mkdir -p /opt/codeql && \
         ln -s /opt/codeql*/codeql /usr/local/bin/codeql
 
 # Install query packs for LANGUAGE
-RUN codeql pack download codeql/java-queries
+# Pack version must be a release built for CODEQL_VERSION
+# (ghcr manifest label com.github.codeql.cli.version).
+ARG CODEQL_QUERIES_VERSION=1.11.13
+RUN codeql pack download "codeql/java-queries@${CODEQL_QUERIES_VERSION}"
 
 WORKDIR /workspace
 COPY analyze.sh /usr/local/bin/analyze.sh

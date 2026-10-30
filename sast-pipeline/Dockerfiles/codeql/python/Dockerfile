@@ -5,14 +5,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
      && rm -rf /var/lib/apt/lists/*
 
 # Install CodeQL CLI
-ARG CODEQL_VERSION=2.18.4
+ARG CODEQL_VERSION=2.27.3
 RUN mkdir -p /opt/codeql && \
         curl -fsSL "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip" -o /tmp/codeql.zip && \
         unzip -q /tmp/codeql.zip -d /opt && \
         rm /tmp/codeql.zip && \
         ln -s /opt/codeql*/codeql /usr/local/bin/codeql
 
-RUN codeql pack download codeql/python-queries
+# Pack version must be a release built for CODEQL_VERSION
+# (ghcr manifest label com.github.codeql.cli.version).
+ARG CODEQL_QUERIES_VERSION=1.8.13
+RUN codeql pack download "codeql/python-queries@${CODEQL_QUERIES_VERSION}"
 
 WORKDIR /workspace
 COPY analyze.sh /analyze.sh

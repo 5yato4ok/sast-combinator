@@ -6,7 +6,7 @@ RUN sed -i 's|http://archive.ubuntu.com/ubuntu|mirror://mirrors.ubuntu.com/mirro
     && rm -rf /var/lib/apt/lists/*
 
 # Install CodeQL CLI
-ARG CODEQL_VERSION=2.18.4
+ARG CODEQL_VERSION=2.27.3
 RUN mkdir -p /opt/codeql && \
         curl -fsSL "https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip" -o /tmp/codeql.zip && \
         unzip -q /tmp/codeql.zip -d /opt && \
@@ -14,7 +14,10 @@ RUN mkdir -p /opt/codeql && \
         ln -s /opt/codeql*/codeql /usr/local/bin/codeql
 
 # Install query packs for LANGUAGE
-RUN codeql pack download codeql/cpp-queries
+# Pack version must be a release built for CODEQL_VERSION
+# (ghcr manifest label com.github.codeql.cli.version).
+ARG CODEQL_QUERIES_VERSION=1.9.2
+RUN codeql pack download "codeql/cpp-queries@${CODEQL_QUERIES_VERSION}"
 
 WORKDIR /workspace
 COPY analyze.sh /usr/local/bin/analyze.sh

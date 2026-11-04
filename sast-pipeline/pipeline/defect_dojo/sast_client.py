@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import requests
 
 from .client import DefectDojoClient, DojoConfig, ImportResult
+from .repo_info import checkout_relative_path
 
 logger = logging.getLogger(__name__)
 
@@ -150,13 +151,10 @@ class SastPipelineDDClient(DefectDojoClient):
 
         def _validate_and_update_finding(finding: Dict[str, Any]) -> Dict[str, Any]:
             file_path = finding.get("file_path", "")
-            if not trim_path:
+            relative_path = checkout_relative_path(file_path, trim_path)
+            if relative_path == file_path:
                 return finding
-            # Only if path starts with trim_path; ensure slash handling matches original
-            if not file_path.startswith(trim_path):
-                return finding
-            tp = trim_path if trim_path.endswith("/") else trim_path + "/"
-            finding["file_path"] = file_path.replace(tp, "")
+            finding["file_path"] = relative_path
             return self.patch_finding(finding)
 
         def _process_one(f) -> int:

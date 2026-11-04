@@ -42,7 +42,7 @@ python3 run_pipeline.py sast \
 Useful selection and rebuild options are:
 
 - `--analyzers semgrep bearer` — select explicit analyzers;
-- `--time_class_level fast|medium|slow` — include analyzers through that class;
+- `--time_class_level fast|medium|slow` — when no analyzers are named, select those through that class;
 - `--project_force_rebuild` — rebuild the prepared project workspace;
 - `--rebuild_images` — rebuild builder and analyzer images;
 - `--config path.yml` — load the same arguments from YAML.

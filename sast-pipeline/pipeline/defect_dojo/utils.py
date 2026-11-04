@@ -42,14 +42,6 @@ def load_dojo_config(config_path: str) -> DojoConfig:
                       name_mode=name_mode, engagement_status=engagement_status)
 
 
-# analyzers + scan_type
-def resolve_scan_type(analyzer) -> str:
-    ot = analyzer.get("output_type", "SARIF")
-    if ot.lower() in ("xml", "generic-xml"):
-        return "Generic XML Import"
-    return ot
-
-
 # Public API: identical signature
 def upload_results(
     output_dir: str,
@@ -73,20 +65,19 @@ def upload_results(
     repo_params = read_repo_params(repo_path or os.environ.get("GIT_REPO_PATH", ".."))
     client = SastPipelineDDClient(cfg, token)
 
-    for analyzer in cfg_helper.get_analyzers():
-        analyzer_name = analyzer.get("name")
-        report_path = os.path.join(output_dir, cfg_helper.get_analyzer_result_file_name(analyzer))
+    for report in cfg_helper.get_analyzer_reports():
+        analyzer_name = report.analyzer_name
+        report_path = os.path.join(output_dir, report.result_file)
         if not os.path.exists(report_path):
             logging.error(f"No result on expected path {report_path} for analyzer {analyzer_name}")
             continue
-        scan_type = resolve_scan_type(analyzer)
-        logger.info("Processing report: %s (analyzer=%s, scan_type=%s)", report_path, analyzer_name, scan_type)
+        logger.info("Processing report: %s (analyzer=%s, scan_type=%s)", report_path, analyzer_name, report.scan_type)
 
         try:
             res = client.upload_report(
                 analyzer_name=analyzer_name,
                 product_name=product_name,
-                scan_type=scan_type,
+                scan_type=report.scan_type,
                 report_path=report_path,
                 repo_params=repo_params,
                 trim_path=trim_path

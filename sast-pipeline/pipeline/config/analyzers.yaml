@@ -90,6 +90,7 @@ analyzers:
 
   - name: codeql
     language_specific_containers: true
+    time_class: slow
     enabled: true
     output_type: "SARIF"
     env:
@@ -172,6 +173,7 @@ analyzers:
 
   - name: qodana
     language_specific_containers: true
+    time_class: slow
     output_type: "SARIF"
     language: [ "python", "csharp", "java", "kotlin" ]
     configuration:
@@ -219,6 +221,7 @@ analyzers:
 
   - name: infer
     commentary: "Couldn't process nx_open"
+    time_class: slow
     enabled: true
     image: infer-cpp
     output_type: "Generic Findings Import"

@@ -17,6 +17,7 @@ import io
 import json
 import yaml
 from pathlib import Path
+from pipeline.config_utils import AnalyzerSelection, TimeClass
 from pipeline.config_utils import AnalyzersConfigHelper as AH
 
 import pytest
@@ -216,13 +217,12 @@ def test_get_supported_languages_caches(tmp_path):
 
 
 def test_get_level_values():
-    """The helper returns ordinal values for known time classes and a
-    fallback for unknown classes."""
+    """Known time classes are ordered fast < medium < slow; an unset or unknown class counts as slow."""
     assert AH.get_level("fast") == 0
     assert AH.get_level("medium") == 1
     assert AH.get_level("slow") == 2
-    # Unknown classes default to 100
-    assert AH.get_level("unknown") == 100
+    assert AH.get_level("unknown") == 2
+    assert AH.get_level(None) == 2
 
 
 def test_filter_language_specific_config():
@@ -347,3 +347,76 @@ def test_a_catalog_entry_wins_over_the_image_reference(tmp_path):
     assert helper.source_token("aist-dast-connector:v2") == "dast"
     # Fallback would have said "dast-connector".
     assert helper.image_fallback_token("aist-dast-connector:v2") == "dast-connector"
+
+
+def _selection_catalog(tmp_path):
+    config = {
+        "analyzers": [
+            {"name": "quick", "image": "q", "language": ["python"], "time_class": "fast"},
+            {"name": "unclassed", "image": "u", "language": ["python"]},
+            {"name": "heavy", "image": "h", "language": ["python"], "time_class": "slow"},
+            {"name": "compiled", "image": "c", "language": ["python"], "time_class": "fast", "type": "builder"},
+            {"name": "other_language", "image": "o", "language": ["go"], "time_class": "fast"},
+            {"name": "off", "image": "x", "language": ["python"], "time_class": "fast", "enabled": False},
+        ],
+    }
+    cfg_path = tmp_path / "selection.yaml"
+    cfg_path.write_text(yaml.dump(config), encoding="utf-8")
+    return AH(str(cfg_path))
+
+
+def test_a_launch_naming_no_analyzer_runs_the_enabled_ones_for_its_languages_within_its_ceiling(tmp_path):
+    helper = _selection_catalog(tmp_path)
+
+    selected = helper.select_analyzers(
+        AnalyzerSelection(languages=("python",), max_time_class=TimeClass.MEDIUM, compilable=False),
+    )
+
+    assert selected == ["quick"]
+
+
+def test_an_analyzer_declaring_no_time_class_is_selected_and_run_as_slow(tmp_path):
+    helper = _selection_catalog(tmp_path)
+
+    selected = helper.select_analyzers(AnalyzerSelection(languages=("python",), max_time_class=TimeClass.SLOW))
+    with open(helper.prepare_pipeline_analyzer_config(["python"], "unclassed1", max_time_class="medium")) as fh:
+        run_at_medium = [a["name"] for a in yaml.safe_load(fh)["analyzers"]]
+
+    assert "unclassed" in selected
+    assert "unclassed" not in run_at_medium
+
+
+def test_profile_include_and_exclude_adjust_the_default_selection_but_never_an_explicit_one(tmp_path):
+    helper = _selection_catalog(tmp_path)
+    profile = {"include": ("heavy",), "exclude": ("quick",)}
+
+    defaults = helper.select_analyzers(
+        AnalyzerSelection(languages=("python",), max_time_class=TimeClass.FAST, compilable=True, **profile),
+    )
+    explicit = helper.select_analyzers(
+        AnalyzerSelection(languages=("python",), requested=("quick",), **profile),
+    )
+
+    assert defaults == ["compiled", "heavy"]
+    assert explicit == ["quick"]
+
+
+def test_an_included_analyzer_above_the_ceiling_is_run_when_the_launch_names_it(tmp_path):
+    helper = _selection_catalog(tmp_path)
+    selected = helper.select_analyzers(
+        AnalyzerSelection(languages=("python",), max_time_class=TimeClass.FAST, include=("heavy",)),
+    )
+
+    path = helper.prepare_pipeline_analyzer_config(
+        ["python"], "include1", max_time_class="fast", target_analyzers=selected,
+    )
+    with open(path, encoding="utf-8") as fh:
+        prepared = [a["name"] for a in yaml.safe_load(fh)["analyzers"]]
+
+    assert "heavy" in prepared
+
+
+def test_an_unknown_ceiling_admits_every_class():
+    assert TimeClass.of("glacial") is TimeClass.SLOW
+    assert TimeClass.of(None) is TimeClass.SLOW
+    assert TimeClass.of("fast") is TimeClass.FAST

@@ -18,6 +18,7 @@ from pipeline.dast.contracts import (
     CONNECTOR_EXIT_LOCAL_SETUP,
     DastConnectorInput,
     DastRecoveryState,
+    DastRunState,
     DastStartCommand,
 )
 from pipeline.dast.resilience import HANDSHAKE, IMPATIENT, IN_FLIGHT, WATCH
@@ -134,6 +135,15 @@ def _gateway(handler, *, clock=None, plan=WATCH, on_retry=None):
         plan=plan,
         on_retry=on_retry,
     )
+
+
+def test_a_report_is_carried_only_by_terminal_states_and_never_by_a_failed_or_stopped_run():
+    report_states = {state for state in DastRunState if state.carries_report}
+
+    assert report_states
+    assert all(state.terminal for state in report_states)
+    assert DastRunState.FAILED not in report_states
+    assert DastRunState.STOPPED not in report_states
 
 
 def test_connector_owns_start_poll_log_and_clean_result_protocol(tmp_path, capsys):

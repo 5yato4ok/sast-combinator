@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 CONTRACT_VERSION = "2.0"
+CONTRACT_MAJOR = int(CONTRACT_VERSION.partition(".")[0])
 # The connector exits with this instead of 1 when it never reached the provider: a bad input file,
 # an unusable token, an unwritable output directory. The caller must not retry those -- the next
 # attempt runs against the same host state and fails identically. (sysexits.h EX_CONFIG)
@@ -44,6 +45,15 @@ class DastRunState(StrEnum):
             self.FAILED_WITH_PARTIAL_RESULTS,
             self.FAILED,
             self.STOPPED,
+        }
+
+    @property
+    def carries_report(self) -> bool:
+        """Whether a run that ended in this state delivered a findings report to import."""
+        return self in {
+            self.SUCCEEDED,
+            self.COMPLETED_WITH_DEGRADATION,
+            self.FAILED_WITH_PARTIAL_RESULTS,
         }
 
 

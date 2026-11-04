@@ -36,6 +36,14 @@ class RepoParams:
     local_path: str
 
 
+def checkout_relative_path(file_path: str, trim_path: str) -> str:
+    """Return ``file_path`` without the leading scanned-checkout root ``trim_path``; any other path is returned as is."""
+    if not trim_path:
+        return file_path
+    root = trim_path if trim_path.endswith("/") else trim_path + "/"
+    return file_path.removeprefix(root)
+
+
 def run_git(repo: Path, args: list[str]) -> str:
     """Run a git command in the given repo and return stripped stdout."""
     cmd = ["git", "-C", str(repo)] + args

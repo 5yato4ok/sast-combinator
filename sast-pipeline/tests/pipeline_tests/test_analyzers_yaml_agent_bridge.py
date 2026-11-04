@@ -12,6 +12,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from pipeline.config_utils import AnalyzerReport, AnalyzersConfigHelper
+
 CONFIG_PATH = (
     Path(__file__).resolve().parents[2]
     / "pipeline"
@@ -47,17 +49,17 @@ def test_skill_name_matches_skill_md_directory(diff_analyzer):
     assert diff_analyzer["skill_name"] == "aist-diff-security-review"
 
 
-def test_output_type_uses_dedicated_claude_scan_type(diff_analyzer):
-    # Maps via aist.internal_upload.resolve_scan_type to the "Claude Diff
-    # Security" scan_type whose parser (subclass of GenericParser) the AIST
-    # app installs in factory.PARSERS at startup. The dedicated test_type
-    # name lets canonical dedupe handle these findings as a first-class
-    # scanner instead of the generic catch-all.
-    assert diff_analyzer["output_type"] == "Claude Diff Security"
+def test_upload_reads_each_agent_report_with_its_dedicated_scan_type():
+    # The "Claude * Security" scan types name the parsers (GenericParser subclasses) the AIST app installs at
+    # startup, so canonical dedupe treats these findings as first-class scanners.
+    reports = {report.analyzer_name: report for report in AnalyzersConfigHelper(str(CONFIG_PATH)).get_analyzer_reports()}
 
-
-def test_result_filename_matches_skill_contract(diff_analyzer):
-    assert diff_analyzer["result_file"] == "claude-diff-security_result.json"
+    assert reports["claude-diff-security"] == AnalyzerReport(
+        "claude-diff-security", "claude-diff-security_result.json", "Claude Diff Security",
+    )
+    assert reports["claude-full-security"] == AnalyzerReport(
+        "claude-full-security", "claude-full-security_result.json", "Claude Full Security",
+    )
 
 
 def test_required_result_and_truncation_file_declared(diff_analyzer):
@@ -95,14 +97,6 @@ def test_full_type_is_agent_bridge(full_analyzer):
 
 def test_full_skill_name_matches_skill_md_directory(full_analyzer):
     assert full_analyzer["skill_name"] == "aist-full-security-review"
-
-
-def test_full_output_type_uses_dedicated_claude_scan_type(full_analyzer):
-    assert full_analyzer["output_type"] == "Claude Full Security"
-
-
-def test_full_result_filename_matches_skill_contract(full_analyzer):
-    assert full_analyzer["result_file"] == "claude-full-security_result.json"
 
 
 def test_full_required_result_and_truncation_file_declared(full_analyzer):

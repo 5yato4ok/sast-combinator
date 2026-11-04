@@ -267,7 +267,7 @@ sast-combinator/vpn-sidecar/
 └── README.md         — this file
 
 aist/utils/vpn.py              — Python: sidecar lifecycle (vpn_sidecar_context)
-aist/models.py                 — OrgIntegrationVPNSecret (credential storage)
+aist/models/organizations.py   — OrgIntegrationVPNSecret (credential storage)
 aist/api/org_integrations.py   — API: save, parse .ovpn, validate endpoint
 docs/integrations/vpn.md       — how AIST uses this sidecar (architecture, config)
 ```

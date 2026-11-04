@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any, ClassVar
 
+from pipeline.dast.contracts import DastRunState
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = PROJECT_ROOT / "contracts" / "dast-integration.openapi.json"
 SOURCE_PATH = PROJECT_ROOT / "contracts" / "dast-integration.source.json"
@@ -172,9 +174,7 @@ class DastContractSnapshot:
             schemas.get("V2TerminalResultSchema", {})
             .get("properties", {}).get("status", {}).get("enum", [])
         )
-        if terminal_statuses != {
-            "succeeded", "completed_with_degradation", "failed_with_partial_results", "failed", "stopped",
-        }:
+        if terminal_statuses != {state.value for state in DastRunState if state.terminal}:
             message = "DAST terminal status set changed"
             raise DastContractCompatibilityError(message)
 

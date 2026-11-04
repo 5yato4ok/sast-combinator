@@ -167,7 +167,7 @@ def run_selected_analyzers(
         log.warning("No analyzers to launch")
         return None
     # Sort by time_class for predictable ordering
-    analyzers.sort(key=lambda a: config_helper.ANALYZER_ORDER.get(a.get("time_class", "medium"), 1))
+    analyzers.sort(key=lambda a: config_helper.get_level(config_helper.time_class_of(a)))
     analyzers_names = [str(a.get("name")) for a in analyzers]
     log.info(
         "Selected analyzers: %s",

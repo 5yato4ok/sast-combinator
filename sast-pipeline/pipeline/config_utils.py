@@ -2,6 +2,8 @@ import copy
 import logging
 import os
 import textwrap
+from dataclasses import dataclass
+from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 
@@ -9,13 +11,64 @@ import yaml
 
 log = logging.getLogger(__name__)
 
+GENERIC_XML_SCAN_TYPE = "Generic XML Import"
+
+
+class TimeClass(StrEnum):
+    """How long an analyzer runs; a launch's ceiling keeps analyzers of a slower class out."""
+
+    FAST = "fast"
+    MEDIUM = "medium"
+    SLOW = "slow"
+
+    @classmethod
+    def of(cls, value: object) -> "TimeClass":
+        """The class ``value`` names; an unset or unknown value is the slowest class."""
+        return cls(value) if value in cls._value2member_map_ else cls.SLOW
+
+
+@dataclass(frozen=True)
+class AnalyzerSelection:
+    """
+    What a SAST launch asks to run.
+
+    The ``requested`` analyzers when any are named; otherwise every enabled analyzer for ``languages`` whose time
+    class is within ``max_time_class`` (builder analyzers only for a ``compilable`` project), less ``exclude``,
+    plus ``include``.
+    """
+
+    languages: tuple[str, ...] = ()
+    max_time_class: TimeClass = TimeClass.SLOW
+    compilable: bool = True
+    requested: tuple[str, ...] = ()
+    include: tuple[str, ...] = ()
+    exclude: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class AnalyzerReport:
+    """Where one configured analyzer writes its result, and which importer scan type reads it."""
+
+    analyzer_name: str
+    result_file: str
+    scan_type: str
+
+    @classmethod
+    def of(cls, analyzer: dict) -> "AnalyzerReport":
+        output_type = analyzer.get("output_type") or "SARIF"
+        return cls(
+            analyzer_name=analyzer.get("name") or "unknown",
+            result_file=AnalyzersConfigHelper.get_analyzer_result_file_name(analyzer),
+            scan_type=GENERIC_XML_SCAN_TYPE if output_type.lower() in {"xml", "generic-xml"} else output_type,
+        )
+
 
 class AnalyzersConfigHelper:
     SAST_EXECUTION_TYPE = "sast"
     ANALYZER_ORDER = {
-        "fast": 0,
-        "medium": 1,
-        "slow": 2,
+        TimeClass.FAST: 0,
+        TimeClass.MEDIUM: 1,
+        TimeClass.SLOW: 2,
     }
     analyzers: list[dict[str, object]] = None
     languages = None
@@ -77,6 +130,9 @@ class AnalyzersConfigHelper:
 
     def get_analyzers(self):
         return self.analyzers
+
+    def get_analyzer_reports(self) -> list[AnalyzerReport]:
+        return [AnalyzerReport.of(analyzer) for analyzer in self.analyzers]
 
     def get_supported_analyzers(self):
         if not self.analyzers:
@@ -155,6 +211,27 @@ class AnalyzersConfigHelper:
         return self.languages
 
     @staticmethod
+    def time_class_of(analyzer: dict) -> TimeClass:
+        return TimeClass.of(analyzer.get("time_class"))
+
+    def select_analyzers(self, selection: AnalyzerSelection) -> list[str]:
+        """The names of the analyzers ``selection`` runs; see :class:`AnalyzerSelection`."""
+        if selection.requested:
+            return list(selection.requested)
+        defaults = self.get_names(
+            self.get_filtered_analyzers(
+                analyzers_to_run=None,
+                max_time_class=selection.max_time_class,
+                non_compile_project=not selection.compilable,
+                target_languages=list(selection.languages),
+                show_only_parent=True,
+            ),
+        )
+        names = [name for name in defaults if name not in selection.exclude]
+        names.extend(name for name in selection.include if name not in names)
+        return names
+
+    @staticmethod
     def get_names(analyzers):
         names = []
         for analyzer in analyzers:
@@ -175,13 +252,9 @@ class AnalyzersConfigHelper:
         else:
             analyzers = [a for a in analyzers if a.get("enabled", True) and self._is_sast_analyzer(a)]
         write = 0
-        # The ceiling is compared against analyzer levels below, so an unset or unknown class
-        # has to fall back to the *level* of "slow", not to its name -- comparing int to str
-        # raises, and callers legitimately leave this unset to mean "no ceiling".
-        max_time_class = self.ANALYZER_ORDER.get(max_time_class, self.ANALYZER_ORDER["slow"])
+        max_level = self.get_level(max_time_class)
         for a in analyzers:
             name = a.get("name")
-            analyzer_time_class = str(a.get("time_class", "medium"))
             type = a.get("type", "default")
             analyzers_languages = a.get("language", [])
 
@@ -197,7 +270,7 @@ class AnalyzersConfigHelper:
                 log.warning("Attempt to launch analyzer %s on non compile project. Skipping...", name)
                 continue
 
-            if self.ANALYZER_ORDER.get(analyzer_time_class) > max_time_class:
+            if self.get_level(self.time_class_of(a)) > max_level:
                 log.info("Skipping slow analyzer '%s'", name)
                 continue
 
@@ -213,8 +286,8 @@ class AnalyzersConfigHelper:
         return analyzers
 
     @staticmethod
-    def get_level(time_class: str) -> int:
-        return AnalyzersConfigHelper.ANALYZER_ORDER.get(time_class, 100)
+    def get_level(time_class: str | None) -> int:
+        return AnalyzersConfigHelper.ANALYZER_ORDER[TimeClass.of(time_class)]
 
     @staticmethod
     def expand_analyzers(analyzers, allowed_langs=None):
@@ -333,8 +406,7 @@ class AnalyzersConfigHelper:
         """
         Filters analyzers by:
           - supported languages (intersection with `languages`),
-          - time_class (must be <= min_time_class),
-          - optional list of target analyzer names.
+          - the `target_analyzers` names when given, else time_class within `max_time_class`.
 
         If an analyzer has `language_specific_containers=True`,
         its `configuration` is filtered so that only entries for the allowed languages remain.
@@ -351,7 +423,7 @@ class AnalyzersConfigHelper:
                 continue
             langs = set(analyzer.get("language", []))
             has_lang = bool(allowed_langs & langs)
-            time_ok = AnalyzersConfigHelper.get_level(analyzer.get("time_class", "slow")) <= max_level
+            time_ok = target_set is not None or self.get_level(self.time_class_of(analyzer)) <= max_level
             name_ok = True if not target_set else (
                         analyzer.get("name") in target_set or analyzer.get("parent") in target_set)
 

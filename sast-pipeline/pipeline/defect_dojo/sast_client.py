@@ -5,6 +5,7 @@ import os
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import quote
 
 import requests
 
@@ -43,8 +44,7 @@ class LinkBuilder:
             return None
         scm = self._scm_type(repo_url)
         ref = ref or "master"
-        file_path = file_path.replace("file://","")
-        fp = file_path.lstrip("/")
+        fp = quote(checkout_relative_path(file_path, "").lstrip("/"), safe="/")
         if scm == "github":
             return f"{repo_url.rstrip('/')}/blob/{ref}/{fp}"
         if scm == "gitlab":

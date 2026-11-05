@@ -24,6 +24,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+from urllib.parse import unquote, urlsplit
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,15 @@ class RepoParams:
 
 
 def checkout_relative_path(file_path: str, trim_path: str) -> str:
-    """Return ``file_path`` without the leading scanned-checkout root ``trim_path``; any other path is returned as is."""
+    """
+    Return ``file_path`` without the leading scanned-checkout root ``trim_path``.
+
+    A ``file:`` URI is read as the local path it names. Any path outside the checkout root is returned unchanged
+    apart from that.
+    """
+    parts = urlsplit(file_path)
+    if parts.scheme == "file":
+        file_path = unquote(parts.path)
     if not trim_path:
         return file_path
     root = trim_path if trim_path.endswith("/") else trim_path + "/"

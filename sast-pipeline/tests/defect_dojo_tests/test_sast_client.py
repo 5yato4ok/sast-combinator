@@ -3,7 +3,7 @@ from __future__ import annotations
 import responses
 
 from pipeline.defect_dojo.client import DojoConfig
-from pipeline.defect_dojo.sast_client import SastPipelineDDClient
+from pipeline.defect_dojo.sast_client import LinkBuilder, SastPipelineDDClient
 
 
 class RepoParams:
@@ -115,3 +115,9 @@ def test_enrich_existing_pagination_and_only_missing(dojo_base_url, dojo_token):
 
     updated = client.enrich_existing(product_name=None, only_missing=True, max_workers=4)
     assert updated == 1
+
+
+def test_a_repository_link_for_a_file_uri_names_the_decoded_path():
+    link = LinkBuilder().build("https://github.com/org/shop", "file:///src/my%20module/%23slug/page.tsx", "abc123")
+
+    assert link == "https://github.com/org/shop/blob/abc123/src/my%20module/%23slug/page.tsx"

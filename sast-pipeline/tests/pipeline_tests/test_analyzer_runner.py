@@ -487,3 +487,28 @@ def test_reading_an_image_field_never_fails_the_run_it_describes(monkeypatch):
     assert ar.docker_utils.image_id("sast-semgrep") is None
     assert ar.docker_utils.image_label("sast-semgrep", "aist.tool.version") is None
     assert ar.docker_utils.image_id("") is None
+
+
+@pytest.mark.parametrize(
+    ("report", "status", "result_exists"),
+    [("", "missing_result", False), ('{"runs": []}', "success", True)],
+)
+def test_an_analyzer_that_left_an_empty_report_produced_no_result(
+    monkeypatch, tmp_path, caplog, report, status, result_exists,
+):
+    """An empty report is no report: the run says the analyzer produced nothing, without degrading over it."""
+    cfg_path = _single_analyzer_config(tmp_path, "eslint_security", "eslint-security-analyzer")
+    monkeypatch.setattr(ar.docker_utils, "image_id", lambda image: None)
+    monkeypatch.setattr(ar.docker_utils, "image_label", lambda image, label: None)
+
+    def leave_report(image, builder_container, args, project_path, output_dir, pipeline_id, env_vars, dockerfile_dir=""):
+        Path(output_dir, args[2]).write_text(report, encoding="utf-8")
+
+    monkeypatch.setattr(ar, "run_docker", leave_report)
+
+    with caplog.at_level("WARNING", logger=ar.log.name):
+        outcome = _run(tmp_path, cfg_path)["analyzer_outcomes"][0]
+    assert (outcome["status"], outcome["result_exists"], outcome["degraded"]) == (status, result_exists, False)
+    warned = [record.getMessage() for record in caplog.records if "produced no result" in record.getMessage()]
+    expected_warning = "Analyzer 'eslint_security' produced no result: eslint_security_result.sarif is missing or empty"
+    assert warned == ([] if result_exists else [expected_warning])

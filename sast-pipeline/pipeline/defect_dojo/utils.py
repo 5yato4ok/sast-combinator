@@ -52,7 +52,7 @@ def upload_results(
     trim_path: str
 ) -> List[ImportResult]:
     cfg = load_dojo_config(dojo_config_path)
-    token = os.environ.get("DEFECTDOJO_TOKEN") or 'c3d8a99cb7cf35b0dac30bd7458bcd15d155fb86'
+    token = os.environ.get("DEFECTDOJO_TOKEN")
     if not token:
         raise ValueError("Missing DEFECTDOJO_TOKEN environment variable.")
     if not os.path.isdir(output_dir):
@@ -65,12 +65,9 @@ def upload_results(
     repo_params = read_repo_params(repo_path or os.environ.get("GIT_REPO_PATH", ".."))
     client = SastPipelineDDClient(cfg, token)
 
-    for report in cfg_helper.get_analyzer_reports():
+    for report in cfg_helper.get_produced_reports(output_dir):
         analyzer_name = report.analyzer_name
-        report_path = os.path.join(output_dir, report.result_file)
-        if not os.path.exists(report_path):
-            logging.error(f"No result on expected path {report_path} for analyzer {analyzer_name}")
-            continue
+        report_path = str(report.path_in(output_dir))
         logger.info("Processing report: %s (analyzer=%s, scan_type=%s)", report_path, analyzer_name, report.scan_type)
 
         try:

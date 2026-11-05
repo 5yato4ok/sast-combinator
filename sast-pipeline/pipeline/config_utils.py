@@ -9,6 +9,8 @@ from pathlib import Path
 
 import yaml
 
+from .run_output import result_produced
+
 log = logging.getLogger(__name__)
 
 GENERIC_XML_SCAN_TYPE = "Generic XML Import"
@@ -64,6 +66,10 @@ class AnalyzerReport:
             result_file=AnalyzersConfigHelper.get_analyzer_result_file_name(analyzer),
             scan_type=GENERIC_XML_SCAN_TYPE if output_type.lower() in {"xml", "generic-xml"} else output_type,
         )
+
+    def path_in(self, output_dir: str | Path) -> Path:
+        """Where this report is in the run's ``output_dir``."""
+        return Path(output_dir) / self.result_file
 
 
 class AnalyzersConfigHelper:
@@ -136,6 +142,10 @@ class AnalyzersConfigHelper:
 
     def get_analyzer_reports(self) -> list[AnalyzerReport]:
         return [AnalyzerReport.of(analyzer) for analyzer in self.analyzers]
+
+    def get_produced_reports(self, output_dir: str | Path) -> list[AnalyzerReport]:
+        """The configured analyzers' reports produced in ``output_dir``; an analyzer that left no result has none."""
+        return [report for report in self.get_analyzer_reports() if result_produced(report.path_in(output_dir))]
 
     def get_supported_analyzers(self):
         if not self.analyzers:

@@ -139,6 +139,44 @@ def test_required_result_missing_after_success_returns_missing_result_outcome(tm
     assert outcomes[0]["messages"][0]["code"] == "missing_result"
 
 
+def test_required_result_left_empty_after_success_returns_missing_result_outcome(tmp_path):
+    cfg = _write_config(tmp_path, [_agent()])
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+    (output_dir / "claude-diff-security_result.json").write_text("", encoding="utf-8")
+
+    outcomes = abr.run_agent_bridge_analyzers(
+        bridge_client=_make_client(),
+        config_path=cfg,
+        pipeline_id="p",
+        project_path="/x",
+        output_dir=str(output_dir),
+    )
+
+    assert (outcomes[0]["status"], outcomes[0]["result_exists"], outcomes[0]["degraded"]) == ("missing_result", False, True)
+    assert outcomes[0]["messages"][0]["code"] == "missing_result"
+
+
+def test_optional_agent_without_result_is_missing_result_but_not_degraded(tmp_path, caplog):
+    cfg = _write_config(tmp_path, [_agent(required_result=False)])
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+
+    with caplog.at_level("WARNING", logger=abr.log.name):
+        outcomes = abr.run_agent_bridge_analyzers(
+            bridge_client=_make_client(),
+            config_path=cfg,
+            pipeline_id="p",
+            project_path="/x",
+            output_dir=str(output_dir),
+        )
+
+    assert (outcomes[0]["status"], outcomes[0]["result_exists"], outcomes[0]["degraded"]) == ("missing_result", False, False)
+    assert [record.getMessage() for record in caplog.records if "produced no result" in record.getMessage()] == [
+        "Analyzer 'claude-diff-security' produced no result: claude-diff-security_result.json is missing or empty",
+    ]
+
+
 def test_truncation_marker_returns_truncated_outcome(tmp_path):
     cfg = _write_config(tmp_path, [_agent(truncation_file="diff_truncated.flag")])
     output_dir = tmp_path / "out"

@@ -22,6 +22,8 @@ from typing import Mapping, Sequence
 import yaml
 
 from .bridge_client import BridgeClient
+from .config_utils import AnalyzerReport
+from .run_output import result_produced
 
 log = logging.getLogger(__name__)
 
@@ -118,8 +120,9 @@ def _build_outcome(
     messages: list[dict[str, str]] | None = None,
 ) -> dict:
     name = str(analyzer.get("name") or "agent-bridge")
-    result_filename = str(analyzer.get("result_file") or f"{name}_result.json")
-    result_exists = (Path(output_dir) / result_filename).exists()
+    report = AnalyzerReport.of(dict(analyzer))
+    result_filename = report.result_file
+    result_exists = result_produced(report.path_in(output_dir))
     required_result = bool(analyzer.get("required_result", False))
     outcome_messages = list(messages or [])
 
@@ -133,13 +136,14 @@ def _build_outcome(
         detail = truncation_marker.read_text(encoding="utf-8", errors="replace").strip()
         outcome_messages.append(_message(level="warning", code="truncated", text=detail or "Analyzer truncated input."))
 
-    if status == "success" and required_result and not result_exists:
+    if status == "success" and not result_exists:
         status = "missing_result"
+        log.warning("Analyzer '%s' produced no result: %s is missing or empty", name, result_filename)
         outcome_messages.append(
             _message(
                 level="warning",
                 code="missing_result",
-                text=f"Required analyzer result file was not produced: {result_filename}",
+                text=f"Analyzer result file was not produced: {result_filename}",
             ),
         )
 
@@ -214,7 +218,7 @@ def run_agent_bridge_analyzers(
             )
             continue
 
-        result_filename = analyzer.get("result_file") or f"{name}_result.json"
+        result_filename = AnalyzerReport.of(dict(analyzer)).result_file
         ai_response = _ai_response_artifact(analyzer, str(result_filename)) or {}
         ai_response_filename = ai_response.get("path") or _derive_ai_response_filename(str(result_filename))
         runtime_filename = _runtime_filename_for(str(name))

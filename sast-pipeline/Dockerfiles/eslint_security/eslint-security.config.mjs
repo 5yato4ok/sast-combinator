@@ -1,13 +1,10 @@
 // config/eslint-security.config.mjs
-import js from "@eslint/js";
-import tseslint from "@typescript-eslint/eslint-plugin";
 import tsparser from "@typescript-eslint/parser";
 import security from "eslint-plugin-security";
 import nous from "eslint-plugin-no-unsanitized";
 
 
 export default [
-  js.configs.recommended,
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
@@ -16,7 +13,6 @@ export default [
       sourceType: "module"
     },
     plugins: {
-      "@typescript-eslint": tseslint,
       security,
       "no-unsanitized": nous
     },
@@ -44,15 +40,7 @@ export default [
       "no-eval": "warn",
       "no-implied-eval": "warn",
       "no-new-func": "warn",
-      "no-script-url": "warn",
-
-
-      "@typescript-eslint/no-implied-eval": "warn",
-      "@typescript-eslint/no-unsafe-argument": "warn",
-      "@typescript-eslint/no-unsafe-assignment": "warn",
-      "@typescript-eslint/no-unsafe-call": "warn",
-      "@typescript-eslint/no-unsafe-member-access": "warn",
-      "@typescript-eslint/no-var-requires": "warn"
+      "no-script-url": "warn"
     }
   }
 ];

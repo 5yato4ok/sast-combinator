@@ -51,3 +51,9 @@ def write_json_atomically(output_dir: Path, filename: str, payload: dict[str, An
     finally:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
+
+
+def result_produced(result_path: str | Path) -> bool:
+    """Whether an analyzer left a result at ``result_path``; an empty file is no result."""
+    path = Path(result_path)
+    return path.is_file() and path.stat().st_size > 0

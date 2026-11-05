@@ -1,0 +1,12 @@
+{
+  "name": "aist-eslint-security-analyzer",
+  "private": true,
+  "dependencies": {
+    "@microsoft/eslint-formatter-sarif": "3.1.0",
+    "@typescript-eslint/parser": "8.72.1",
+    "eslint": "9.39.5",
+    "eslint-plugin-no-unsanitized": "4.1.5",
+    "eslint-plugin-security": "3.0.1",
+    "typescript": "5.9.3"
+  }
+}

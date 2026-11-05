@@ -24,6 +24,7 @@ import yaml  # type: ignore
 from . import config_utils
 from . import docker_utils
 from .contracts import AnalyzerBuild
+from .run_output import result_produced
 
 
 log = logging.getLogger(__name__)
@@ -36,17 +37,19 @@ def _message(*, level: str, code: str, text: object) -> dict[str, str]:
 
 def _build_outcome(*, analyzer: dict, output_dir: str, status: str, messages: list[dict] | None = None) -> dict:
     name = str(analyzer.get("name") or "unknown")
-    result_file = config_utils.AnalyzersConfigHelper.get_analyzer_result_file_name(analyzer)
-    result_exists = os.path.exists(os.path.join(output_dir, result_file))
+    report = config_utils.AnalyzerReport.of(analyzer)
+    result_file = report.result_file
+    result_exists = result_produced(report.path_in(output_dir))
     required_result = bool(analyzer.get("required_result", False))
     outcome_messages = list(messages or [])
-    if status == "success" and required_result and not result_exists:
+    if status == "success" and not result_exists:
         status = "missing_result"
+        log.warning("Analyzer '%s' produced no result: %s is missing or empty", name, result_file)
         outcome_messages.append(
             _message(
                 level="warning",
                 code="missing_result",
-                text=f"Required analyzer result file was not produced: {result_file}",
+                text=f"Analyzer result file was not produced: {result_file}",
             ),
         )
     return {

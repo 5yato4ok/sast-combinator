@@ -3,7 +3,7 @@ import logging
 import os
 import textwrap
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 
@@ -14,12 +14,15 @@ log = logging.getLogger(__name__)
 GENERIC_XML_SCAN_TYPE = "Generic XML Import"
 
 
-class TimeClass(StrEnum):
+class TimeClass(str, Enum):
     """How long an analyzer runs; a launch's ceiling keeps analyzers of a slower class out."""
 
     FAST = "fast"
     MEDIUM = "medium"
     SLOW = "slow"
+
+    def __str__(self) -> str:
+        return self.value
 
     @classmethod
     def of(cls, value: object) -> "TimeClass":

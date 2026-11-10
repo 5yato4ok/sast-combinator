@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import signal
+import ssl
 import sys
 import time
 from collections.abc import Callable, Iterable
@@ -29,6 +30,7 @@ from pipeline.dast.contracts import (
     DastTerminalResult,
 )
 from pipeline.dast.endpoint_policy import DastEndpointPolicy, DastEndpointPolicyError
+from pipeline.dast.http_transport import PinnedGatewayTransport
 from pipeline.dast.resilience import (
     IMPATIENT,
     WATCH,
@@ -93,6 +95,7 @@ class DastGatewayClient:
         token: str,
         ca_file: Path | None = None,
         trusted_vpn: bool = False,
+        allowed_private_networks: Iterable[str] = (),
         resolver: Callable[[str, int], Iterable[str]] | None = None,
         client: httpx.Client | None = None,
         sleep: Callable[[float], None] = time.sleep,
@@ -105,7 +108,9 @@ class DastGatewayClient:
         if not token:
             raise DastConnectorError("DAST token is empty")
         try:
-            endpoint = DastEndpointPolicy(trusted_vpn=trusted_vpn, resolver=resolver).validate(gateway_url)
+            endpoint = DastEndpointPolicy(
+                trusted_vpn=trusted_vpn, resolver=resolver, allowed_private_networks=allowed_private_networks,
+            ).validate(gateway_url)
         except DastEndpointPolicyError as exc:
             raise DastConnectorError(str(exc)) from exc
         self._sleep = sleep
@@ -115,7 +120,7 @@ class DastGatewayClient:
         # Every message this class raises names the gateway generically, because a pipeline log is
         # tenant-readable and the deployment's internal hostname is not for it. A rendered cause
         # comes from a library and observes no such rule, so it is filtered on the way out.
-        self._redact = (gateway_url, endpoint.hostname)
+        self._redact = (gateway_url, endpoint.hostname, *endpoint.addresses)
         self._owns_client = client is None
         headers = {
             "Accept": "application/json",
@@ -123,12 +128,16 @@ class DastGatewayClient:
             "Content-Type": "application/json",
         }
         if client is None:
+            verify = ssl.create_default_context(cafile=ca_file) if ca_file else True
+            limits = httpx.Limits(max_connections=4, max_keepalive_connections=2, keepalive_expiry=15.0)
+            transport = None if trusted_vpn else PinnedGatewayTransport(endpoint, verify=verify, limits=limits, trust_env=False)
             client = httpx.Client(
                 base_url=gateway_url,
                 headers=headers,
                 timeout=httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0),
-                limits=httpx.Limits(max_connections=4, max_keepalive_connections=2, keepalive_expiry=15.0),
-                verify=str(ca_file) if ca_file else True,
+                limits=limits,
+                verify=verify,
+                transport=transport,
                 follow_redirects=False,
                 trust_env=False,
             )
@@ -541,6 +550,7 @@ def main(argv: list[str] | None = None) -> int:
             token=token,
             ca_file=args.ca_file,
             trusted_vpn=args.trusted_vpn,
+            allowed_private_networks=filter(None, os.environ.get("AIST_DAST_ALLOWED_PRIVATE_NETWORKS", "").split(",")),
             plan=plan,
         ) as gateway:
             DastConnector(gateway=gateway, output_dir=args.output).run(connector_input)

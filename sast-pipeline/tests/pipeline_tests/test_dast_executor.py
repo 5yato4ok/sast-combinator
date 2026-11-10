@@ -103,7 +103,7 @@ def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret
     ca_file = tmp_path / "ca.pem"
     ca_file.write_text("certificate-material", encoding="utf-8")
     ca_file.chmod(0o600)
-    execution = _execution(tmp_path, ca_file=ca_file)
+    execution = _execution(tmp_path, ca_file=ca_file, allowed_private_networks=("10.23.4.0/24", "fd00::/64"))
     calls = []
 
     def run_container(**kwargs):
@@ -137,7 +137,7 @@ def test_executor_uses_shared_container_logging_and_vpn_namespace_without_secret
                 str(execution.token_file): "/run/secrets/dast-token:ro",
                 str(ca_file): "/run/secrets/dast-ca.pem:ro",
             },
-            "env": None,
+            "env": {"AIST_DAST_ALLOWED_PRIVATE_NETWORKS": "10.23.4.0/24,fd00::/64"},
             "args": [
                 "--input",
                 "/run/aist/input.json",

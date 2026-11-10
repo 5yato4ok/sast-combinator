@@ -159,6 +159,7 @@ def test_dast_command_uses_canonical_dispatch_without_sast_builder(monkeypatch, 
     )
 
     catalog = AnalyzersConfigHelper(CONFIG_PATH)
+    monkeypatch.setenv("AIST_DAST_ALLOWED_PRIVATE_NETWORKS", "10.23.4.5/32,fd00::/64")
     run_dast(
         [
             "--pipeline-id",
@@ -180,6 +181,7 @@ def test_dast_command_uses_canonical_dispatch_without_sast_builder(monkeypatch, 
     assert len(executions) == 1
     assert executions[0][0] == "dast"
     assert executions[0][1].command.idempotency_key == "launch-123"
+    assert executions[0][1].allowed_private_networks == ("10.23.4.5/32", "fd00::/64")
     assert executions[0][2] is catalog
     assert '"run_id":"run-123"' in capsys.readouterr().out
 

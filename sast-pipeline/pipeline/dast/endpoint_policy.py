@@ -26,9 +26,18 @@ class ValidatedDastEndpoint:
     # DastEndpointPolicy._authorized_addresses.
     addresses: tuple[str, ...]
 
+    def matches_origin(self, request_url: str) -> bool:
+        """Both HTTP clients must keep requests on the approved HTTPS origin."""
+        origin = urlsplit(request_url)
+        return (
+            origin.scheme,
+            (origin.hostname or "").rstrip(".").lower(),
+            origin.port or 443,
+        ) == ("https", self.hostname, self.port)
+
 
 class DastEndpointPolicy:
-    """Allow public HTTPS endpoints directly and RFC1918/ULA only through trusted VPN.
+    """Allow public and configured private HTTPS endpoints with optional VPN transport.
 
     URL shape and port are always enforced; how far the *address* can be is in
     :meth:`_authorized_addresses`.
@@ -38,22 +47,21 @@ class DastEndpointPolicy:
     # Deliberately a short enumerated allowlist, not an open range: DAST gateway deployments
     # commonly front their service on 8443 to avoid binding a privileged port, but each addition
     # here is still a reviewed exception to the SSRF policy, not a general "any port" escape hatch.
-    # Kept in sync with aist/integrations/dast_endpoint_policy.py, the onboarding-time policy that
-    # this connector-side policy re-evaluates inside the network namespace at scan-launch time.
     ALLOWED_PORTS: ClassVar[frozenset[int]] = frozenset({HTTPS_PORT, 8443})
     MAX_DNS_ANSWERS: ClassVar[int] = 32
-    _TRUSTED_VPN_IPV4: ClassVar[tuple[ipaddress.IPv4Network, ...]] = (
-        ipaddress.ip_network("10.0.0.0/8"),
-        ipaddress.ip_network("172.16.0.0/12"),
-        ipaddress.ip_network("192.168.0.0/16"),
-    )
-    _TRUSTED_VPN_IPV6: ClassVar[tuple[ipaddress.IPv6Network, ...]] = (
-        ipaddress.ip_network("fc00::/7"),
-    )
-
-    def __init__(self, *, trusted_vpn: bool, resolver: AddressResolver | None = None):
+    def __init__(
+        self,
+        *,
+        trusted_vpn: bool,
+        allowed_private_networks: Iterable[str] = (),
+        resolver: AddressResolver | None = None,
+    ):
         self._trusted_vpn = trusted_vpn
         self._resolver = resolver or self._resolve_with_system_dns
+        try:
+            self._private_networks = tuple(ipaddress.ip_network(value.strip()) for value in allowed_private_networks)
+        except (ValueError, AttributeError, TypeError) as exc:
+            raise DastEndpointPolicyError("AIST_DAST_ALLOWED_PRIVATE_NETWORKS must contain valid CIDRs") from exc
 
     def validate(self, gateway_url: str) -> ValidatedDastEndpoint:
         parsed = urlsplit(gateway_url)
@@ -89,12 +97,11 @@ class DastEndpointPolicy:
         """Return the destination addresses this policy was able to verify.
 
         A literal needs no lookup, so what is checked is what will be connected to. A name on a
-        direct connection must resolve and must be public: that answer is the one the socket uses.
+        direct connection must resolve to permitted unicast addresses: the socket uses that answer.
 
-        A VPN-routed name is only ever *denied* by a lookup -- the address rules already admit both
-        public and RFC1918/ULA under a trusted route -- so requiring the lookup to succeed buys no
-        enforcement while costing the attempt whenever VPN-pushed DNS lags the tunnel. The route and
-        the port allowlist remain the boundary; the HTTP layer retries the connection.
+        A VPN-routed name is only ever denied by a local lookup: the proxy owns the actual
+        resolution. The operator-provisioned route and port allowlist remain the boundary;
+        the configured private CIDRs cannot authorize an address that is not observable here.
 
         An empty result means "not verifiable here", not "no addresses".
         """
@@ -140,6 +147,11 @@ class DastEndpointPolicy:
                 continue
             self._reject_special_purpose(address)
 
+    @staticmethod
+    def reject_redirect(status_code: int) -> None:
+        if 300 <= status_code < 400:
+            raise DastEndpointPolicyError("DAST gateway redirects are not allowed")
+
     def _resolve_addresses(self, hostname: str, port: int) -> tuple[str, ...]:
         try:
             raw_addresses = tuple(self._resolver(hostname, port))
@@ -166,10 +178,9 @@ class DastEndpointPolicy:
         self._reject_special_purpose(address)
         if address.is_global:
             return
-        trusted_networks = self._TRUSTED_VPN_IPV4 if address.version == 4 else self._TRUSTED_VPN_IPV6
-        if self._trusted_vpn and any(address in network for network in trusted_networks):
+        if any(address in network for network in self._private_networks):
             return
-        raise DastEndpointPolicyError("Non-public DAST gateway addresses require a trusted VPN route")
+        raise DastEndpointPolicyError("DAST gateway private address is not permitted by AIST_DAST_ALLOWED_PRIVATE_NETWORKS")
 
     @staticmethod
     def _normalized_address(raw_address: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
@@ -180,7 +191,7 @@ class DastEndpointPolicy:
 
     @staticmethod
     def _reject_special_purpose(address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None:
-        if address.is_unspecified or address.is_loopback or address.is_link_local or address.is_multicast:
+        if address.is_unspecified or address.is_loopback or address.is_link_local or address.is_multicast or address.is_reserved:
             raise DastEndpointPolicyError(
                 "DAST gateway resolves to a forbidden local or special-purpose address",
             )

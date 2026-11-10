@@ -1,5 +1,6 @@
 import gc
 import json
+import ssl
 import os
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -614,6 +615,13 @@ def test_gateway_client_configures_tls_timeouts_limits_and_disables_environment(
     ca_file = tmp_path / "ca.pem"
     ca_file.write_text("test CA", encoding="utf-8")
     captured = {}
+    context = ssl.create_default_context()
+
+    def load_context(*, cafile):
+        assert cafile == ca_file
+        return context
+
+    monkeypatch.setattr("pipeline.dast.connector.ssl.create_default_context", load_context)
 
     class FakeClient:
         def __init__(self, **kwargs):
@@ -632,7 +640,7 @@ def test_gateway_client_configures_tls_timeouts_limits_and_disables_environment(
     ):
         pass
 
-    assert captured["verify"] == str(ca_file)
+    assert captured["verify"] is context
     assert captured["follow_redirects"] is False
     assert captured["trust_env"] is False
     assert captured["timeout"].connect == pytest.approx(5.0)
@@ -640,24 +648,15 @@ def test_gateway_client_configures_tls_timeouts_limits_and_disables_environment(
     assert captured["limits"].max_connections == 4
 
 
-def test_gateway_allows_private_destination_only_inside_trusted_vpn_namespace():
-    def private_resolver(_hostname, _port):
-        return ("10.23.4.5",)
-
-    with pytest.raises(DastConnectorError, match="require a trusted VPN route"):
-        DastGatewayClient(
-            gateway_url="https://dast.internal",
-            token="public.secret",
-            resolver=private_resolver,
-            client=httpx.Client(transport=httpx.MockTransport(lambda _request: _response(200, {}))),
-        )
-
+@pytest.mark.parametrize("trusted_vpn", [False, True])
+def test_gateway_allows_private_destination_with_optional_vpn(trusted_vpn):
     client = httpx.Client(transport=httpx.MockTransport(lambda _request: _response(200, {})))
     with DastGatewayClient(
         gateway_url="https://dast.internal",
         token="public.secret",
-        trusted_vpn=True,
-        resolver=private_resolver,
+        trusted_vpn=trusted_vpn,
+        resolver=lambda _hostname, _port: ("10.23.4.5",),
+        allowed_private_networks=("10.23.4.0/24",),
         client=client,
     ):
         pass

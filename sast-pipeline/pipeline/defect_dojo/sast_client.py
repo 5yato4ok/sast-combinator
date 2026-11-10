@@ -5,7 +5,7 @@ import os
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import quote
+from urllib.parse import quote, unquote, urlsplit
 
 import requests
 
@@ -86,6 +86,11 @@ class LinkBuilder:
 
 class SastPipelineDDClient(DefectDojoClient):
     """Extensions that implement original SAST pipeline behavior (import, trim, enrich)."""
+
+    def __init__(self, cfg: DojoConfig, token: str) -> None:
+        if "aist-admin" in unquote(urlsplit(cfg.url).path).split("/"):
+            raise ValueError("AIST imports must use the AIST pipeline import API; standalone DefectDojo enrichment is not supported")
+        super().__init__(cfg, token)
 
     @staticmethod
     def derive_engagement_name(analyzer_name: str, branch: Optional[str], commit: Optional[str], name_mode: str) -> str:

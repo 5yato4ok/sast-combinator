@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from pipeline.config_utils import AnalyzersConfigHelper
@@ -48,6 +49,7 @@ def run(argv: list[str], *, analyzer_config: AnalyzersConfigHelper) -> DastExecu
             recovery=recovery,
             ca_file=args.ca_file,
             vpn_container_name=args.vpn_container,
+            allowed_private_networks=tuple(filter(None, os.environ.get("AIST_DAST_ALLOWED_PRIVATE_NETWORKS", "").split(","))),
             stop_requested=args.stop_requested,
         ),
         analyzer_config=analyzer_config,

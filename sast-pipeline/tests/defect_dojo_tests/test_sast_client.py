@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 import responses
 
 from pipeline.defect_dojo.client import DojoConfig
@@ -121,3 +123,10 @@ def test_a_repository_link_for_a_file_uri_names_the_decoded_path():
     link = LinkBuilder().build("https://github.com/org/shop", "file:///src/my%20module/%23slug/page.tsx", "abc123")
 
     assert link == "https://github.com/org/shop/blob/abc123/src/my%20module/%23slug/page.tsx"
+
+
+@pytest.mark.parametrize("base", ["https://aist.internal/aist-admin", "https://aist.internal/aist-admin/"])
+def test_standalone_enrichment_cannot_write_scm_links_to_aist(base, requests_mock):
+    with pytest.raises(ValueError, match="AIST pipeline import API"):
+        SastPipelineDDClient(DojoConfig(url=base), "fixture-token")
+    assert not requests_mock.called

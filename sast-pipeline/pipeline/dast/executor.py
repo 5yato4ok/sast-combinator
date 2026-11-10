@@ -50,6 +50,7 @@ class DastExecutionInput:
     recovery: DastRecoveryState | None = None
     ca_file: Path | None = None
     vpn_container_name: str | None = None
+    allowed_private_networks: tuple[str, ...] = ()
     stop_requested: bool = False
     #: Called with the connector's own recovery state while the run is still going: once the
     #: provider has accepted it, and again whenever the connector advances. A caller that keeps
@@ -275,7 +276,7 @@ class DastExecutor:
                     build_context=_CONNECTOR_BUILD_CONTEXT,
                     pipeline_id=execution.pipeline_id,
                     volumes=volumes,
-                    env=None,
+                    env={"AIST_DAST_ALLOWED_PRIVATE_NETWORKS": ",".join(execution.allowed_private_networks)},
                     args=args,
                     network=f"container:{execution.vpn_container_name}" if execution.vpn_container_name else None,
                     user=user,

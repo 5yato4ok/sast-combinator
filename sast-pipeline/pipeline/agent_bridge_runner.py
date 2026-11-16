@@ -15,13 +15,12 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Mapping, Sequence
 
 import yaml
 
-from .bridge_client import BridgeClient
+from .bridge_client import BridgeClient, format_extra_args, prepare_bridge_output_dir
 from .config_utils import AnalyzerReport
 from .run_output import result_produced
 
@@ -29,7 +28,6 @@ log = logging.getLogger(__name__)
 
 AGENT_BRIDGE_TYPE = "agent-bridge"
 _RUNTIME_FILENAME_SUFFIX = "_runtime.json"
-_FORBIDDEN_EXTRA_ARG_CHARS = ("\n", "\r")
 
 
 def _derive_ai_response_filename(result_filename: str) -> str:
@@ -49,26 +47,6 @@ def _runtime_filename_for(analyzer_name: str) -> str:
     return f"{analyzer_name}{_RUNTIME_FILENAME_SUFFIX}"
 
 
-def _format_extra_args(values: Mapping[str, str]) -> str:
-    """Render a flat ``key=value`` string the bridge appends to the skill prompt.
-
-    Values containing newlines are dropped — they would corrupt the
-    ``extra_args`` encoding and could be used to inject prompt content.
-    JSON-valued runtime config is NOT passed through this helper; it lives
-    in the sidecar file referenced by ``runtime_filename``.
-    """
-    parts: list[str] = []
-    for key, value in values.items():
-        if value is None:
-            continue
-        text = str(value)
-        if any(ch in text for ch in _FORBIDDEN_EXTRA_ARG_CHARS):
-            log.warning("Dropping extra_arg %s with forbidden control character", key)
-            continue
-        parts.append(f"{key}={text}")
-    return " ".join(parts)
-
-
 def _write_runtime_file(
     *,
     output_dir: str,
@@ -76,17 +54,10 @@ def _write_runtime_file(
     runtime_env: Mapping[str, object],
 ) -> None:
     path = Path(output_dir) / runtime_filename
-    path.parent.mkdir(parents=True, exist_ok=True)
+    prepare_bridge_output_dir(path.parent)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(dict(runtime_env), indent=2), encoding="utf-8")
     tmp.replace(path)
-    # The host orchestrator runs as root; the bridge container runs as an
-    # unprivileged user (uid=1000). Make output_dir world-writable so the
-    # bridge can write result files without needing elevated privileges.
-    try:
-        os.chmod(str(path.parent), 0o777)
-    except OSError as exc:
-        log.warning("Could not chmod output_dir %s: %s", path.parent, exc)
 
 
 def _message(*, level: str, code: str, text: object) -> dict[str, str]:
@@ -244,7 +215,7 @@ def run_agent_bridge_analyzers(
             )
             continue
 
-        extra_args = _format_extra_args({
+        extra_args = format_extra_args({
             "output_path": output_dir,
             "result_filename": str(result_filename),
             "ai_response_filename": str(ai_response_filename),
@@ -265,7 +236,7 @@ def run_agent_bridge_analyzers(
                 extra_args=extra_args,
                 model=model,
             )
-            if response.get("status") != "success":
+            if not response.succeeded:
                 outcomes.append(
                     _build_outcome(
                         analyzer=analyzer,
@@ -275,7 +246,7 @@ def run_agent_bridge_analyzers(
                             _message(
                                 level="warning",
                                 code="bridge_error",
-                                text=response.get("detail") or response,
+                                text=response.detail or response.status,
                             ),
                         ],
                     ),

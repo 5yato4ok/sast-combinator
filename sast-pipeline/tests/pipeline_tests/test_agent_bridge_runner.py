@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 import yaml
 
 import pipeline.agent_bridge_runner as abr
+from pipeline.bridge_client import BridgeSessionResult
 
 
 def _write_config(tmp_path: Path, analyzers: list[dict]) -> str:
@@ -20,9 +21,9 @@ def _write_config(tmp_path: Path, analyzers: list[dict]) -> str:
 def _make_client(success: bool = True) -> MagicMock:
     client = MagicMock()
     if success:
-        client.analyze_sync.return_value = {"status": "success", "detail": ""}
+        client.analyze_sync.return_value = BridgeSessionResult(status="success")
     else:
-        client.analyze_sync.return_value = {"status": "error", "detail": "boom"}
+        client.analyze_sync.return_value = BridgeSessionResult(status="error", detail="boom")
     return client
 
 
@@ -271,7 +272,7 @@ def test_bridge_exception_does_not_stop_next_agent(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
     client = MagicMock()
-    client.analyze_sync.side_effect = [RuntimeError("bridge down"), {"status": "success"}]
+    client.analyze_sync.side_effect = [RuntimeError("bridge down"), BridgeSessionResult(status="success")]
 
     outcomes = abr.run_agent_bridge_analyzers(
         bridge_client=client,

@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Mapping
 
 import httpx
@@ -36,6 +38,50 @@ DEFAULT_SYNC_TIMEOUT_SECONDS = int(os.environ.get("AIST_LOCAL_TRIAGE_TIMEOUT", "
 _BRIDGE_BASE_URL = "http://localhost"
 _ANALYZE_PATH = "/analyze"
 _ANALYZE_SYNC_PATH = "/analyze-sync"
+_FORBIDDEN_EXTRA_ARG_CHARS = ("\n", "\r")
+
+
+@dataclass(frozen=True, slots=True)
+class BridgeSessionResult:
+    """How one ``/analyze-sync`` skill session ended, as the bridge reported it."""
+
+    status: str
+    detail: str = ""
+
+    @property
+    def succeeded(self) -> bool:
+        return self.status == "success"
+
+
+def format_extra_args(values: Mapping[str, Any]) -> str:
+    """Render the flat ``key=value`` string the bridge appends to the skill prompt.
+
+    Values containing newlines are dropped — they would corrupt the
+    ``extra_args`` encoding and could be used to inject prompt content.
+    """
+    parts: list[str] = []
+    for key, value in values.items():
+        if value is None:
+            continue
+        text = str(value)
+        if any(ch in text for ch in _FORBIDDEN_EXTRA_ARG_CHARS):
+            log.warning("Dropping extra_arg %s with forbidden control character", key)
+            continue
+        parts.append(f"{key}={text}")
+    return " ".join(parts)
+
+
+def prepare_bridge_output_dir(path: str | Path) -> None:
+    """Create ``path`` so that the bridge, which runs as an unprivileged user (uid=1000), can write its files there.
+
+    A failure is logged; the session then fails to write its result, which its caller reports.
+    """
+    directory = Path(path)
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        directory.chmod(0o777)
+    except OSError as exc:
+        log.warning("Could not prepare bridge output dir %s: %s", directory, exc)
 
 
 class BridgeError(Exception):
@@ -94,11 +140,9 @@ class BridgeClient:
         The bridge returns 202 and POSTs the eventual result to
         ``callback_url`` (or just runs to completion if no callback is set).
 
-        Raises ``BridgeError`` on transport failure so the caller's pipeline
-        state machine can mark its run degraded. Used by AIST's local
-        triage flow (``aist/tasks/ai.py``); the SAST-pipeline diff
-        analyzer goes through ``analyze_sync`` which swallows errors
-        instead.
+        Raises ``BridgeError`` on transport failure, so the caller can report
+        the request as failed; ``analyze_sync`` reports failures in its
+        result instead.
         """
         payload = self._payload(
             skill_name=skill_name,
@@ -137,14 +181,12 @@ class BridgeClient:
         source_path: str,
         extra_args: str = "",
         model: str = "",
-    ) -> dict[str, Any]:
-        """Block until ``/analyze-sync`` returns the bridge's CallbackPayload.
+    ) -> BridgeSessionResult:
+        """Block until ``/analyze-sync`` returns how the skill session ended.
 
-        Returns the parsed JSON body (``{"status": ..., "detail": ...}``)
-        on HTTP 200. Returns a synthetic ``{"status": "error", "detail": ...}``
-        when the call fails in any way — failures are logged but never
-        raised, matching how docker-analyzer failures are handled in
-        ``analyzer_runner``.
+        A call that fails in any way returns an ``error`` result with the
+        reason in ``detail``; failures are logged but never raised, matching
+        how docker-analyzer failures are handled in ``analyzer_runner``.
         """
         payload = self._payload(
             skill_name=skill_name,
@@ -164,7 +206,7 @@ class BridgeClient:
                     "Bridge /analyze-sync skill=%s pipeline=%s returned HTTP %s: %s",
                     skill_name, project_id, resp.status_code, detail,
                 )
-                return {"status": "error", "detail": detail}
+                return BridgeSessionResult(status="error", detail=detail)
             try:
                 body = resp.json()
             except ValueError:
@@ -172,22 +214,26 @@ class BridgeClient:
                     "Bridge /analyze-sync skill=%s returned non-JSON body",
                     skill_name,
                 )
-                return {"status": "error", "detail": "non-json bridge response"}
-            self._log_outcome(skill_name, project_id, body)
-            return body
+                return BridgeSessionResult(status="error", detail="non-json bridge response")
+            result = BridgeSessionResult(
+                status=str(body.get("status") or "error"),
+                detail=str(body.get("detail") or ""),
+            )
+            self._log_outcome(skill_name, project_id, result)
+            return result
         except httpx.HTTPError as exc:
             log.warning(
                 "Bridge /analyze-sync skill=%s pipeline=%s failed: %s",
                 skill_name, project_id, exc,
             )
-            return {"status": "error", "detail": f"transport error: {exc}"[:500]}
+            return BridgeSessionResult(status="error", detail=f"transport error: {exc}"[:500])
         except OSError as exc:
             # Most commonly: socket missing because the bridge container is down.
             log.warning(
                 "Bridge /analyze-sync skill=%s pipeline=%s socket error on %s: %s",
                 skill_name, project_id, self._socket_path, exc,
             )
-            return {"status": "error", "detail": f"socket error: {exc}"[:500]}
+            return BridgeSessionResult(status="error", detail=f"socket error: {exc}"[:500])
 
     # ------------------------------------------------------------------ #
     # Internal                                                             #
@@ -225,10 +271,8 @@ class BridgeClient:
         return httpx.Client(transport=transport, timeout=timeout)
 
     @staticmethod
-    def _log_outcome(skill_name: str, project_id: str, body: dict) -> None:
-        status = body.get("status")
-        detail = body.get("detail", "") or ""
-        if status == "success":
+    def _log_outcome(skill_name: str, project_id: str, result: BridgeSessionResult) -> None:
+        if result.succeeded:
             log.info(
                 "Bridge /analyze-sync skill=%s pipeline=%s succeeded",
                 skill_name, project_id,
@@ -236,5 +280,5 @@ class BridgeClient:
         else:
             log.warning(
                 "Bridge /analyze-sync skill=%s pipeline=%s status=%s detail=%s",
-                skill_name, project_id, status, detail[:500],
+                skill_name, project_id, result.status, result.detail[:500],
             )

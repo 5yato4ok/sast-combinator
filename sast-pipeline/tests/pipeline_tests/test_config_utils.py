@@ -420,3 +420,16 @@ def test_an_unknown_ceiling_admits_every_class():
     assert TimeClass.of("glacial") is TimeClass.SLOW
     assert TimeClass.of(None) is TimeClass.SLOW
     assert TimeClass.of("fast") is TimeClass.FAST
+
+
+def test_a_web_project_is_not_given_the_dotnet_inspector_but_a_dotnet_project_is():
+    """ReSharper InspectCode needs a .NET solution and toolchain; on a JavaScript project it can only fail."""
+    helper = AH()
+
+    def selected_for(*scm_languages):
+        return helper.select_analyzers(AnalyzerSelection(languages=tuple(AH.convert_languages(scm_languages))))
+
+    assert "resharper" not in selected_for("JavaScript", "TypeScript", "HTML", "Python")
+    assert "resharper" in selected_for("C#", "JavaScript", "HTML")
+    assert "resharper" in selected_for("Visual Basic .NET", "JavaScript", "HTML")
+    assert "resharper" in selected_for("ASP.NET", "HTML")

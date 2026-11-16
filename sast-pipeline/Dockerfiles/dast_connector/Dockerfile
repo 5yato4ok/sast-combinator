@@ -15,6 +15,10 @@ FROM runtime AS test
 
 USER root
 
+# The analyzer wrapper tests run the wrappers' own tools: jq reads Horusec's report, and node
+# runs the ESLint image's symlink scan.
+RUN apt-get update && apt-get install -y --no-install-recommends jq nodejs && rm -rf /var/lib/apt/lists/*
+
 # httpx is needed by bridge_client, which several of the copied tests import.
 RUN pip install --no-cache-dir pytest==8.4.2 pyyaml==6.0.3 httpx==0.28.1
 

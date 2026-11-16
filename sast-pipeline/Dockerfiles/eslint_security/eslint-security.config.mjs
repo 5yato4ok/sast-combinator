@@ -2,9 +2,14 @@
 import tsparser from "@typescript-eslint/parser";
 import security from "eslint-plugin-security";
 import nous from "eslint-plugin-no-unsanitized";
+import { unresolvableLinkPatterns } from "./unresolvable-links.mjs";
 
+
+// ESLint aborts the whole run on reading a symlink that resolves to nothing.
+const unresolvableLinks = unresolvableLinkPatterns(process.cwd());
 
 export default [
+  ...(unresolvableLinks.length ? [{ ignores: unresolvableLinks }] : []),
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {

@@ -82,7 +82,9 @@ analyzers:
     type: simple
     image: resharper-analyzer
     time_class: medium
-    language: [ "csharp", "vb", "aspnet", "javascript", "typescript", "html" ]
+    # InspectCode needs a .NET solution and the toolchain the project script exports as DOTNET_PATH;
+    # it inspects a solution's JavaScript, TypeScript and HTML as part of that solution.
+    language: [ "csharp", "vb", "aspnet", "visual basic .net", "asp.net" ]
     output_type: "SARIF"
     env:
      - DOTNET_PATH

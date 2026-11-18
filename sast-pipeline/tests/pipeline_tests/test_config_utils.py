@@ -192,6 +192,34 @@ def test_get_all_images(tmp_path):
     assert helper.get_all_images() == {"i1", "i2"}
 
 
+def test_get_all_images_skips_imageless_agent_bridge_analyzers(tmp_path):
+    """A rebuild-images run removes every image ``get_all_images`` names; an
+    agent-bridge analyzer runs without a container image, so it must not add
+    ``None`` to that set alongside the real analyzer images."""
+    config = {
+        "analyzers": [
+            {"name": "semgrep", "enabled": True, "image": "sast-semgrep"},
+            {
+                "name": "claude-full-security",
+                "type": "agent-bridge",
+                "enabled": True,
+                "skill_name": "aist-full-security-review",
+            },
+            {
+                "name": "codeql",
+                "enabled": True,
+                "language_specific_containers": True,
+                "configuration": [{"javascript": {"image": "codeql-javascript-typescript"}}],
+            },
+        ]
+    }
+    cfg_path = tmp_path / "cfg.yaml"
+    with cfg_path.open("w") as fh:
+        yaml.dump(config, fh)
+    helper = AH(str(cfg_path))
+    assert helper.get_all_images() == {"sast-semgrep", "codeql-javascript-typescript"}
+
+
 def test_get_supported_languages_caches(tmp_path):
     """The helper should compute and cache the set of languages defined
     across analyzer variants on first call and return the cached

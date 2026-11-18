@@ -162,8 +162,9 @@ class AnalyzersConfigHelper:
     def get_all_images(self):
         result = set()
         for analyzer in self.analyzers:
-            if self._is_sast_analyzer(analyzer):
-                result.add(analyzer.get("image"))
+            # Agent-bridge analyzers run on the host through the bridge and have no image.
+            if self._is_sast_analyzer(analyzer) and analyzer.get("image"):
+                result.add(analyzer["image"])
         return result
 
     def get_execution_provider(self, execution_type):

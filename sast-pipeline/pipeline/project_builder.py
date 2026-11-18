@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -25,6 +26,10 @@ from .build_configuration import SourceRevision, SourceType
 from .build_runtime import prepare_build_runtimes
 from .config_utils import AnalyzersConfigHelper
 from .run_output import prepare_run_output_dir
+
+# The builder mounts the project at /workspace; an uploaded archive is copied to that root itself,
+# so the container path is either exactly /workspace or a path below it.
+_CONTAINER_PROJECT_ROOT = re.compile(r"/workspace(?=/|$)")
 
 log = logging.getLogger(__name__)
 
@@ -220,7 +225,7 @@ def configure_project_run_analyses(
         if isinstance(obj, list):
             return [replace_in_dict(i, target_path) for i in obj]
         if isinstance(obj, str):
-            return obj.replace("/workspace/", f"{target_path}/")  # TODO: remove build-tmp everywhere
+            return _CONTAINER_PROJECT_ROOT.sub(lambda _: target_path, obj)
         return obj
 
     trim_path = launch_data.get("project_path")

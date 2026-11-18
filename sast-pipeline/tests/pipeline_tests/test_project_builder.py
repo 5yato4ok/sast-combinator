@@ -396,3 +396,97 @@ def test_configure_project_run_analyses_accepts_git_branch_version(monkeypatch, 
 
     assert captured_env["PROJECT_VERSION"] == "master"
     assert captured_env["PROJECT_VERSION_TYPE"] == "GIT_BRANCH"
+
+
+def _run_with_builder_report(monkeypatch, tmp_path, *, version, builder_launch_data):
+    """
+    Run ``configure_project_run_analyses`` with Docker faked at the ``docker_utils`` boundary.
+
+    The fake builder writes ``builder_launch_data`` as its launch description. Returns the host project path,
+    the keyword arguments the agent-bridge phase received, and the launch data the run returned.
+    """
+    host_project_path = tmp_path / "runs" / "pid"
+    script = tmp_path / "project_config.sh"
+    script.write_text("export PROJECT_PATH=/workspace\n")
+    context_dir = tmp_path / "context"
+    context_dir.mkdir()
+    analyzers_cfg = tmp_path / "analyzers_out.yaml"
+    analyzers_cfg.write_text("analyzers: []\n")
+
+    def fake_build_image(*, iid_file=None, **kwargs):
+        Path(iid_file).write_text("sha256:builder")
+
+    def fake_run_container(*, volumes=None, **kwargs):
+        output = next(host for host, container in volumes.items() if container == "/shared/output")
+        (Path(output) / "launch_description.json").write_text(json.dumps(builder_launch_data))
+
+    bridge_calls = []
+
+    def fake_run_agent_bridge_analyzers(**kwargs):
+        bridge_calls.append(kwargs)
+        return [{"name": "claude-full-security", "status": "success"}]
+
+    monkeypatch.setattr(du, "build_image", fake_build_image)
+    monkeypatch.setattr(du, "run_container", fake_run_container)
+    monkeypatch.setattr(pb.agent_bridge_runner, "run_agent_bridge_analyzers", fake_run_agent_bridge_analyzers)
+
+    result = pb.configure_project_run_analyses(
+        script_path=str(script),
+        output_dir=str(tmp_path / "out"),
+        languages=["javascript"],
+        analyzer_config=make_dummy_analyzer_config(tmp_cfg_path=str(analyzers_cfg)),
+        dockerfile_path="Dockerfile",
+        context_dir=str(context_dir),
+        project_path=str(host_project_path),
+        version=version,
+        pipeline_id="pid",
+        bridge_client=object(),
+    )
+    [bridge_call] = bridge_calls
+    return host_project_path, bridge_call, result
+
+
+def test_uploaded_archive_run_gives_agent_bridge_the_host_source_root(monkeypatch, tmp_path):
+    """An uploaded-archive version is copied to the root of the builder's /workspace mount, so the builder
+    reports ``project_path`` as exactly "/workspace". Agent-bridge analyzers run on the host and must
+    receive the host directory holding those sources, not the container path."""
+    extracted = tmp_path / "extracted"
+    (extracted / "apps" / "catalog").mkdir(parents=True)
+    (extracted / "package.json").write_text('{"name": "nx-tools"}')
+    (extracted / "apps" / "catalog" / "server.js").write_text("require('http')")
+
+    host_project_path, bridge_call, result = _run_with_builder_report(
+        monkeypatch, tmp_path,
+        version={"type": "FILE_HASH", "version": "9b80c6c7", "extracted_root": str(extracted)},
+        builder_launch_data={"project_path": "/workspace", "launched_analyzers": ["semgrep"]},
+    )
+
+    assert bridge_call["project_path"] == str(host_project_path)
+    assert (Path(bridge_call["project_path"]) / "package.json").is_file()
+    assert result["project_path"] == str(host_project_path)
+    assert result["trim_path"] == "/workspace"
+
+
+def test_git_version_run_gives_agent_bridge_the_host_checkout_subdirectory(monkeypatch, tmp_path):
+    """A Git version is cloned into a subdirectory of the /workspace mount. The agent-bridge analyzers and the
+    persisted launch data get that subdirectory under the host project path; a container path that merely
+    starts with the same letters, such as /workspaces, is not a path inside the mount and stays as it is."""
+    host_project_path, bridge_call, result = _run_with_builder_report(
+        monkeypatch, tmp_path,
+        version={"type": "GIT_BRANCH", "version": "main"},
+        builder_launch_data={
+            "project_path": "/workspace/dev_myapp",
+            "launched_analyzers": ["semgrep"],
+            "analyzer_outcomes": [{
+                "name": "semgrep",
+                "status": "success",
+                "messages": [{"text": "scanned /workspace/dev_myapp/src; cache in /workspaces/x"}],
+            }],
+        },
+    )
+
+    assert bridge_call["project_path"] == f"{host_project_path}/dev_myapp"
+    assert result["project_path"] == f"{host_project_path}/dev_myapp"
+    assert result["trim_path"] == "/workspace/dev_myapp"
+    [semgrep] = [outcome for outcome in result["analyzer_outcomes"] if outcome["name"] == "semgrep"]
+    assert semgrep["messages"][0]["text"] == f"scanned {host_project_path}/dev_myapp/src; cache in /workspaces/x"

@@ -24,17 +24,24 @@ FIXTURE = PACKAGE / "tests" / "fixtures" / "build_runtime"
 
 @dataclass(frozen=True, slots=True)
 class NativeImages:
+    base: str = "sast-builder-base-test:verification"
     builder: str = "sast-builder-runtime-test:verification"
     source_analyzer: str = "sast-source-runtime-test:verification"
 
 
 @pytest.fixture(scope="module")
-def native_images():
+def native_images(tmp_path_factory):
     images = NativeImages()
+    base_context = tmp_path_factory.mktemp("nonroot-toolchain")
+    (base_context / "Dockerfile").write_text("FROM ubuntu:22.04\nUSER 65534:65534\n")
+    docker_utils.build_image(image_name=images.base, context_dir=str(base_context))
     docker_utils.build_image(
         image_name=images.builder, context_dir=str(PACKAGE),
         dockerfile="Dockerfiles/builder/Dockerfile",
-        build_args={"PROJECT_CONFIG_PATH": "tests/fixtures/build_runtime/init.sh"},
+        build_args={
+            "PROJECT_CONFIG_PATH": "tests/fixtures/build_runtime/init.sh",
+            "BUILDER_BASE_IMAGE": images.base,
+        },
     )
     docker_utils.build_image(
         image_name=images.source_analyzer, context_dir=str(PACKAGE),

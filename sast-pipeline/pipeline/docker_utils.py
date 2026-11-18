@@ -10,15 +10,18 @@ different parts of the pipeline.
 
 from __future__ import annotations
 
+import codecs
 import hashlib
-import subprocess
+import logging
 import os
 import re
-import uuid
 import selectors
-import logging
+import subprocess
+import uuid
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Iterable, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
 from pipeline.config_utils import AnalyzersConfigHelper
 
@@ -69,16 +72,16 @@ def construct_container_name(image: str, pipeline_id: str) -> str:
 def image_exists(image_name: str) -> bool:
     """Check whether a Docker image is present locally.
 
-    A small wrapper around ``docker images -q``. Returns True if the
+    A small wrapper around ``docker image inspect``. Returns True if the
     image has been built/pulled already, or False otherwise.
     """
     result = subprocess.run(
-        ["docker", "images", "-q", image_name],
+        ["docker", "image", "inspect", image_name],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,
     )
-    return result.stdout.strip() != ""
+    return result.returncode == 0
 
 
 # A container declares the level of a line and may name the phase and job it is working on
@@ -136,8 +139,6 @@ def _log_container_line(line: str, stream: str = "stdout", log_addition: str = "
 
 
 def run_logged_cmd(cmd, log_addition=""):
-    import codecs
-
     with subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -193,6 +194,21 @@ def delete_image_if_exist(image_name):
     run_logged_cmd(["docker", "image", "rm", image_name])
 
 
+@dataclass(frozen=True, slots=True)
+class ContainerResources:
+    """Optional Docker limits; unset values retain the worker's existing policy."""
+
+    memory: str = ""
+    cpus: str = ""
+
+    @classmethod
+    def from_env(cls, env: Mapping[str, str], prefix: str) -> ContainerResources:
+        return cls(memory=env.get(f"{prefix}_MEMORY", ""), cpus=env.get(f"{prefix}_CPUS", ""))
+
+    def arguments(self) -> list[str]:
+        return [item for flag, value in (("--memory", self.memory), ("--cpus", self.cpus)) if value for item in (flag, value)]
+
+
 def run_container(
     *,
     image: str,
@@ -204,6 +220,8 @@ def run_container(
     args: Optional[Iterable[str]] = None,
     network: Optional[str] = None,
     user: Optional[str] = None,
+    entrypoint: Optional[str] = None,
+    resources: Optional[ContainerResources] = None,
 ) -> subprocess.CompletedProcess | None:
     """Run a Docker container with optional volume and environment configuration.
 
@@ -247,12 +265,22 @@ def run_container(
             cmd += ["-e", f"{k}={v}"]
     if network:
         cmd += ["--network", network]
+    if entrypoint:
+        cmd += ["--entrypoint", entrypoint]
+    if resources:
+        cmd += resources.arguments()
     # Append image and any additional arguments
     cmd += [image]
     if args:
         cmd += list(args)
 
-    run_logged_cmd(cmd, f"[{AnalyzersConfigHelper.source_token_for_image(image)}]")
+    try:
+        run_logged_cmd(cmd, f"[{AnalyzersConfigHelper.source_token_for_image(image)}]")
+    except subprocess.CalledProcessError as exc:
+        # Docker arguments may contain credentials in environment flags. Callers persist
+        # error text in launch outcomes, so the command must not cross this boundary.
+        safe_command = ["docker", "run", "--name", container_name, "<arguments omitted>"]
+        raise subprocess.CalledProcessError(exc.returncode, safe_command) from None
 
 
 def image_runtime_user(image: str) -> Optional[Tuple[int, int]]:
@@ -429,6 +457,7 @@ def run_pipeline_container(
     network: Optional[str] = None,
     volumes_from: Optional[str] = None,
     user: Optional[str] = None,
+    resources: Optional[ContainerResources] = None,
 ) -> subprocess.CompletedProcess | None:
     """Run one containerized pipeline step under the contract every step shares.
 
@@ -443,6 +472,7 @@ def run_pipeline_container(
     ensure_image(image, dockerfile_dir, build_context=build_context)
     for host_path in (volumes or {}):
         _require_shared_path(host_path)
+    resource_options = {"resources": resources} if resources else {}
     return run_container(
         image=image,
         pipeline_id=pipeline_id,
@@ -452,6 +482,7 @@ def run_pipeline_container(
         network=network,
         volumes_from=volumes_from,
         user=user,
+        **resource_options,
     )
 
 
@@ -465,6 +496,7 @@ def build_image(
     check: bool = True,
     default_log_level: str = "INFO",
     timeout: Optional[float] = None,
+    iid_file: Optional[str] = None,
 ) -> None:
     """Build a Docker image with optional build arguments and logging.
 
@@ -478,11 +510,14 @@ def build_image(
     :param dockerfile: Optional path to a Dockerfile. If provided, passed via ``-f``.
     :param build_args: Mapping of build argument names to values (passed via ``--build-arg``).
     :param labels: Mapping of image labels to record on the result (passed via ``--label``).
+    :param iid_file: Docker writes this build's immutable image ID here, independent of later tag changes.
     :param check: If True, raise ``CalledProcessError`` for non-zero exit codes.
     :param timeout: Optional cap in seconds. A build that hangs would otherwise hold the calling
         worker forever; callers that run inside a Celery task pass one.
     """
     cmd: list[str] = ["docker", "build"]
+    if iid_file:
+        cmd += ["--iidfile", iid_file]
     # Append build-arg flags
     if build_args:
         for k, v in build_args.items():
@@ -617,6 +652,30 @@ def cleanup_pipeline_containers(pipeline_id: str) -> None:
             cleanup_container(name)
     except Exception as exc:
         log.warning("Failed to clean up pipeline containers for %s: %s", pipeline_id, exc)
+    cleanup_pipeline_volumes(pipeline_id)
+
+
+def cleanup_volume(volume: str) -> None:
+    """Remove an unused runtime volume without masking the original execution failure."""
+    try:
+        run_logged_cmd(["docker", "volume", "rm", "--force", volume])
+    except (OSError, subprocess.CalledProcessError) as exc:
+        log.warning("Could not remove analyzer runtime volume %s: %s", volume, exc)
+
+
+def cleanup_pipeline_volumes(pipeline_id: str) -> None:
+    """Cancellation may outlive the worker's context manager; reclaim its labeled runtimes."""
+    if not pipeline_id:
+        return
+    try:
+        result = subprocess.run(
+            ["docker", "volume", "ls", "-q", "--filter", f"label=com.aist.pipeline-id={pipeline_id}"],
+            text=True, capture_output=True, check=True,
+        )
+        for volume in result.stdout.splitlines():
+            cleanup_volume(volume)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        log.warning("Could not list runtime volumes for pipeline %s: %s", pipeline_id, exc)
 
 
 def container_exists(name: str) -> bool:

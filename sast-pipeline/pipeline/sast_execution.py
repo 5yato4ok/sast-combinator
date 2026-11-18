@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import TYPE_CHECKING, Any
 
+from pipeline.build_configuration import SastRuntimeConfiguration
 from pipeline.docker_utils import cleanup_pipeline_containers
 from pipeline.project_builder import configure_project_run_analyses
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 @dataclass(frozen=True, slots=True)
 class SastExecutionInput:
     execution_id: str
-    runtime_arguments: Mapping[str, Any]
+    runtime_arguments: SastRuntimeConfiguration
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,13 +25,15 @@ class SastExecutionResult:
 
 
 def execute_sast(execution: SastExecutionInput) -> SastExecutionResult:
-    arguments = dict(execution.runtime_arguments)
-    if arguments.get("pipeline_id") != execution.execution_id:
+    configuration = execution.runtime_arguments
+    if configuration.pipeline_id != execution.execution_id:
         detail = "SAST runtime pipeline_id must match the public execution id"
         raise ValueError(detail)
     try:
         return SastExecutionResult(
-            launch_data=configure_project_run_analyses(**arguments),
+            launch_data=configure_project_run_analyses(**{
+                field.name: getattr(configuration, field.name) for field in fields(configuration)
+            }),
         )
     finally:
         cleanup_pipeline_containers(execution.execution_id)

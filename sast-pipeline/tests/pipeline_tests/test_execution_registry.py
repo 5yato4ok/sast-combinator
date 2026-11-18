@@ -2,6 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from pipeline.build_configuration import SastRuntimeConfiguration
+from pipeline.config_utils import AnalyzersConfigHelper
 from pipeline.contracts import (
     ExecutionArtifact,
     ExecutionInput,
@@ -86,7 +88,11 @@ def test_sast_facade_always_cleans_up_its_execution(monkeypatch, tmp_path):
     )
     execution = SastExecutionInput(
         execution_id="sast-execution",
-        runtime_arguments={"pipeline_id": "sast-execution", "output_dir": str(tmp_path / "result")},
+        runtime_arguments=SastRuntimeConfiguration(
+            pipeline_id="sast-execution", output_dir=str(tmp_path / "result"), script_path=str(tmp_path / "init.sh"),
+            languages=["python"], analyzer_config=AnalyzersConfigHelper(),
+            dockerfile_path="Dockerfiles/builder/Dockerfile", context_dir=tmp_path,
+        ),
     )
 
     result = execute_sast(execution)

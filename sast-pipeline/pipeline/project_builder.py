@@ -16,10 +16,14 @@ import logging
 import os
 import shutil
 import subprocess
+import tempfile
+from dataclasses import asdict
 from pathlib import Path
 
-from . import agent_bridge_runner
-from . import docker_utils
+from . import agent_bridge_runner, docker_utils
+from .build_configuration import SourceRevision, SourceType
+from .build_runtime import prepare_build_runtimes
+from .config_utils import AnalyzersConfigHelper
 from .run_output import prepare_run_output_dir
 
 log = logging.getLogger(__name__)
@@ -37,7 +41,7 @@ def configure_project_run_analyses(
         project_path: str = "/tmp/my_project",
         force_rebuild: bool = False,
         rebuild_images: bool = False,
-        version: dict | None = None,
+        version: SourceRevision | dict | None = None,
         log_level: str | None = None,
         min_time_class: str = "",
         analyzers=None,
@@ -45,6 +49,7 @@ def configure_project_run_analyses(
         network: str | None = None,
         bridge_client=None,
         agent_bridge_runtime_env=None,
+        base_image: str = "",
 ):
     """
     Build the builder image and run all configured analyzers.
@@ -53,9 +58,10 @@ def configure_project_run_analyses(
     :param output_dir: Directory on the host where analysis results will be written.
     :param image_name: Name of the Docker image for the builder container.
     :param dockerfile_path: Path to the builder Dockerfile.
+    :param base_image: Optional builder base image reference, supplied by the caller's project configuration.
     :param project_path: Directory in the container where the project will be mounted.
     :param force_rebuild: If True, force a rebuild of the project.
-    :param version: Optional dictionary with version information.
+    :param version: Source revision; legacy dictionary callers are normalized at this boundary.
     :return: Path to the output directory with a timestamp appended.
     """
     if analyzers is None:
@@ -89,14 +95,20 @@ def configure_project_run_analyses(
 
     # Build the builder image with the project config script as a build arg
     build_args = {"PROJECT_CONFIG_PATH": str(relative_config_path)}
-    docker_utils.build_image(
-        image_name=image_name,
-        context_dir=context_dir,
-        dockerfile=dockerfile_path,
-        build_args=build_args,
-        check=True,
-        default_log_level="DEBUG",
-    )
+    if base_image:
+        build_args["BUILDER_BASE_IMAGE"] = base_image
+    with tempfile.TemporaryDirectory(prefix="sast-builder-") as build_metadata:
+        iid_file = Path(build_metadata) / "image-id"
+        docker_utils.build_image(
+            image_name=image_name,
+            context_dir=context_dir,
+            dockerfile=dockerfile_path,
+            build_args=build_args,
+            check=True,
+            default_log_level="DEBUG",
+            iid_file=str(iid_file),
+        )
+        builder_image = iid_file.read_text(encoding="utf-8").strip()
 
     # Clean up the copied script
     try:
@@ -113,18 +125,23 @@ def configure_project_run_analyses(
         "FORCE_REBUILD": "1" if force_rebuild else "0",
         "BUILDER_CONTAINER": builder_container_name,
     } | (additional_env or {})
+    for key in ("SAST_ANALYZER_MEMORY", "SAST_ANALYZER_CPUS"):
+        if key in os.environ:
+            env_dict.setdefault(key, os.environ[key])
     # Propagate logging level and version if provided
     if log_level:
         env_dict["LOG_LEVEL"] = log_level
 
-    if version and "type" in version:
+    if isinstance(version, dict):
+        version = SourceRevision.from_dict(version)
+    if version and version.type is not None:
         log.info("Building builder version: %s", version)
-        if version.get("type") in {"GIT_HASH", "GIT_BRANCH"}:
-            log.info("Project version %s", version.get("type"))
-            env_dict["PROJECT_VERSION"] = (version.get("version") or "master").strip()
-        elif version.get("type") == "FILE_HASH":
+        if version.type in {SourceType.GIT_HASH, SourceType.GIT_BRANCH}:
+            log.info("Project version %s", version.type)
+            env_dict["PROJECT_VERSION"] = (version.version or "master").strip()
+        elif version.type == SourceType.FILE_HASH:
             # copy sources to project_path
-            extracted_sources = version.get("extracted_root")
+            extracted_sources = version.extracted_root
             if not Path(extracted_sources).exists():
                 raise ValueError(f"Path to extracted sources not exists {extracted_sources}")
 
@@ -134,7 +151,7 @@ def configure_project_run_analyses(
             log.info(f"Copying folder {extracted_sources} to {project_path}")
             subprocess.run(["cp", "-r", extracted_sources, project_path], check=True)
         else:
-            raise ValueError(f"Unknown version of type {version['type']}")
+            raise ValueError(f"Unknown version of type {version.type}")
 
     env_dict["PIPELINE_ID"] = pipeline_id
 
@@ -153,19 +170,28 @@ def configure_project_run_analyses(
         tmp_analyzer_config_path: "/app/analyzers.yaml",
     }
 
+    selected = AnalyzersConfigHelper(tmp_analyzer_config_path).get_filtered_analyzers(
+        None, max_time_class="slow", non_compile_project=False,
+    )
+    resources = docker_utils.ContainerResources.from_env(dict(os.environ) | env_dict, "SAST_BUILDER")
     log.info(f"Running builder container {builder_container_name}")
     try:
         # Not run_pipeline_container: the builder image is rebuilt every run with per-project
         # build args above (not "build if absent"), and the Docker socket it mounts is not step
         # data, so it cannot satisfy that helper's shared-root rule.
-        docker_utils.run_container(
-            image=image_name,
-            name=builder_container_name,
-            volumes=volumes,
-            env=env_dict,
-            pipeline_id=pipeline_id,
-            network=network,
-        )
+        with prepare_build_runtimes(selected, pipeline_id) as runtimes:
+            env_dict["SAST_BUILD_RUNTIMES"] = json.dumps([asdict(runtime) for runtime in runtimes])
+            for runtime in runtimes:
+                volumes.update(runtime.mounts)
+            docker_utils.run_container(
+                image=builder_image,
+                name=builder_container_name,
+                volumes=volumes,
+                env=env_dict,
+                pipeline_id=pipeline_id,
+                network=network,
+                resources=resources,
+            )
     except KeyboardInterrupt:
         # Ensure that all containers associated with this pipeline are terminated
         log.warning("Pipeline interrupted; cleaning up spawned containers…")

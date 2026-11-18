@@ -8,9 +8,11 @@ helpers are monkeypatched so that no external commands are executed.
 
 import logging
 import re
+import subprocess
 import types
 
 import pytest
+import pipeline.docker_utils as du
 
 
 def test_get_pipeline_id_returns_a_fresh_short_id():
@@ -55,27 +57,25 @@ def test_container_name_carries_the_pipeline_id_for_cleanup():
 
 
 def test_image_exists(monkeypatch):
-    """The helper should return True if ``docker images -q`` produces any
-    output and False otherwise."""
-    import subprocess
-    import pipeline.docker_utils as du
+    """Both image tags and immutable image IDs can be checked without rebuilding."""
 
     class DummyResult:
-        def __init__(self, stdout):
-            self.stdout = stdout
+        def __init__(self, returncode):
+            self.returncode = returncode
 
     # Simulate a found image
     monkeypatch.setattr(
         subprocess,
         "run",
-        lambda *args, **kwargs: DummyResult("abc\n"),
+        lambda *args, **kwargs: DummyResult(0),
     )
     assert du.image_exists("some-image") is True
+    assert du.image_exists("sha256:immutable-image-id") is True
     # Simulate no image found
     monkeypatch.setattr(
         subprocess,
         "run",
-        lambda *args, **kwargs: DummyResult("\n"),
+        lambda *args, **kwargs: DummyResult(1),
     )
     assert du.image_exists("other-image") is False
 
@@ -230,8 +230,6 @@ def test_build_image_logging_and_exit(monkeypatch, caplog):
 def test_cleanup_pipeline_containers(monkeypatch):
     """Cleaning up pipeline containers should call ``docker rm -f`` for
     every matching container returned by ``docker ps``."""
-    import subprocess
-    import pipeline.docker_utils as du
     calls = []
     # Simulate docker ps returning two container names
     class DummyCompleted:
@@ -240,7 +238,7 @@ def test_cleanup_pipeline_containers(monkeypatch):
     monkeypatch.setattr(
         subprocess,
         "run",
-        lambda *args, **kwargs: DummyCompleted("cont1\ncont2\n"),
+        lambda cmd, **kwargs: DummyCompleted("runtime-volume\n" if cmd[1] == "volume" else "cont1\ncont2\n"),
     )
     # Capture calls to run_logged_cmd instead of actually removing containers
     monkeypatch.setattr(du, "run_logged_cmd", lambda cmd, log_addition="": calls.append(cmd))
@@ -253,6 +251,7 @@ def test_cleanup_pipeline_containers(monkeypatch):
         ["docker", "rm", "-f", "cont1"],
         ["docker", "stop", "cont2"],
         ["docker", "rm", "-f", "cont2"],
+        ["docker", "volume", "rm", "--force", "runtime-volume"],
     ]
 
 def test_run_pipeline_container_builds_a_missing_image_before_running(monkeypatch, tmp_path):

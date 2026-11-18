@@ -18,14 +18,12 @@ from __future__ import annotations
 import json
 import logging
 import os
+from contextlib import ExitStack
 
-import yaml  # type: ignore
-
-from . import config_utils
-from . import docker_utils
+from . import config_utils, docker_utils
+from .build_runtime import capture_build
 from .contracts import AnalyzerBuild
 from .run_output import result_produced
-
 
 log = logging.getLogger(__name__)
 AGENT_BRIDGE_TYPE = "agent-bridge"
@@ -84,6 +82,7 @@ def run_docker(
     pipeline_id: str,
     env_vars: list[str] | None = None,
     dockerfile_dir: str = "",
+    optional_env: tuple[str, ...] = (),
 ) -> None:
     """Run a single analyzer container.
 
@@ -105,6 +104,9 @@ def run_docker(
                 env[var] = os.environ[var]
             else:
                 raise Exception(f"Required environment variable '{var}' is not set.")
+    env.update({key: os.environ[key] for key in optional_env if key in os.environ})
+    resources = docker_utils.ContainerResources.from_env(os.environ, "SAST_ANALYZER")
+    resource_options = {"resources": resources} if resources.arguments() else {}
     volumes = (
         None
         if builder_container
@@ -123,6 +125,7 @@ def run_docker(
         volumes=volumes,
         env=env or None,
         args=args,
+        **resource_options,
     )
 
 
@@ -206,21 +209,28 @@ def run_selected_analyzers(
         output_file_name = config_helper.get_analyzer_result_file_name(analyzer)
 
         args = [str(input_path), str(output_dir), str(output_file_name)]
-        env_vars = analyzer.get("env", []) or []
+        env_vars = list(analyzer.get("env", []) or [])
         if log_level:
             env_vars += ["LOG_LEVEL"]
-        analyzer_builds.append(_analyzer_build(analyzer=analyzer, image=str(image or "")))
         try:
-            run_docker(
-                str(image),
-                builder_container,
-                args,
-                project_path,
-                output_dir,
-                pipeline_id,
-                env_vars,
-                dockerfile_dir=dockerfile_dir,
-            )
+            with ExitStack() as stack:
+                runtime_options = {}
+                if analyzer.get("build_runtime"):
+                    captured = stack.enter_context(capture_build(analyzer, str(input_path), pipeline_id))
+                    image = captured.image
+                    args.append(captured.artifact_dir)
+                    runtime_options["optional_env"] = tuple(analyzer.get("optional_env", ()))
+                run_docker(
+                    str(image),
+                    builder_container,
+                    args,
+                    project_path,
+                    output_dir,
+                    pipeline_id,
+                    env_vars,
+                    dockerfile_dir=dockerfile_dir,
+                    **runtime_options,
+                )
             analyzer_outcomes.append(_build_outcome(analyzer=analyzer, output_dir=output_dir, status="success"))
         except KeyboardInterrupt:
             raise
@@ -234,6 +244,7 @@ def run_selected_analyzers(
                     messages=[_message(level="warning", code="runner_exception", text=exc)],
                 ),
             )
+        analyzer_builds.append(_analyzer_build(analyzer=analyzer, image=str(image or "")))
 
     launch_info["analyzer_outcomes"] = analyzer_outcomes
     launch_info["analyzer_versions"] = [

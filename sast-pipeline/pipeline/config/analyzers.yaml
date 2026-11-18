@@ -104,12 +104,17 @@ analyzers:
           dockerfile_path: "Dockerfiles/codeql/python/"
           result_file: "codeql_python.sarif"
       - cpp:
-          commentary: "Not working on nx_open"
-          enabled: false
+          enabled: true
           type: builder
+          required_result: true
           image: codeql-c-cpp
           dockerfile_path: "Dockerfiles/codeql/cpp/"
           result_file: "codeql_cpp.sarif"
+          build_runtime:
+            root: /opt/sast-tools/codeql
+            capture: /opt/sast-tools/codeql/capture.sh
+          optional_env:
+            - CODEQL_RAM_MB
       - c:
           inherits: cpp
       - csharp:

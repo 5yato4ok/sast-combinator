@@ -22,7 +22,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from . import agent_bridge_runner, docker_utils
-from .build_configuration import SourceRevision, SourceType
+from .build_configuration import BUILDER_RESERVED_ENV, SourceRevision, SourceType
 from .build_runtime import prepare_build_runtimes
 from .config_utils import AnalyzersConfigHelper
 from .run_output import prepare_run_output_dir
@@ -51,6 +51,7 @@ def configure_project_run_analyses(
         min_time_class: str = "",
         analyzers=None,
         additional_env=None,
+        secret_env=None,
         network: str | None = None,
         bridge_client=None,
         agent_bridge_runtime_env=None,
@@ -67,10 +68,16 @@ def configure_project_run_analyses(
     :param project_path: Directory in the container where the project will be mounted.
     :param force_rebuild: If True, force a rebuild of the project.
     :param version: Source revision; legacy dictionary callers are normalized at this boundary.
+    :param secret_env: Builder-only variables, masked in the relayed output. A name that is
+        reserved by the builder or also present in ``additional_env`` raises ``ValueError``.
     :return: Path to the output directory with a timestamp appended.
     """
     if analyzers is None:
         analyzers = []
+    secret_env = dict(secret_env or {})
+    redefined = sorted(secret_env.keys() & (BUILDER_RESERVED_ENV | (additional_env or {}).keys()))
+    if redefined:
+        raise ValueError(f"Secret builder environment redefines {', '.join(redefined)}")
 
     output_dir = str(prepare_run_output_dir(output_dir))
 
@@ -192,10 +199,11 @@ def configure_project_run_analyses(
                 image=builder_image,
                 name=builder_container_name,
                 volumes=volumes,
-                env=env_dict,
+                env=env_dict | secret_env,
                 pipeline_id=pipeline_id,
                 network=network,
                 resources=resources,
+                redact=secret_env.values(),
             )
     except KeyboardInterrupt:
         # Ensure that all containers associated with this pipeline are terminated

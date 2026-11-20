@@ -139,8 +139,8 @@ def test_missing_project_build_command_fails_before_capture(monkeypatch, tmp_pat
 
 def test_resource_limits_are_optional_and_allow_large_workers(monkeypatch):
     calls = []
-    monkeypatch.setattr(docker_utils, "run_logged_cmd", lambda cmd, *args: calls.append(cmd))
-    limits = docker_utils.ContainerResources(memory="128g", cpus="8")
+    monkeypatch.setattr(docker_utils, "run_logged_cmd", lambda cmd, *args, **kwargs: calls.append(cmd))
+    limits =docker_utils.ContainerResources(memory="128g", cpus="8")
     docker_utils.run_container(image="builder", pipeline_id="run", resources=limits)
     assert calls[0][calls[0].index("--memory") + 1] == "128g"
     assert calls[0][calls[0].index("--cpus") + 1] == "8"
@@ -234,8 +234,9 @@ def test_failed_authenticated_analyzer_does_not_disclose_its_token(monkeypatch, 
     monkeypatch.setattr(docker_utils, "image_label", lambda *args: "1")
     monkeypatch.setattr(docker_utils, "ensure_image", lambda *args, **kwargs: None)
 
-    def fail(cmd, *args):
-        assert any(secret in arg for arg in cmd)
+    def fail(cmd, *args, **kwargs):
+        assert Path(cmd[cmd.index("--env-file") + 1]).read_text() == f"SCANNER_TOKEN={secret}\n"
+        assert not any(secret in arg for arg in cmd)
         raise subprocess.CalledProcessError(17, cmd)
 
     monkeypatch.setattr(docker_utils, "run_logged_cmd", fail)
@@ -250,7 +251,7 @@ def test_failed_authenticated_analyzer_does_not_disclose_its_token(monkeypatch, 
 
 def test_container_failure_preserves_exit_status_for_provider_recovery(monkeypatch):
     secret = "sentinel-private-value"
-    def fail(cmd, *args):
+    def fail(cmd, *args, **kwargs):
         raise subprocess.CalledProcessError(23, cmd)
 
     monkeypatch.setattr(docker_utils, "run_logged_cmd", fail)

@@ -22,6 +22,8 @@ import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
+from pipeline.redaction import Redactor
+
 
 class RetryBudgetError(ValueError):
     """The declared budget could not produce a usable retry schedule."""
@@ -177,15 +179,13 @@ def describe_cause(exc: BaseException, *, redact: Iterable[str] = ()) -> str:
     ``redact`` removes strings that must not reach a tenant-readable log -- the gateway URL and
     its hostname, which the surrounding error messages deliberately never carry.
     """
-    secrets = sorted((str(item) for item in redact if item), key=len, reverse=True)
+    redactor = Redactor.of(redact, mask="<gateway>")
     links: list[str] = []
     seen: set[int] = set()
     current: BaseException | None = exc
     while current is not None and id(current) not in seen and len(links) < _MAX_CAUSE_LINKS:
         seen.add(id(current))
-        detail = str(current).strip()
-        for secret in secrets:
-            detail = detail.replace(secret, "<gateway>")
+        detail = redactor(str(current).strip())
         links.append(f"{type(current).__name__}: {detail}" if detail else type(current).__name__)
         current = current.__cause__
     return " <- ".join(links)

@@ -17,13 +17,16 @@ import os
 import re
 import selectors
 import subprocess
+import tempfile
 import uuid
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Tuple
 
 from pipeline.config_utils import AnalyzersConfigHelper
+from pipeline.redaction import Redactor
 
 log = logging.getLogger(__name__)
 
@@ -138,7 +141,24 @@ def _log_container_line(line: str, stream: str = "stdout", log_addition: str = "
     log.log(level, f"{prefix} {body}" if prefix else body)
 
 
-def run_logged_cmd(cmd, log_addition=""):
+# Output a step writes without any line break is relayed in pieces of this many characters.
+_MAX_PENDING_LINE = 64 * 1024
+
+
+def _split_complete_lines(text: str) -> Tuple[list, str]:
+    """Split ``text`` into its terminated lines and the unterminated remainder.
+
+    A remainder longer than ``_MAX_PENDING_LINE`` is returned as a line of its own.
+    """
+    lines = text.splitlines(keepends=True)
+    if lines and lines[-1].splitlines() == [lines[-1]] and len(lines[-1]) <= _MAX_PENDING_LINE:
+        return lines[:-1], lines[-1]
+    return lines, ""
+
+
+def run_logged_cmd(cmd, log_addition="", *, redact: Iterable[str] = ()):
+    """Run ``cmd`` and relay its output line by line, each value of ``redact`` masked."""
+    redactor = Redactor.of(redact)
     with subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -159,6 +179,12 @@ def run_logged_cmd(cmd, log_addition=""):
             "stdout": codecs.getincrementaldecoder("utf-8")("replace"),
             "stderr": codecs.getincrementaldecoder("utf-8")("replace"),
         }
+        # A line is relayed only once it is complete, so a value split across reads is still masked.
+        pending = {"stdout": "", "stderr": ""}
+
+        def relay(stream_name: str, text: str) -> None:
+            for line in text.splitlines():
+                _log_container_line(redactor(line), stream=stream_name, log_addition=log_addition)
 
         try:
             while True:
@@ -167,10 +193,13 @@ def run_logged_cmd(cmd, log_addition=""):
                     stream_name, fileobj = key.data
                     chunk = fileobj.read()
                     if chunk:
-                        text = decoders[stream_name].decode(chunk)
-                        for line in text.splitlines():
-                            _log_container_line(line, stream=stream_name, log_addition=log_addition)
+                        lines, pending[stream_name] = _split_complete_lines(
+                            pending[stream_name] + decoders[stream_name].decode(chunk),
+                        )
+                        relay(stream_name, "".join(lines))
                     else:
+                        relay(stream_name, pending[stream_name] + decoders[stream_name].decode(b"", final=True))
+                        pending[stream_name] = ""
                         sel.unregister(fileobj)
 
                 if proc.poll() is not None and not sel.get_map():
@@ -209,6 +238,28 @@ class ContainerResources:
         return [item for flag, value in (("--memory", self.memory), ("--cpus", self.cpus)) if value for item in (flag, value)]
 
 
+@contextmanager
+def _env_file(env: Mapping[str, object]) -> Iterator[str]:
+    """Path of an owner-only ``docker run --env-file`` holding ``env``; the file is removed on exit.
+
+    The format is one ``NAME=value`` per line, so a name that is empty, starts with ``#`` or holds
+    whitespace or ``=``, and a value with a line break, raise ``ValueError`` naming the variable.
+    """
+    lines = []
+    for name, value in env.items():
+        text = str(value)
+        if not name or name.startswith("#") or any(char.isspace() or char == "=" for char in name):
+            raise ValueError(f"Environment variable name {name!r} cannot be passed to a container")
+        if "\n" in text or "\r" in text:
+            raise ValueError(f"Environment variable {name} holds a line break, which a container cannot receive")
+        lines.append(f"{name}={text}\n")
+    with tempfile.TemporaryDirectory(prefix="sast-env-") as directory:
+        path = Path(directory) / "container.env"
+        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8") as handle:
+            handle.writelines(lines)
+        yield str(path)
+
+
 def run_container(
     *,
     image: str,
@@ -216,12 +267,13 @@ def run_container(
     name: Optional[str] = None,
     volumes_from: Optional[str] = None,
     volumes: Optional[Dict[str, str]] = None,
-    env: Optional[Dict[str, str]] = None,
+    env: Optional[Mapping[str, object]] = None,
     args: Optional[Iterable[str]] = None,
     network: Optional[str] = None,
     user: Optional[str] = None,
     entrypoint: Optional[str] = None,
     resources: Optional[ContainerResources] = None,
+    redact: Iterable[str] = (),
 ) -> subprocess.CompletedProcess | None:
     """Run a Docker container with optional volume and environment configuration.
 
@@ -236,10 +288,13 @@ def run_container(
         analyzers share a builder container's filesystem.
     :param volumes: Mapping of host paths to container mount points
         (``-v host:container``).
-    :param env: Mapping of environment variables to export into the container.
+    :param env: Mapping of environment variables to export into the container, values taken as
+        ``str(value)``. They reach ``docker`` through an owner-only ``--env-file`` removed after the
+        run, never through its command line or its own environment. A name or value that file
+        cannot carry raises ``ValueError``.
     :param args: Additional positional arguments to pass to the container after the image name.
     :param user: Optional ``uid:gid`` to run as (``--user``), overriding the image's own ``USER``.
-    :param check: If True, a non-zero exit code raises ``CalledProcessError``.
+    :param redact: Values masked in the relayed container output.
     """
     cmd: list[str] = ["docker", "run", "--rm"]
     # Always assign a container name to allow for clean termination on interrupt.
@@ -260,27 +315,23 @@ def run_container(
     if volumes:
         for host_path, container_path in volumes.items():
             cmd += ["-v", f"{host_path}:{container_path}"]
-    if env:
-        for k, v in env.items():
-            cmd += ["-e", f"{k}={v}"]
     if network:
         cmd += ["--network", network]
     if entrypoint:
         cmd += ["--entrypoint", entrypoint]
     if resources:
         cmd += resources.arguments()
-    # Append image and any additional arguments
-    cmd += [image]
-    if args:
-        cmd += list(args)
 
-    try:
-        run_logged_cmd(cmd, f"[{AnalyzersConfigHelper.source_token_for_image(image)}]")
-    except subprocess.CalledProcessError as exc:
-        # Docker arguments may contain credentials in environment flags. Callers persist
-        # error text in launch outcomes, so the command must not cross this boundary.
-        safe_command = ["docker", "run", "--name", container_name, "<arguments omitted>"]
-        raise subprocess.CalledProcessError(exc.returncode, safe_command) from None
+    with _env_file(env) if env else nullcontext() as env_file:
+        if env_file:
+            cmd += ["--env-file", env_file]
+        cmd += [image, *(args or [])]
+        try:
+            run_logged_cmd(cmd, f"[{AnalyzersConfigHelper.source_token_for_image(image)}]", redact=redact)
+        except subprocess.CalledProcessError as exc:
+            # Callers persist error text in launch outcomes, so the command must not cross this boundary.
+            safe_command = ["docker", "run", "--name", container_name, "<arguments omitted>"]
+            raise subprocess.CalledProcessError(exc.returncode, safe_command) from None
 
 
 def image_runtime_user(image: str) -> Optional[Tuple[int, int]]:

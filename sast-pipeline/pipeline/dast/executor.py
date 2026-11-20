@@ -154,6 +154,7 @@ _CONNECTOR_SOURCE_PATHS = (
     "Dockerfiles/dast_connector/Dockerfile",
     "pipeline/__init__.py",
     "pipeline/docker_utils.py",
+    "pipeline/redaction.py",
     "pipeline/run_output.py",
     "pipeline/dast",
 )

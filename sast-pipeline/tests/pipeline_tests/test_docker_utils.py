@@ -8,8 +8,10 @@ helpers are monkeypatched so that no external commands are executed.
 
 import logging
 import re
+import stat
 import subprocess
 import types
+from pathlib import Path
 
 import pytest
 import pipeline.docker_utils as du
@@ -105,26 +107,31 @@ def test_run_container_constructs_command(monkeypatch):
     import pipeline.docker_utils as du
     recorded = []
     # Ensure a stable container name and pipeline id
-    monkeypatch.setattr(du, "run_logged_cmd", lambda cmd, log_addition="": recorded.append((cmd, log_addition)))
+    def record(cmd, log_addition="", **kwargs):
+        env_file = Path(cmd[cmd.index("--env-file") + 1])
+        recorded.append((cmd, log_addition, env_file, env_file.read_text(), stat.S_IMODE(env_file.stat().st_mode)))
+
+    monkeypatch.setattr(du, "run_logged_cmd", record)
     du.run_container(
         image="myimg",
         pipeline_id="pid",
         volumes_from="base",
         volumes={"/host": "/container"},
-        env={"KEY": "VAL"},
+        env={"KEY": "VAL", "JOBS": 4},
         args=["arg"],
     )
-    cmd, log_addition = recorded[-1]
+    cmd, log_addition, env_file, env_text, env_mode = recorded[-1]
     # Command should start with the docker invocation
     assert cmd[:4] == ["docker", "run", "--rm", "--name"]
     # --volumes-from directive
     assert "--volumes-from" in cmd
     # The image name should appear before the arguments
-    assert "myimg" in cmd
-    assert "arg" in cmd
-    # Environment variables are passed with -e
-    assert "-e" in cmd
-    assert any("KEY=VAL" in part for part in cmd)
+    assert cmd[cmd.index("myimg") + 1:] == ["arg"]
+    # Environment values reach docker only through an owner-only env file removed after the run
+    assert not any("VAL" in part for part in cmd)
+    assert env_text == "KEY=VAL\nJOBS=4\n"
+    assert env_mode == 0o600
+    assert not env_file.exists()
     # Volumes mapping is passed with -v
     assert "-v" in cmd
     # Log lines are tagged with the analyzer's catalog name, never with the image tag.
@@ -135,7 +142,7 @@ def test_run_container_overrides_the_image_user_only_when_asked(monkeypatch):
     """A step that owns its mounts can pin the identity the container runs as."""
     import pipeline.docker_utils as du
     recorded = []
-    monkeypatch.setattr(du, "run_logged_cmd", lambda cmd, log_addition="": recorded.append(cmd))
+    monkeypatch.setattr(du, "run_logged_cmd", lambda cmd, log_addition="", **kwargs: recorded.append(cmd))
 
     du.run_container(image="img", pipeline_id="pid", user="1000:1000")
     du.run_container(image="img", pipeline_id="pid")

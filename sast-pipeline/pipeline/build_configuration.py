@@ -14,6 +14,31 @@ if TYPE_CHECKING:
     from .config_utils import AnalyzersConfigHelper
 
 
+# Builder environment names the builder runtime assigns or reads as its own configuration.
+BUILDER_RESERVED_ENV = frozenset({
+    "BUILDER_CONTAINER",
+    "COMPILER_PATH",
+    "COMPILE_COMMANDS_PATH",
+    "FORCE_REBUILD",
+    "GOMODCACHE",
+    "JOBS",
+    "LOG_LEVEL",
+    "NON_COMPILE_PROJECT",
+    "PIPELINE_ID",
+    "PROJECT_PATH",
+    "PROJECT_VERSION",
+    "PYTHONPATH",
+    "PYTHONUNBUFFERED",
+    "RESERVE_CORES",
+    "SAST_ANALYZER_CPUS",
+    "SAST_ANALYZER_MEMORY",
+    "SAST_BUILDER_CPUS",
+    "SAST_BUILDER_MEMORY",
+    "SAST_BUILD_COMMAND",
+    "SAST_BUILD_RUNTIMES",
+})
+
+
 class SourceType(str, Enum):
     GIT_BRANCH = "GIT_BRANCH"
     GIT_HASH = "GIT_HASH"
@@ -56,6 +81,8 @@ class SastRuntimeConfiguration:
     min_time_class: str = ""
     analyzers: list[str] = field(default_factory=list)
     additional_env: Mapping[str, str] = field(default_factory=dict)
+    # Builder-only variables whose values are masked in the relayed builder output.
+    secret_env: Mapping[str, str] = field(default_factory=dict, repr=False)
     network: str | None = None
     bridge_client: BridgeClient | None = None
     agent_bridge_runtime_env: Mapping[str, str] | None = None
